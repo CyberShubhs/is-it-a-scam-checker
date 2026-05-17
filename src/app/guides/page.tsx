@@ -7,15 +7,18 @@ import { Metadata } from 'next';
 import { ShieldCheck, ArrowRight, BookOpen, AlertTriangle, Users, Newspaper } from 'lucide-react';
 import { GuideCtaLink } from '@/components/TrackedLinks';
 
+// SEO note: /guides had 0 clicks at avg position 11. The retitle sharpens
+// intent ("how to identify scams" + plain-English keyword) and the meta
+// emphasises the practical, real-example angle to lift CTR.
 export const metadata: Metadata = {
-    title: 'Scam Identification Guides: Learn to Spot Phishing, Fraud and Online Threats',
-    description: 'Comprehensive guides on identifying scams worldwide. Learn to recognise fake websites, phishing emails, SMS scams, payment fraud, and impersonation tactics with real examples.',
+    title: 'How to Identify Scams: Free Guides for Phishing, SMS & Online Fraud',
+    description: 'Plain-English guides that walk you through real scam examples — phishing emails, SMS smishing, fake websites, marketplace and crypto fraud — with red flags and what to do next.',
     alternates: {
         canonical: 'https://scamchecker.app/guides',
     },
     openGraph: {
-        title: 'Scam Identification Guides: Learn to Spot Phishing, Fraud and Online Threats',
-        description: 'Comprehensive guides on identifying scams with real examples and actionable protection advice.',
+        title: 'How to Identify Scams: Free Guides for Phishing, SMS & Online Fraud',
+        description: 'Plain-English guides on identifying scams, with real examples and actionable protection advice.',
         url: 'https://scamchecker.app/guides',
     },
 };
@@ -48,14 +51,88 @@ export default function GuidesIndexPage() {
         <div className="bg-slate-50 min-h-screen">
             <div className="container mx-auto px-4 py-12 max-w-5xl">
                 <header className="text-center mb-16">
+                    {/* H1 mirrors the new SEO title. */}
                     <h1 className="text-4xl md:text-5xl font-extrabold mb-6 text-slate-900 leading-tight">
-                        Scam Identification & Prevention Hub
+                        How to Identify Scams: Free Guides for Phishing, SMS &amp; Online Fraud
                     </h1>
                     <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-                        Expert guides on identifying fraud, recovering from scams, and protecting your identity.
-                        Written by security professionals, explained in plain English.
+                        Plain-English guides on identifying scams, recovering
+                        from fraud, and protecting your identity online. Every
+                        guide walks through real examples — the messages,
+                        emails, and websites scammers actually use — and tells
+                        you what to do next.
                     </p>
                 </header>
+
+                {/* Start here block
+                    ------------------------------------------------------------
+                    GSC shows /guides at avg pos 11 with 0 clicks. New visitors
+                    need a clear first-step. This block surfaces the 5 most
+                    useful guides for somebody who just received something
+                    suspicious. */}
+                <section
+                    aria-label="Start here scam guides"
+                    className="mb-16 rounded-2xl border border-blue-200 bg-blue-50 p-6"
+                >
+                    <h2 className="text-2xl font-bold text-slate-900 mb-3">
+                        Start here if you just received something suspicious
+                    </h2>
+                    <p className="text-slate-700 mb-5">
+                        Pick the situation that matches yours. These five
+                        guides cover the cases people land on this site for
+                        most often.
+                    </p>
+                    <ul className="grid sm:grid-cols-2 gap-3 list-none p-0">
+                        <li>
+                            <Link
+                                href="/guides/scam-text-message-examples"
+                                className="block p-3 rounded-lg bg-white border border-blue-200 hover:border-blue-400 transition-colors"
+                            >
+                                "I got a scam text — what does a real one look like?"
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/guides/whatsapp-scams-examples"
+                                className="block p-3 rounded-lg bg-white border border-blue-200 hover:border-blue-400 transition-colors"
+                            >
+                                "Someone messaged me on WhatsApp with a job offer / investment / OTP request"
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/guides/is-this-website-legit"
+                                className="block p-3 rounded-lg bg-white border border-blue-200 hover:border-blue-400 transition-colors"
+                            >
+                                "Is this website legit before I enter card details?"
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/guides/email-phishing-examples"
+                                className="block p-3 rounded-lg bg-white border border-blue-200 hover:border-blue-400 transition-colors"
+                            >
+                                "Is this email a phishing attempt?"
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/guides/what-to-do-if-youve-been-scammed"
+                                className="block p-3 rounded-lg bg-white border border-blue-200 hover:border-blue-400 transition-colors"
+                            >
+                                "I think I've already been scammed — what now?"
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/check"
+                                className="block p-3 rounded-lg bg-white border border-blue-200 hover:border-blue-400 transition-colors font-semibold"
+                            >
+                                Or run the message through the free scam checker →
+                            </Link>
+                        </li>
+                    </ul>
+                </section>
 
                 {/* Instant Checker CTA */}
                 <div className="bg-white border border-slate-200 rounded-2xl p-8 mb-16 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
@@ -67,8 +144,13 @@ export default function GuidesIndexPage() {
                             <ShieldCheck className="w-8 h-8" />
                         </div>
                         <div>
-                            <h2 className="font-bold text-2xl text-slate-900 mb-2">Have a suspicious message?</h2>
-                            <p className="text-slate-600 text-lg">Don't guess. Paste it into our AI-powered checker for an instant analysis.</p>
+                            <h2 className="font-bold text-2xl text-slate-900 mb-2">Have a suspicious message right now?</h2>
+                            <p className="text-slate-600 text-lg">
+                                Don&apos;t guess. Paste it into the free scam
+                                checker — it analyses for phishing patterns,
+                                lookalike domains, and known fraud signals in
+                                seconds.
+                            </p>
                         </div>
                     </div>
                     <Button asChild size="lg" className="flex-shrink-0 relative z-10 bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 h-auto">

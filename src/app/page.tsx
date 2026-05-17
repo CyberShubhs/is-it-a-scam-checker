@@ -8,15 +8,19 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Mail, Globe, ArrowRight, BookOpen, ShieldCheck, AlertTriangle, Search, Newspaper } from 'lucide-react';
 
+// SEO note: title/meta tuned for the "scam checker", "online scam checker",
+// and "is this a scam" intent buckets. GSC shows homepage CTR of 2.78% at
+// avg position 16 — this version leads with the tool's plain-English value
+// proposition to lift CTR while we work on rank.
 export const metadata: Metadata = {
-    title: 'Free Online Scam Checker: Detect Phishing Messages, Emails and Suspicious Links',
-    description: 'Instantly check if a message, email or link is a scam. Our free tool analyses text for fraud patterns, phishing attempts and suspicious URLs. No sign-up required.',
+    title: 'Scam Checker: Check Links, Emails, Messages & Websites for Fraud',
+    description: 'Free scam checker. Paste a suspicious link, email, SMS, WhatsApp message or website to get a plain-English fraud risk result in seconds — no sign-up, nothing stored.',
     alternates: {
         canonical: 'https://scamchecker.app',
     },
     openGraph: {
-        title: 'Free Online Scam Checker: Detect Phishing Messages, Emails and Suspicious Links',
-        description: 'Instantly check if a message, email or link is a scam. Free, private fraud detection.',
+        title: 'Scam Checker: Check Links, Emails, Messages & Websites for Fraud',
+        description: 'Paste any suspicious link, email, SMS, WhatsApp message or website. Get a plain-English scam risk result with red flags and next steps in seconds.',
         url: 'https://scamchecker.app',
     },
 };
@@ -41,11 +45,13 @@ export default function Home() {
             {/* Hero Section */}
             <section className="bg-slate-50 py-12 md:py-20">
                 <div className="container mx-auto px-4 text-center">
+                    {/* H1 matches the GSC target query "scam checker" — single
+                        H1 per page; the rest of the page uses H2/H3. */}
                     <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-6">
-                        Free Online Scam Checker: Detect Phishing Messages, Emails and Suspicious Links
+                        Scam Checker: Check Links, Emails, Messages &amp; Websites for Fraud
                     </h1>
                     <p className="text-lg md:text-xl text-slate-600 mb-4 max-w-3xl mx-auto">
-                        Received a suspicious text, email, or link? Paste it below for an instant fraud risk assessment. Our tool analyses content for common scam patterns — from fake delivery notifications and bank impersonation to phishing attempts and investment frauds.
+                        Paste a suspicious link, email, SMS, WhatsApp message, or website below. Our free scam checker analyses it for common fraud patterns — fake delivery alerts, bank impersonation, phishing attempts, investment groups, OTP requests — and gives you a plain-English risk result with red flags and next steps.
                     </p>
                     <p className="text-md text-slate-500 mb-8 max-w-2xl mx-auto">
                         Completely free, requires no sign-up, and your content is never stored. Works for scams targeting users worldwide.
@@ -80,6 +86,118 @@ export default function Home() {
                         <br />
                         This tool provides guidance based on known patterns. Always verify suspicious requests through official channels.
                     </p>
+                </div>
+            </section>
+
+            {/* Popular scam checks
+                ----------------------------------------------------------------
+                GSC told us /check and /reports are our strongest commercial-
+                intent pages (highest CTR, best avg position). This section
+                pushes link authority to those pages with descriptive anchors
+                that also match real query intents like "is this website
+                legit", "check scam link", etc. */}
+            <section className="py-12 bg-white border-t border-slate-100">
+                <div className="container mx-auto px-4 max-w-5xl">
+                    <h2 className="text-2xl md:text-3xl font-bold text-center mb-3 text-slate-900">
+                        Popular scam checks people run on this site
+                    </h2>
+                    <p className="text-center text-slate-600 mb-8 max-w-2xl mx-auto">
+                        Pick the situation that matches yours. Each link opens
+                        the right tool for the job — no sign-up, nothing stored.
+                    </p>
+                    <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 list-none p-0">
+                        <li>
+                            <Link
+                                href="/check"
+                                className="block h-full p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-primary hover:shadow-md transition-all"
+                            >
+                                <h3 className="font-semibold text-slate-900 mb-1">
+                                    I got a scam message — check it for me
+                                </h3>
+                                <p className="text-slate-600 text-sm">
+                                    Paste any SMS, WhatsApp or social DM into the
+                                    main scam checker to see if it matches known
+                                    fraud patterns.
+                                </p>
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/check-scam-link"
+                                className="block h-full p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-primary hover:shadow-md transition-all"
+                            >
+                                <h3 className="font-semibold text-slate-900 mb-1">
+                                    Is this website legit, or is the link a scam?
+                                </h3>
+                                <p className="text-slate-600 text-sm">
+                                    Run a URL through the link checker for
+                                    lookalike domain, redirect, and phishing
+                                    signal detection before you click.
+                                </p>
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/check-scam-email"
+                                className="block h-full p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-primary hover:shadow-md transition-all"
+                            >
+                                <h3 className="font-semibold text-slate-900 mb-1">
+                                    Is this email a phishing attempt?
+                                </h3>
+                                <p className="text-slate-600 text-sm">
+                                    Paste the email body or sender to check for
+                                    fake invoices, credential theft, and business
+                                    email compromise tactics.
+                                </p>
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/check-scam-text"
+                                className="block h-full p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-primary hover:shadow-md transition-all"
+                            >
+                                <h3 className="font-semibold text-slate-900 mb-1">
+                                    Someone asked me for an OTP or code
+                                </h3>
+                                <p className="text-slate-600 text-sm">
+                                    Use the SMS/WhatsApp checker to verify
+                                    OTP-harvesting messages, fake bank codes, and
+                                    "read back the number" scams.
+                                </p>
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/reports"
+                                className="block h-full p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-primary hover:shadow-md transition-all"
+                            >
+                                <h3 className="font-semibold text-slate-900 mb-1">
+                                    Search the community scam report database
+                                </h3>
+                                <p className="text-slate-600 text-sm">
+                                    Browse recent reports of scam websites,
+                                    phone numbers, and emails submitted by other
+                                    users.
+                                </p>
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/have-i-been-scammed"
+                                className="block h-full p-5 rounded-xl bg-red-50 border border-red-200 hover:border-red-400 hover:shadow-md transition-all"
+                            >
+                                <h3 className="font-semibold text-red-900 mb-1">
+                                    I clicked a suspicious link — have I been
+                                    scammed?
+                                </h3>
+                                <p className="text-red-800 text-sm">
+                                    Open the damage-control checklist for the
+                                    fastest way to lock down your accounts and
+                                    money.
+                                </p>
+                            </Link>
+                        </li>
+                    </ul>
                 </div>
             </section>
 

@@ -298,88 +298,113 @@ export const guides: Guide[] = [
   },
   {
     slug: 'whatsapp-scams-examples',
-    title: 'WhatsApp and Messaging App Scams: How to Recognise Fraud',
-    excerpt: 'Family impersonation scams, crypto investment groups, and messaging fraud tactics.',
-    metaDescription: 'Identify WhatsApp and messaging app scams. Learn about family impersonation scams, fake investment groups, and fraud tactics.',
-    date: '2026-01-26',
+    title: 'WhatsApp Scams: Real Messages, Job Offers, Investment Groups & OTP Tricks',
+    excerpt: 'Real examples of WhatsApp scam messages — fake job offers, investment groups, OTP requests, romance and family-impersonation chats — plus what to do next.',
+    metaDescription: 'Real WhatsApp scam messages: fake job offers, investment groups, OTP requests, family-impersonation and romance scam chats. See red flags and what to do next.',
+    date: '2026-05-18',
     relatedSlugs: ['scam-text-message-examples', 'bank-impersonation-scams', 'facebook-marketplace-scams'],
     content: `
 <div class="bg-primary/10 border border-primary/20 rounded-xl p-6 mb-8">
-  <p class="font-semibold text-lg mb-2">Got a suspicious WhatsApp message?</p>
-  <p class="text-slate-600 mb-4">Copy the text and paste it into our checker for instant analysis.</p>
-  <a href="/check" class="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary/90">Check It Now →</a>
+  <p class="font-semibold text-lg mb-2">Got a suspicious WhatsApp message right now?</p>
+  <p class="text-slate-600 mb-4">Copy the message text and paste it into our free scam checker — it flags the patterns scammers actually use (urgency, OTP harvesting, fake brand impersonation, lookalike links).</p>
+  <a href="/check" class="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary/90">Check the WhatsApp message now →</a>
 </div>
 
-<p>WhatsApp scams have exploded in Australia. The "Hi Mum" scam alone cost Australians over $7 million in a single year. These scammers are clever, persistent, and increasingly sophisticated.</p>
+<p>WhatsApp scams have exploded worldwide. The "Hi Mum" family-impersonation scam alone cost victims in the UK, Australia, and Ireland tens of millions of pounds. In Nigeria, India, and Ghana, WhatsApp is now the primary channel for fake job offers and "investment group" frauds. The pattern is the same everywhere: an unsolicited DM, a story designed to bypass your suspicion, and a request that turns into money or credentials leaving your account.</p>
 
-<h2>Quick Verdict</h2>
+<h2>The 6 most common WhatsApp scams in 2026</h2>
 <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 my-4">
-  <p><strong>What it usually is:</strong> Impersonation scams asking for urgent money transfers, or investment scams promising unrealistic returns.</p>
-  <p><strong>Who gets targeted:</strong> Parents and grandparents (Hi Mum scams), anyone interested in making money (crypto scams).</p>
+  <p><strong>What they usually want:</strong> a money transfer, your one-time password (OTP), your card details, or to add you to a paid "investment" group that steals your deposit.</p>
+  <p><strong>Who gets targeted:</strong> everyone — but parents and grandparents are hit hardest by family-impersonation scams, and job seekers / students by fake recruitment offers.</p>
 </div>
 
-<h2>Red Flags to Look For</h2>
+<h3>1. Fake job offers on WhatsApp</h3>
+<p>You receive an unsolicited "HR" message claiming to have seen your CV on LinkedIn, Indeed, or Naukri. They offer remote work with high pay for simple tasks ("rate products", "watch videos", "like posts"). Once you bite, you are added to a Telegram or WhatsApp group, asked to complete tasks in exchange for small "commissions", and then prompted to "top up" your account to unlock bigger tasks. The top-up money is gone. This is the "task scam" or "swiping scam".</p>
+
+<div class="bg-red-50 p-4 rounded-lg border border-red-200 my-4">
+  <p class="font-medium mb-2">Example message</p>
+  <p class="font-mono text-sm mb-2">"Hi! I'm from Amazon HR. We saw your resume on Indeed. Work-from-home position, $45/hr, no experience required. Just complete simple training tasks. Add me on WhatsApp to start: +1 ###-###-####"</p>
+  <p class="text-sm text-red-700"><strong>Reality:</strong> there is no job. You will be asked to send "training fees" or "platform deposits" you will never get back. No real employer asks for money up front.</p>
+</div>
+
+<h3>2. Crypto "investment group" scams</h3>
+<p>You are added to a group called "Binance VIP Signals", "FX Profit Club", or similar. Members post screenshots of huge daily gains. A friendly "analyst" or "mentor" DMs you to help you get started. They direct you to a slick-looking trading site (which is fake) and walk you through depositing money. The dashboard shows your balance growing. When you try to withdraw, you are told to "pay tax" or "verify identity" with more money — and then they disappear.</p>
+
+<h3>3. OTP requests over WhatsApp</h3>
+<p>Someone you don't know — or someone pretending to be a friend whose account was compromised — asks you to "share a code I sent you by mistake" or "read back the 6-digit number". That code is your WhatsApp registration OTP, your bank's transaction OTP, or a social-media password reset. Anyone asking you to share a one-time code, ever, is trying to steal something.</p>
+
+<div class="bg-red-50 p-4 rounded-lg border border-red-200 my-4">
+  <p class="font-medium mb-2">Example message</p>
+  <p class="font-mono text-sm mb-2">"Hey, sorry — I sent a verification code to your number by mistake. Can you send it back? My account is locked otherwise."</p>
+  <p class="text-sm text-red-700"><strong>Reality:</strong> they are trying to take over your WhatsApp, your bank account, or your social media. Never share a code. <a href="/check-scam-text" class="text-blue-700 underline">Run the message through our SMS / WhatsApp scam checker</a> if you are unsure.</p>
+</div>
+
+<h3>4. The "Hi Mum / Hi Dad" family-impersonation scam</h3>
+<p>A message arrives from an unknown number: "Hi Mum, I've lost my phone, this is my new number. My banking app isn't working — can you pay this bill for me?" Real children, parents, and partners do not lead with a money request before saying hello. The scammer uses urgency and emotional pressure to skip the verification step.</p>
+
+<div class="bg-red-50 p-4 rounded-lg border border-red-200 my-4">
+  <p class="font-medium mb-2">Example message</p>
+  <p class="font-mono text-sm mb-2">"Hi mum, I dropped my phone in the toilet and this is my new number. Save it. My banking app won't work until the new SIM arrives. Can you pay my electricity bill? I'll pay you back Thursday."</p>
+  <p class="text-sm text-red-700"><strong>Reality:</strong> it is not your child. The "bill" is the scammer's bank account. Call your actual family member on their old number to verify — always.</p>
+</div>
+
+<h3>5. Romance scam chats that move to WhatsApp</h3>
+<p>You match on a dating app, the conversation moves to WhatsApp within hours, and "they" are warm, attentive, and quickly emotionally invested. After days or weeks, a crisis appears: a hospital bill, a stranded family member, a frozen investment account. The ask is always money, and the deadline is always urgent. This is the "pig butchering" template — sometimes the same scammer who runs the investment-group scam pivots into romance after rapport is built.</p>
+
+<h3>6. Brand-impersonation messages (banks, couriers, tax)</h3>
+<p>A WhatsApp message arrives "from" your bank, a courier, or the tax authority (HMRC, IRS, ATO, FIRS, GRA), with a link that looks almost right. The link goes to a phishing page that mirrors the real one. If you are unsure of the link, paste it into our <a href="/check-scam-link" class="text-blue-700 underline">link scam checker</a> before tapping anything.</p>
+
+<h2>Red flags to look for in any WhatsApp message</h2>
 <ul>
-  <li><strong>"Hi Mum/Dad, I've got a new number"</strong> — The classic opener. Real kids would just tell you, not ask for money immediately.</li>
-  <li><strong>Urgency + money request</strong> — "I need $2000 by tonight or I'll be evicted/stranded/arrested"</li>
-  <li><strong>Can't talk on phone</strong> — "My phone is broken, can only text"</li>
-  <li><strong>Asks for PayID or bank transfer</strong> — Not Beem, not their usual account</li>
-  <li><strong>Added to random crypto groups</strong> — "VIP Investment Signals" with screenshots of huge profits</li>
-  <li><strong>Romance that moves fast</strong> — Met on a dating app, now on WhatsApp, and suddenly needs money</li>
-  <li><strong>Profile photo doesn't match</strong> — Right-click and search by image on Google</li>
+  <li><strong>Unsolicited contact</strong> — you didn't apply, sign up, or share your number with this person.</li>
+  <li><strong>"Hi Mum/Dad, I've got a new number"</strong> followed by a money request.</li>
+  <li><strong>Urgency + money</strong> — "I need it by tonight or I'll be evicted / arrested / fired."</li>
+  <li><strong>"Can't talk on the phone right now"</strong> — scammers can't fake a voice convincingly, so they invent a reason not to call.</li>
+  <li><strong>OTP / verification code requests</strong> — even from people you know. Their account may be hacked.</li>
+  <li><strong>Random group invites</strong> — "VIP Signals", "Earn Daily", "FX Mentors". Leave them immediately.</li>
+  <li><strong>Romance that moves fast</strong> — matched on a dating app, on WhatsApp within hours, soulmate-level chemistry within days.</li>
+  <li><strong>Profile photo doesn't match</strong> — reverse-image search any photo that feels too polished.</li>
+  <li><strong>Job offers asking for upfront money</strong> — "training fee", "equipment deposit", "platform top-up". No legitimate employer does this.</li>
 </ul>
 
-<h2>Realistic Examples</h2>
-<div class="space-y-4 my-6">
-  <div class="bg-red-50 p-4 rounded-lg border border-red-200">
-    <p class="font-medium mb-2">The "Hi Mum" Scam</p>
-    <p class="font-mono text-sm mb-2">"Hi mum, I dropped my phone in the toilet and this is my new number. Can you save it? I need a favour - my banking app won't work until the new SIM arrives. Can you pay my electricity bill? I'll pay you back Thursday. Here's the details..."</p>
-    <p class="text-sm text-red-700"><strong>Reality:</strong> It's not your child. The "bill" is a scammer's bank account. Call your actual child on their old number to verify.</p>
-  </div>
-  <div class="bg-red-50 p-4 rounded-lg border border-red-200">
-    <p class="font-medium mb-2">The Crypto Investment Group</p>
-    <p class="font-mono text-sm mb-2">You're added to "Binance VIP Signals" with 200 members sharing screenshots of 500% gains. An "analyst" DMs you offering to help you get started with a "guaranteed" method.</p>
-    <p class="text-sm text-red-700"><strong>Reality:</strong> Fake screenshots, fake members, fake profits. They'll get you to deposit on a fake exchange, show fake gains, then steal it all when you try to withdraw.</p>
-  </div>
-  <div class="bg-red-50 p-4 rounded-lg border border-red-200">
-    <p class="font-medium mb-2">The Job Offer</p>
-    <p class="font-mono text-sm mb-2">"Hi! I'm from Amazon HR. We saw your resume on Seek. We have a work-from-home position, $45/hour. Just complete some simple training tasks. Add me on WhatsApp to start."</p>
-    <p class="text-sm text-red-700"><strong>Reality:</strong> There's no job. You'll be asked to pay for "training" or "equipment" that never arrives.</p>
-  </div>
-</div>
-
-<h2>What to Do Next</h2>
+<h2>What to do next</h2>
 <ol>
-  <li><strong>Call them on their old number</strong> — If someone claims to be family, verify with a phone call to their known number.</li>
-  <li><strong>Ask a question only they'd know</strong> — "What did we have for dinner last Sunday?" Scammers can't answer.</li>
-  <li><strong>Never send money to new account details</strong> — Verify any payment request through another channel.</li>
-  <li><strong>Leave random groups immediately</strong> — Being in crypto groups makes you a target.</li>
-  <li><strong>Block and report</strong> — In WhatsApp: tap the number > Report > Block.</li>
+  <li><strong>Verify out-of-band.</strong> If someone claims to be family, call their known number directly. If they claim to be a recruiter, look up the company website (don't click their link) and call them. If they claim to be your bank, hang up and call the number on the back of your card.</li>
+  <li><strong>Ask a question only the real person could answer.</strong> "What did we have for dinner last Sunday?" works on impersonators every time.</li>
+  <li><strong>Never share an OTP, password, PIN, or card CVV.</strong> Not with anyone, ever, on WhatsApp.</li>
+  <li><strong>Never send money to new account details</strong> without verifying through another channel.</li>
+  <li><strong>Leave any random group</strong> the moment you notice you've been added without asking.</li>
+  <li><strong>Block and report.</strong> In WhatsApp: tap the contact &rarr; <em>Report</em> &rarr; <em>Block</em>. That signal helps WhatsApp shut the account down faster.</li>
 </ol>
 
-<h2>If You Already Sent Money</h2>
+<h2>If you already sent money or shared a code</h2>
 <div class="bg-red-50 border border-red-200 rounded-lg p-4 my-4">
+  <p class="mb-3">Speed matters more than anything else. The first hour is the most recoverable window.</p>
   <ul>
-    <li><strong>Contact your bank immediately</strong> — They may be able to stop or reverse the transfer.</li>
-    <li><strong>Report to ReportCyber</strong> — cyber.gov.au</li>
-    <li><strong>Report to Scamwatch</strong> — scamwatch.gov.au</li>
-    <li><strong>Don't send more</strong> — Scammers often claim the first transfer "didn't work" to get more.</li>
+    <li><strong>Open the <a href="/have-i-been-scammed" class="text-red-700 underline font-semibold">have-I-been-scammed damage-control checklist</a></strong> — it walks through the exact steps for your situation.</li>
+    <li><strong>Contact your bank immediately.</strong> Most banks have a 24/7 fraud line — they may be able to stop or reverse the transfer.</li>
+    <li><strong>Don't send more.</strong> Scammers often claim the first payment "didn't go through" to extract more money. Stop responding.</li>
+    <li><strong>Report.</strong> In the UK, Action Fraud. In the US, FTC ReportFraud. In Australia, Scamwatch. In Nigeria, the EFCC. In India, the national Cyber Crime Reporting Portal.</li>
   </ul>
 </div>
 
-<h2>Frequently Asked Questions</h2>
+<h2>Frequently asked questions</h2>
 <div class="space-y-4 my-6">
   <details class="bg-white border rounded-lg p-4">
-    <summary class="font-semibold cursor-pointer">How did scammers get my number?</summary>
-    <p class="mt-2 text-slate-600">Data breaches, social media (if your profile is public), or random generation. WhatsApp numbers are just phone numbers.</p>
+    <summary class="font-semibold cursor-pointer">How did scammers get my WhatsApp number?</summary>
+    <p class="mt-2 text-slate-600">Data breaches, scraping from public social-media profiles, or random number generation. Your WhatsApp number is just your phone number — anyone with it can message you on WhatsApp.</p>
   </details>
   <details class="bg-white border rounded-lg p-4">
-    <summary class="font-semibold cursor-pointer">Can I get my money back?</summary>
-    <p class="mt-2 text-slate-600">Sometimes, if you act within minutes. Bank transfers are harder to recover than credit card payments. Contact your bank immediately.</p>
+    <summary class="font-semibold cursor-pointer">Can I get my money back if I sent it?</summary>
+    <p class="mt-2 text-slate-600">Sometimes, if you act within minutes. Credit-card payments are the easiest to reverse (chargebacks). Bank transfers are harder but possible. Crypto and gift-card payments are almost impossible to recover. Contact your bank immediately.</p>
   </details>
   <details class="bg-white border rounded-lg p-4">
-    <summary class="font-semibold cursor-pointer">Should I engage with them to waste their time?</summary>
-    <p class="mt-2 text-slate-600">That's up to you, but generally no. It keeps your number flagged as "active" and can lead to more attempts. Block and move on.</p>
+    <summary class="font-semibold cursor-pointer">Should I waste a scammer's time by engaging with them?</summary>
+    <p class="mt-2 text-slate-600">No. It keeps your number flagged as "active" in their database and increases the number of follow-up attempts you'll get. Block, report, and move on.</p>
+  </details>
+  <details class="bg-white border rounded-lg p-4">
+    <summary class="font-semibold cursor-pointer">Is the message I just got definitely a scam?</summary>
+    <p class="mt-2 text-slate-600">Paste it into the <a href="/check" class="text-blue-700 underline">free scam checker</a> and the tool will flag the specific red flags it detects. The checker is private — nothing you paste is uploaded.</p>
   </details>
 </div>
     `

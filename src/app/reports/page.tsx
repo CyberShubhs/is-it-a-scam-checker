@@ -7,15 +7,18 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { AlertOctagon, BookOpen, ShieldCheck, Users, TrendingUp, Globe, Phone, Mail, Coins, Clock, Flame, ArrowRight } from 'lucide-react';
 
+// SEO note: /reports is the second-highest CTR page in GSC (2.9% at avg
+// position 5.91). Title/meta tuned for "scam reports", "reported scam
+// websites", and "scam report database" intent.
 export const metadata: Metadata = {
-    title: 'Live Scam Reports: Real-Time Feed of Reported Fraud Attempts',
-    description: 'See scams reported by users in real-time. Check if a phone number, URL or sender has been flagged. Community-powered fraud detection.',
+    title: 'Live Scam Reports: Search Reported Websites, Emails & Phone Numbers',
+    description: 'Browse recent scam reports submitted by users — suspicious websites, emails, phone numbers and messages. Search the community scam report database.',
     alternates: {
         canonical: 'https://scamchecker.app/reports',
     },
     openGraph: {
-        title: 'Live Scam Reports: Real-Time Feed of Reported Fraud Attempts',
-        description: 'See scams reported by users in real-time. Community-powered fraud detection.',
+        title: 'Live Scam Reports: Search Reported Websites, Emails & Phone Numbers',
+        description: 'Browse recent scam reports submitted by users — suspicious websites, emails, phone numbers and messages.',
         url: 'https://scamchecker.app/reports',
     },
 };
@@ -61,12 +64,35 @@ export default async function ReportsPage() {
 
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
+                            {/* H1 matches the new SEO title and tells visitors
+                                what they can actually do here: search reports. */}
                             <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
                                 <AlertOctagon className="w-8 h-8 text-red-600" />
-                                Live Scam Reports: Real-Time Feed of Reported Fraud Attempts
+                                Live Scam Reports: Search Reported Websites, Emails &amp; Phone Numbers
                             </h1>
                             <p className="text-slate-600 mt-2">
-                                See what others are reporting. Check if a number, URL, or sender has already been flagged as suspicious.
+                                Browse recent scam reports submitted by users —
+                                suspicious websites, phishing emails, scam phone
+                                numbers, and SMS senders. This is the community
+                                scam report database. Search the feed below, or
+                                use the category filters to narrow your search.
+                            </p>
+                            <p className="text-sm text-slate-500 mt-3">
+                                Not sure if something is a scam yet?{' '}
+                                <Link
+                                    href="/check"
+                                    className="text-primary hover:underline"
+                                >
+                                    Run it through the free scam checker first
+                                </Link>
+                                . Already clicked a suspicious link?{' '}
+                                <Link
+                                    href="/have-i-been-scammed"
+                                    className="text-red-600 hover:underline font-semibold"
+                                >
+                                    Open the have-I-been-scammed checklist
+                                </Link>
+                                .
                             </p>
                         </div>
                         <Button asChild variant="default" className="bg-red-600 hover:bg-red-700">
