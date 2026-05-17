@@ -1014,6 +1014,12 @@ export const guides: Guide[] = [
 </div>
 
 <p>You will get through this. It is expensive and stressful, but it is fixable. Take it one step at a time.</p>
+
+<div class="bg-blue-50 border border-blue-200 rounded-xl p-6 my-8">
+  <p class="font-bold text-lg text-blue-900 mb-2">Not sure whether the message you received was a scam?</p>
+  <p class="text-blue-800 mb-4">If you're still holding the original text, email, or link, paste it into our free scam checker before doing anything else. It analyses for phishing patterns, lookalike domains, and other fraud signals so you know exactly what you're dealing with.</p>
+  <a href="/check" class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">Check a suspicious message, email, or link →</a>
+</div>
     `
   }
 ];

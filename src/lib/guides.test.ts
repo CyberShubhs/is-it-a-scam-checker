@@ -12,11 +12,18 @@ const expectedSlugs = [
     'bank-impersonation-scams',
     'facebook-marketplace-scams',
     'parcel-delivery-scams-australia',
+    'what-to-do-if-youve-been-scammed',
 ];
 
 describe('Guides', () => {
-    it('should have exactly 10 guides', () => {
-        expect(guides.length).toBe(10);
+    it('should include every required guide slug', () => {
+        // We assert the required slugs are present rather than pinning to an
+        // exact count, so editorial additions don't break the suite.
+        const slugs = new Set(guides.map((g) => g.slug));
+        for (const expected of expectedSlugs) {
+            expect(slugs.has(expected), `missing guide "${expected}"`).toBe(true);
+        }
+        expect(guides.length).toBeGreaterThanOrEqual(expectedSlugs.length);
     });
 
     it('should contain all expected slugs', () => {
