@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Metadata } from 'next';
 import { ShieldCheck, ArrowRight, BookOpen, AlertTriangle, Users, Newspaper } from 'lucide-react';
+import { GuideCtaLink } from '@/components/TrackedLinks';
 
 export const metadata: Metadata = {
     title: 'Scam Identification Guides: Learn to Spot Phishing, Fraud and Online Threats',
@@ -71,10 +72,14 @@ export default function GuidesIndexPage() {
                         </div>
                     </div>
                     <Button asChild size="lg" className="flex-shrink-0 relative z-10 bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 h-auto">
-                        <Link href="/check" className="gap-2">
-                            Check Message Now
+                        <GuideCtaLink
+                            href="/check"
+                            ctaLocation="guides_hero"
+                            className="gap-2"
+                        >
+                            Check a suspicious message with our scam checker
                             <ArrowRight className="w-5 h-5" />
-                        </Link>
+                        </GuideCtaLink>
                     </Button>
                 </div>
 
@@ -306,10 +311,17 @@ export default function GuidesIndexPage() {
                     </p>
                     <div className="flex justify-center gap-4 flex-wrap">
                         <Button asChild size="lg" className="bg-white text-slate-900 hover:bg-slate-100">
-                            <Link href="/check">Run a free scam check now</Link>
+                            <GuideCtaLink href="/check" ctaLocation="guides_footer">
+                                Run a free scam check now
+                            </GuideCtaLink>
                         </Button>
                         <Button asChild size="lg" variant="outline" className="border-slate-700 text-white hover:bg-slate-800 hover:text-white">
-                            <Link href="/global-scam-reporting">Report a scam in your country</Link>
+                            <GuideCtaLink
+                                href="/global-scam-reporting"
+                                ctaLocation="guides_footer_reporting"
+                            >
+                                Report a scam in your country
+                            </GuideCtaLink>
                         </Button>
                     </div>
                 </div>

@@ -1,16 +1,31 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ShieldAlert, AlertTriangle, Lock, PhoneOff, CreditCard, ArrowRight, CheckCircle2 } from 'lucide-react';
+import {
+    trackHaveIBeenScammedStarted,
+    trackHaveIBeenScammedCompleted,
+    type RiskLevel,
+    type ResultBucket,
+} from '@/lib/analytics';
 
 export default function HaveIBeenScammedPage() {
     const [step, setStep] = useState(1);
     const [answers, setAnswers] = useState<Record<string, boolean>>({});
+    const startedRef = useRef(false);
 
     const handleAnswer = (questionId: string, value: boolean) => {
+        if (!startedRef.current) {
+            startedRef.current = true;
+            trackHaveIBeenScammedStarted({
+                page_path: '/have-i-been-scammed',
+                event_source: 'hibs_assessment',
+                cta_location: 'hibs_step_1',
+            });
+        }
         setAnswers(prev => ({ ...prev, [questionId]: value }));
         setStep(prev => prev + 1);
     };
@@ -18,6 +33,7 @@ export default function HaveIBeenScammedPage() {
     const reset = () => {
         setStep(1);
         setAnswers({});
+        startedRef.current = false;
     };
 
     const Assessment = () => {
@@ -115,8 +131,36 @@ export default function HaveIBeenScammedPage() {
     );
 }
 
+function severityToAnalytics(
+    severity: 'critical' | 'high' | 'medium' | 'low',
+): { risk_level: RiskLevel; result_bucket: ResultBucket } {
+    switch (severity) {
+        case 'critical':
+            return { risk_level: 'high', result_bucket: 'dangerous' };
+        case 'high':
+            return { risk_level: 'high', result_bucket: 'dangerous' };
+        case 'medium':
+            return { risk_level: 'medium', result_bucket: 'suspicious' };
+        case 'low':
+        default:
+            return { risk_level: 'low', result_bucket: 'safe' };
+    }
+}
+
 function Results({ answers, reset }: { answers: Record<string, boolean>, reset: () => void }) {
     const severity = answers.sent_money ? 'critical' : answers.shared_info ? 'high' : answers.clicked_link ? 'medium' : 'low';
+
+    const firedRef = useRef(false);
+    useEffect(() => {
+        if (firedRef.current) return;
+        firedRef.current = true;
+        const mapped = severityToAnalytics(severity);
+        trackHaveIBeenScammedCompleted({
+            risk_level: mapped.risk_level,
+            result_bucket: mapped.result_bucket,
+            page_path: '/have-i-been-scammed',
+        });
+    }, [severity]);
 
     return (
         <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-8">

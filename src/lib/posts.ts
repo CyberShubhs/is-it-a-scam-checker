@@ -71,6 +71,97 @@ export function getPostBySlug(slug: string): Post | null {
 }
 
 /**
+ * Editorial categories used for hub pages. Each one maps to a set of
+ * tag keywords; a post belongs to a category if any of its tags or its
+ * title matches.
+ *
+ * Order matters: a post is assigned to the first category that matches.
+ */
+export interface BlogCategory {
+    slug: string;
+    title: string;
+    description: string;
+    /** Matches against tags (case-insensitive substring) and post title. */
+    keywords: string[];
+}
+
+export const BLOG_CATEGORIES: BlogCategory[] = [
+    {
+        slug: 'scam-alerts',
+        title: 'Scam alerts and active fraud campaigns',
+        description:
+            'Live alerts on scam campaigns hitting consumers right now — what to look for, who is being targeted, and how to react quickly.',
+        keywords: ['scam alert', 'urgent', 'active', 'campaign'],
+    },
+    {
+        slug: 'phishing',
+        title: 'Phishing scams and email fraud',
+        description:
+            'Deep dives on phishing emails, credential theft, and impersonation tactics — including real-world examples and detection tips.',
+        keywords: ['phishing', 'email scam', 'spear phishing', 'credential', 'login'],
+    },
+    {
+        slug: 'fake-websites',
+        title: 'Fake websites and lookalike domains',
+        description:
+            'How fraudsters build convincing fake websites, lookalike domains, and clone storefronts — and how to spot them.',
+        keywords: ['fake website', 'lookalike', 'fake site', 'domain', 'clone', 'storefront'],
+    },
+    {
+        slug: 'crypto-scams',
+        title: 'Crypto scams and investment fraud',
+        description:
+            'Wallet drainers, fake exchanges, pig-butchering rings, and other crypto-flavoured fraud campaigns.',
+        keywords: ['crypto', 'bitcoin', 'wallet', 'investment scam', 'pig butchering', 'mining'],
+    },
+    {
+        slug: 'marketplace-scams',
+        title: 'Marketplace, jobs, and rental scams',
+        description:
+            'Buyer/seller fraud on online marketplaces, fake job offers, employment scams, and rental scams.',
+        keywords: ['marketplace', 'rental', 'job scam', 'employment', 'recruitment', 'reshipping'],
+    },
+    {
+        slug: 'text-message-scams',
+        title: 'SMS, WhatsApp, and text message scams',
+        description:
+            'Smishing campaigns delivered by SMS and WhatsApp — fake delivery notifications, bank alerts, government impersonation, and more.',
+        keywords: ['sms', 'text', 'smishing', 'whatsapp', 'message'],
+    },
+];
+
+function postMatchesCategory(post: Post, category: BlogCategory): boolean {
+    const haystack = [
+        ...(post.frontmatter.tags || []),
+        post.frontmatter.title,
+        post.frontmatter.summary,
+    ]
+        .join(' ')
+        .toLowerCase();
+    return category.keywords.some((kw) => haystack.includes(kw.toLowerCase()));
+}
+
+export function getCategoryBySlug(slug: string): BlogCategory | null {
+    return BLOG_CATEGORIES.find((c) => c.slug === slug) || null;
+}
+
+export function getPostsForCategory(slug: string): Post[] {
+    const category = getCategoryBySlug(slug);
+    if (!category) return [];
+    return getAllPosts().filter((p) => postMatchesCategory(p, category));
+}
+
+/**
+ * Returns the categories a post belongs to (used by post pages to link
+ * back to their hubs).
+ */
+export function getCategoriesForPost(slug: string): BlogCategory[] {
+    const post = getPostBySlug(slug);
+    if (!post) return [];
+    return BLOG_CATEGORIES.filter((c) => postMatchesCategory(post, c));
+}
+
+/**
  * Pick up to `limit` posts most relevant to the given post.
  * Ranking: shared-tag count, then recency. Falls back to newest posts.
  */

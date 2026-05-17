@@ -31,10 +31,28 @@ export default function AboutPage() {
                     </div>
                     <h2 className="text-xl font-bold text-slate-900 mb-3">Who Built This</h2>
                     <p className="text-slate-600 mb-4">
-                        Scam Checker is developed and maintained by <a href="https://shubhamsingla.tech" className="text-blue-600 hover:underline font-medium">Shubham Singla</a>, a Cyber Security professional and Software Engineer.
+                        Scam Checker is developed and maintained by{' '}
+                        <a
+                            href="https://shubhamsingla.tech"
+                            className="text-blue-600 hover:underline font-medium"
+                            rel="author noopener"
+                        >
+                            Shubham Singla — shubhamsingla.tech
+                        </a>
+                        , a Cyber Security professional and Software Engineer. Source
+                        is published on{' '}
+                        <a
+                            href="https://github.com/BeastBoyShubhz"
+                            className="text-blue-600 hover:underline font-medium"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            GitHub (@BeastBoyShubhz)
+                        </a>
+                        .
                     </p>
                     <p className="text-slate-600">
-                        With a background in defensive cybersecurity and secure software development, Shubham built this tool to close the gap between enterprise-grade security tools and consumer protection needs.
+                        With a background in defensive cybersecurity and secure software development, Shubham built this tool to close the gap between enterprise-grade security tools and consumer protection needs. The site is built privacy-first: nothing you paste into the scam checker is uploaded to a server.
                     </p>
                 </div>
 

@@ -10,10 +10,23 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FileUploader } from './FileUploader';
 import { extractTextFromImage, extractTextFromFile } from '@/lib/extractors';
+import {
+    trackCheckSubmitted,
+    trackCheckCompleted,
+    mapRiskLevel,
+    mapResultBucket,
+    type CheckType as AnalyticsCheckType,
+} from '@/lib/analytics';
 
 import { Globe, Mail, MessageSquare, Image as ImageIcon, FileText, Clipboard, X } from 'lucide-react';
 
 type TabType = 'url' | 'email' | 'text' | 'image' | 'file';
+
+function toAnalyticsCheckType(tab: TabType): AnalyticsCheckType {
+    if (tab === 'text') return 'sms';
+    if (tab === 'file') return 'pdf';
+    return tab;
+}
 
 interface ScamCheckerProps {
     defaultTab?: TabType;
@@ -27,7 +40,19 @@ export function ScamChecker({ defaultTab = 'url' }: ScamCheckerProps) {
     const [extractionError, setExtractionError] = useState<string | null>(null);
 
     const handleCheck = () => {
-        if (!input.trim()) return;
+        if (!input.trim() || loading) return;
+
+        const checkType = toAnalyticsCheckType(activeTab);
+        const pagePath =
+            typeof window !== 'undefined' ? window.location.pathname : undefined;
+
+        trackCheckSubmitted({
+            check_type: checkType,
+            page_path: pagePath,
+            has_url: activeTab === 'url',
+            has_attachment: activeTab === 'image' || activeTab === 'file',
+            event_source: 'scam_checker_form',
+        });
 
         setLoading(true);
         // Simulate a brief delay for "scanning" feel
@@ -35,6 +60,13 @@ export function ScamChecker({ defaultTab = 'url' }: ScamCheckerProps) {
             const res = await calculateRiskScore(input);
             setResult(res);
             setLoading(false);
+
+            trackCheckCompleted({
+                check_type: checkType,
+                risk_level: mapRiskLevel(res.riskLevel),
+                result_bucket: mapResultBucket(res.riskLevel),
+                page_path: pagePath,
+            });
         }, 600);
     };
 

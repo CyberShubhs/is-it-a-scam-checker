@@ -4,6 +4,7 @@ import { CheckCircle, AlertTriangle, AlertOctagon, Copy, Check } from 'lucide-re
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { trackResultCopied, mapRiskLevel } from '@/lib/analytics';
 
 import { ReportModal } from './ReportModal';
 
@@ -37,9 +38,16 @@ export function AnalysisResultDisplay({ result, input }: AnalysisResultProps) {
     };
 
     const handleCopy = () => {
+        if (copied) return;
         const text = `Scam Check Result: ${result.riskLevel} Risk.\n\nSummary: ${result.summary}\n\nSignals Detected:\n${result.signals.map(s => `- ${s.label}: ${s.explanation}`).join('\n')}\n\nCheck more at: isitscam.shubhamsingla.tech`;
         navigator.clipboard.writeText(text);
         setCopied(true);
+        trackResultCopied({
+            check_type: 'unknown',
+            risk_level: mapRiskLevel(result.riskLevel),
+            page_path:
+                typeof window !== 'undefined' ? window.location.pathname : undefined,
+        });
         setTimeout(() => setCopied(false), 2000);
     };
 

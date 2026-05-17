@@ -109,14 +109,24 @@ export function Footer() {
                 </div>
                 <div className="border-t border-slate-700 pt-8 text-center text-sm">
                     <p className="mb-2">
-                        Developed and owned by{' '}
+                        Built privacy-first by{' '}
                         <a
                             href="https://shubhamsingla.tech"
                             target="_blank"
-                            rel="noopener noreferrer"
+                            rel="author noopener noreferrer"
                             className="text-white hover:underline"
                         >
                             Shubham Singla — shubhamsingla.tech
+                        </a>
+                        {' '}·{' '}
+                        <a
+                            href="https://github.com/BeastBoyShubhz"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-white hover:underline"
+                            aria-label="Scam Checker source code on GitHub (@BeastBoyShubhz)"
+                        >
+                            GitHub (@BeastBoyShubhz)
                         </a>
                     </p>
                     <p>© {new Date().getFullYear()} Scam Checker. All rights reserved.</p>

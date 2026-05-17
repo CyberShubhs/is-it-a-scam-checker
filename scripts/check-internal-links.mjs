@@ -54,6 +54,18 @@ const PRIORITY_HUBS = [
     '/reports/trending',
 ];
 
+// Blog category hubs are added to the sitemap dynamically (see BLOG_CATEGORIES
+// in src/lib/posts.ts), so we verify them by checking that the routes exist
+// on disk rather than that the sitemap source contains the literal string.
+const BLOG_CATEGORY_HUBS = [
+    '/blog/scam-alerts',
+    '/blog/phishing',
+    '/blog/fake-websites',
+    '/blog/crypto-scams',
+    '/blog/marketplace-scams',
+    '/blog/text-message-scams',
+];
+
 const failures = [];
 
 /** Recursively yield every .tsx file under a directory. */
@@ -265,6 +277,51 @@ if (fs.existsSync(SITEMAP)) {
     }
 } else {
     failures.push(`[missing-file] expected ${relPath(SITEMAP)} to exist`);
+}
+
+/* ---------- 6b: every blog category hub is reachable ---------- */
+
+for (const hub of BLOG_CATEGORY_HUBS) {
+    if (!appRouteExists(hub)) {
+        failures.push(`[missing-blog-category-hub] ${hub} has no matching app route`);
+    }
+}
+
+/* ---------- 7: /llms.txt exists and is non-trivial ---------- */
+
+const LLMS_TXT = path.join(PUBLIC_DIR, 'llms.txt');
+if (!fs.existsSync(LLMS_TXT)) {
+    failures.push('[missing-file] public/llms.txt must exist (so /llms.txt returns 200)');
+} else {
+    const body = readFile(LLMS_TXT);
+    if (body.length < 200) {
+        failures.push('[llms-txt-thin] public/llms.txt is unexpectedly short (<200 chars)');
+    }
+    for (const expected of ['scamchecker.app', 'sitemap']) {
+        if (!body.toLowerCase().includes(expected.toLowerCase())) {
+            failures.push(`[llms-txt-missing-content] public/llms.txt should mention "${expected}"`);
+        }
+    }
+}
+
+/* ---------- 8: blog post template still drives users to /check + /have-i-been-scammed ---------- */
+
+if (fs.existsSync(BLOG_POST)) {
+    const src = readFile(BLOG_POST);
+    if (!src.includes('"/check"')) {
+        failures.push('[blog-cta-missing] blog post page must link to /check');
+    }
+    if (!src.includes('"/have-i-been-scammed"')) {
+        failures.push('[blog-cta-missing] blog post page must link to /have-i-been-scammed');
+    }
+    if (!src.includes('"/reports"')) {
+        failures.push('[blog-cta-missing] blog post page must link to /reports');
+    }
+    // It must render exactly one <h1>
+    const h1Count = (src.match(/<h1\b/g) || []).length;
+    if (h1Count !== 1) {
+        failures.push(`[blog-h1] blog post template has ${h1Count} <h1> tags; should have exactly 1`);
+    }
 }
 
 /* ---------- summary ---------- */

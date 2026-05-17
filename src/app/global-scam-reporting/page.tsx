@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Flag, Globe, Shield, Phone, Mail } from 'lucide-react';
+import { Globe, Shield, Phone, Mail } from 'lucide-react';
 import { TrustSection } from '@/components/TrustSection';
+import { ReportingCard, PlatformCard } from '@/components/ReportingCards';
+import { GuideCtaLink } from '@/components/TrackedLinks';
 
 export const metadata: Metadata = {
     title: "Where to Report Scams Globally (2025 Guide) | Scam Checker",
@@ -46,12 +47,16 @@ export default function GlobalReportingPage() {
                                 description="The primary reporting body for all scams in Australia."
                                 link="https://www.scamwatch.gov.au/report-a-scam"
                                 action="Report Online"
+                                destinationType="government"
+                                country="AU"
                             />
                             <ReportingCard
                                 title="ReportCyber"
                                 description="For cybercrimes like hacking, malware, and identity theft."
                                 link="https://www.cyber.gov.au/report-and-recover/report"
                                 action="Report Cybercrime"
+                                destinationType="cybercrime"
+                                country="AU"
                             />
                             <ReportingCard
                                 title="IDCARE"
@@ -59,6 +64,8 @@ export default function GlobalReportingPage() {
                                 link="https://www.idcare.org/"
                                 action="Get Support"
                                 subtext="Call 1800 595 160"
+                                destinationType="other"
+                                country="AU"
                             />
                         </div>
                     </div>
@@ -75,12 +82,16 @@ export default function GlobalReportingPage() {
                                 description="Report fraud, scams, and bad business practices."
                                 link="https://reportfraud.ftc.gov/"
                                 action="Report to FTC"
+                                destinationType="government"
+                                country="US"
                             />
                             <ReportingCard
                                 title="IC3 (FBI)"
                                 description="Internet Crime Complaint Center for serious cybercrimes."
                                 link="https://www.ic3.gov/"
                                 action="File Complaint"
+                                destinationType="cybercrime"
+                                country="US"
                             />
                         </div>
                     </div>
@@ -97,6 +108,8 @@ export default function GlobalReportingPage() {
                                 description="The UK's national reporting centre for fraud and cybercrime."
                                 link="https://www.actionfraud.police.uk/"
                                 action="Report Fraud"
+                                destinationType="government"
+                                country="UK"
                             />
                             <ReportingCard
                                 title="NCSC"
@@ -104,6 +117,8 @@ export default function GlobalReportingPage() {
                                 link="https://www.ncsc.gov.uk/collection/phishing-scams"
                                 action="Report Phishing"
                                 subtext="Forward emails to report@phishing.gov.uk"
+                                destinationType="cybercrime"
+                                country="UK"
                             />
                         </div>
                     </div>
@@ -120,6 +135,8 @@ export default function GlobalReportingPage() {
                                 description="Collects information on fraud and identity theft."
                                 link="https://antifraudcentre-centreantifraude.ca/report-signalez-eng.htm"
                                 action="Report Fraud"
+                                destinationType="government"
+                                country="CA"
                             />
                         </div>
                     </div>
@@ -162,7 +179,12 @@ export default function GlobalReportingPage() {
                             Use our free tools to verify a suspicious message or link before you report it.
                         </p>
                         <Button asChild size="lg" className="bg-white text-slate-900 hover:bg-slate-100">
-                            <Link href="/check">Check for Scams Now</Link>
+                            <GuideCtaLink
+                                href="/check"
+                                ctaLocation="global_reporting_bottom"
+                            >
+                                Check a message, email, or link with our scam checker
+                            </GuideCtaLink>
                         </Button>
                     </div>
 
@@ -174,33 +196,3 @@ export default function GlobalReportingPage() {
     );
 }
 
-function ReportingCard({ title, description, link, action, subtext }: { title: string, description: string, link: string, action: string, subtext?: string }) {
-    return (
-        <Card className="h-full border-slate-200 hover:border-blue-500 hover:shadow-md transition-all flex flex-col bg-white">
-            <CardHeader>
-                <CardTitle className="text-xl text-slate-900">{title}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col">
-                <p className="text-slate-600 mb-6 flex-1">{description}</p>
-                {subtext && <p className="text-sm font-medium text-slate-900 mb-4 bg-slate-100 p-2 rounded text-center">{subtext}</p>}
-                <Button asChild variant="outline" className="w-full border-slate-300 hover:bg-slate-50 text-slate-700">
-                    <a href={link} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                        {action} <ExternalLink className="w-4 h-4" />
-                    </a>
-                </Button>
-            </CardContent>
-        </Card>
-    );
-}
-
-function PlatformCard({ icon, title, link, text }: { icon: any, title: string, link: string, text: string }) {
-    return (
-        <a href={link} target="_blank" rel="noopener noreferrer" className="block group">
-            <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-500 hover:shadow-md transition-all text-center h-full">
-                <div className="mb-4 flex justify-center">{icon}</div>
-                <h3 className="font-bold text-slate-900 mb-2">{title}</h3>
-                <span className="text-sm text-blue-600 font-medium group-hover:underline">{text}</span>
-            </div>
-        </a>
-    );
-}

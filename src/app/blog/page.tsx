@@ -1,9 +1,10 @@
 import Link from 'next/link';
-import { getAllPosts } from '@/lib/posts';
+import { getAllPosts, BLOG_CATEGORIES } from '@/lib/posts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Metadata } from 'next';
 import { ArrowRight, Newspaper, ShieldCheck } from 'lucide-react';
+import { GuideCtaLink } from '@/components/TrackedLinks';
 
 export const metadata: Metadata = {
     title: 'Blog – Latest Scam Alerts & Safety Advice | Scam Checker',
@@ -65,10 +66,14 @@ export default function BlogIndexPage() {
                         size="lg"
                         className="flex-shrink-0 relative z-10 bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 h-auto"
                     >
-                        <Link href="/check" className="gap-2">
-                            Check Now
+                        <GuideCtaLink
+                            href="/check"
+                            ctaLocation="blog_index_hero"
+                            className="gap-2"
+                        >
+                            Check a suspicious message with our scam checker
                             <ArrowRight className="w-5 h-5" />
-                        </Link>
+                        </GuideCtaLink>
                     </Button>
                 </div>
 
@@ -79,6 +84,32 @@ export default function BlogIndexPage() {
                     </div>
                 ) : (
                     <section>
+                        <section
+                            aria-label="Browse scam alerts by category"
+                            className="mb-16"
+                        >
+                            <h2 className="text-2xl font-bold text-slate-900 mb-6">
+                                Browse scam alerts by category
+                            </h2>
+                            <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 list-none p-0">
+                                {BLOG_CATEGORIES.map((c) => (
+                                    <li key={c.slug}>
+                                        <Link
+                                            href={`/blog/${c.slug}`}
+                                            className="block h-full rounded-xl border border-slate-200 bg-white p-5 hover:border-blue-500 hover:shadow-md transition-all"
+                                        >
+                                            <h3 className="font-bold text-slate-900 mb-1">
+                                                {c.title}
+                                            </h3>
+                                            <p className="text-sm text-slate-600">
+                                                {c.description}
+                                            </p>
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </section>
+
                         <div className="flex items-center gap-3 mb-8">
                             <Newspaper className="w-7 h-7 text-slate-700" />
                             <h2 className="text-3xl font-bold text-slate-900">
@@ -204,7 +235,9 @@ export default function BlogIndexPage() {
                             size="lg"
                             className="bg-white text-slate-900 hover:bg-slate-100"
                         >
-                            <Link href="/check">Run a free scam check now</Link>
+                            <GuideCtaLink href="/check" ctaLocation="blog_index_footer">
+                                Run a free scam check now
+                            </GuideCtaLink>
                         </Button>
                         <Button
                             asChild
@@ -212,7 +245,12 @@ export default function BlogIndexPage() {
                             variant="outline"
                             className="border-slate-700 text-white hover:bg-slate-800 hover:text-white"
                         >
-                            <Link href="/guides">Read scam identification guides</Link>
+                            <GuideCtaLink
+                                href="/guides"
+                                ctaLocation="blog_index_footer_guides"
+                            >
+                                Read scam identification guides
+                            </GuideCtaLink>
                         </Button>
                     </div>
                 </div>

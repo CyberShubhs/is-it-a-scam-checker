@@ -1,4 +1,9 @@
-import { getPostBySlug, getAllPosts, getRelatedPosts } from '@/lib/posts';
+import {
+    getPostBySlug,
+    getAllPosts,
+    getRelatedPosts,
+    getCategoriesForPost,
+} from '@/lib/posts';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import Link from 'next/link';
@@ -6,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, ArrowRight, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { MDXRemote } from 'next-mdx-remote/rsc';
+import { GuideCtaLink } from '@/components/TrackedLinks';
 
 export async function generateStaticParams() {
     const posts = getAllPosts();
@@ -49,7 +55,8 @@ export default async function BlogPostPage({
         notFound();
     }
 
-    const related = getRelatedPosts(slug, 4);
+    const related = getRelatedPosts(slug, 3);
+    const categories = getCategoriesForPost(slug);
 
     return (
         <div className="bg-slate-50 min-h-screen">
@@ -180,12 +187,13 @@ export default async function BlogPostPage({
                         <ShieldCheck className="w-8 h-8 text-blue-600 flex-shrink-0" />
                         <p className="text-slate-700 text-sm leading-relaxed flex-1">
                             Think the message you received might be similar?{' '}
-                            <Link
+                            <GuideCtaLink
                                 href="/check"
+                                ctaLocation="blog_intro_cta"
                                 className="font-semibold text-blue-700 underline-offset-2 hover:underline"
                             >
                                 Use our free scam checker tool to verify it instantly
-                            </Link>{' '}
+                            </GuideCtaLink>{' '}
                             before you click anything or reply.
                         </p>
                     </aside>
@@ -220,29 +228,32 @@ export default async function BlogPostPage({
                                 <p className="text-red-800 text-sm mb-4 leading-relaxed">
                                     If you clicked a suspicious link, sent money, or shared
                                     your password, every minute matters. Follow our step-by-step{' '}
-                                    <Link
+                                    <GuideCtaLink
                                         href="/have-i-been-scammed"
+                                        ctaLocation="blog_mid_hibs"
                                         className="font-semibold underline underline-offset-2"
                                     >
                                         Have I been scammed damage-control checklist
-                                    </Link>{' '}
+                                    </GuideCtaLink>{' '}
                                     or read the full{' '}
-                                    <Link
+                                    <GuideCtaLink
                                         href="/guides/what-to-do-if-youve-been-scammed"
+                                        ctaLocation="blog_mid_recovery_guide"
                                         className="font-semibold underline underline-offset-2"
                                     >
                                         recovery guide for scam victims
-                                    </Link>
+                                    </GuideCtaLink>
                                     .
                                 </p>
                                 <p className="text-red-800 text-sm leading-relaxed">
                                     Not sure yet?{' '}
-                                    <Link
+                                    <GuideCtaLink
                                         href="/check"
+                                        ctaLocation="blog_mid_check"
                                         className="font-semibold underline underline-offset-2"
                                     >
                                         Run the message through our free scam checker
-                                    </Link>{' '}
+                                    </GuideCtaLink>{' '}
                                     for an instant risk assessment.
                                 </p>
                             </div>
@@ -297,10 +308,14 @@ export default async function BlogPostPage({
                         </p>
                         <div className="flex flex-wrap justify-center gap-3">
                             <Button asChild size="lg">
-                                <Link href="/check">Check a message, email or link now</Link>
+                                <GuideCtaLink href="/check" ctaLocation="blog_end_cta_check">
+                                    Check a message, email or link now
+                                </GuideCtaLink>
                             </Button>
                             <Button asChild size="lg" variant="outline">
-                                <Link href="/guides">Browse scam identification guides</Link>
+                                <GuideCtaLink href="/guides" ctaLocation="blog_end_cta_guides">
+                                    Browse scam identification guides
+                                </GuideCtaLink>
                             </Button>
                         </div>
                     </aside>
@@ -351,6 +366,29 @@ export default async function BlogPostPage({
                                 </li>
                             ))}
                         </ul>
+
+                        {categories.length > 0 && (
+                            <nav
+                                aria-label="Browse related scam categories"
+                                className="mt-8"
+                            >
+                                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                                    Related scam categories
+                                </h3>
+                                <ul className="flex flex-wrap gap-2 list-none p-0">
+                                    {categories.map((c) => (
+                                        <li key={c.slug}>
+                                            <Link
+                                                href={`/blog/${c.slug}`}
+                                                className="inline-block bg-slate-100 text-slate-700 text-sm font-medium px-3 py-1.5 rounded-full hover:bg-slate-200"
+                                            >
+                                                {c.title}
+                                            </Link>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </nav>
+                        )}
 
                         <nav
                             aria-label="More scam resources"

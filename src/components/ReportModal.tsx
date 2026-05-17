@@ -5,6 +5,20 @@ import { X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { trackReportSubmitted, type ReportType } from '@/lib/analytics';
+
+function mapReportType(value: string): ReportType {
+    switch (value) {
+        case 'url':
+        case 'phone':
+        case 'email':
+            return value;
+        case 'text':
+            return 'message';
+        default:
+            return 'unknown';
+    }
+}
 
 interface ReportModalProps {
     isOpen: boolean;
@@ -26,6 +40,7 @@ export function ReportModal({ isOpen, onClose, initialValue = '' }: ReportModalP
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (status === 'submitting') return;
         setStatus('submitting');
 
         try {
@@ -37,6 +52,13 @@ export function ReportModal({ isOpen, onClose, initialValue = '' }: ReportModalP
 
             if (res.ok) {
                 setStatus('success');
+                trackReportSubmitted({
+                    report_type: mapReportType(type),
+                    page_path:
+                        typeof window !== 'undefined'
+                            ? window.location.pathname
+                            : undefined,
+                });
                 setTimeout(() => {
                     onClose();
                     setStatus('idle');

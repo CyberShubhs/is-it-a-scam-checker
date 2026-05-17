@@ -1,13 +1,51 @@
+# Scam Checker — scamchecker.app
+
 User-agent: *
 Allow: /
 
-Purpose:
-This website provides scam detection tools, scam reports, and educational content for identifying online fraud, phishing attempts, and malicious websites.
+## Purpose
 
-Primary pages:
-https://scamchecker.app/check
-https://scamchecker.app/guides
-https://scamchecker.app/reports
+Scam Checker is a free, privacy-first tool that helps people determine
+whether a website, email, SMS, WhatsApp message, image, or PDF is a scam.
+It also publishes scam-identification guides, an emergency
+"have I been scammed?" damage-control flow, and a community scam-reporting
+database.
 
-Focus:
-Cybersecurity, scam detection, phishing prevention, fraud awareness.
+## Primary pages
+
+- https://scamchecker.app/check — paste a message, email, or link to get an
+  instant risk assessment.
+- https://scamchecker.app/have-i-been-scammed — emergency damage-control
+  checklist if you think you have already been scammed.
+- https://scamchecker.app/guides — scam-identification guides and learning
+  hub.
+- https://scamchecker.app/reports — community-reported scams.
+- https://scamchecker.app/global-scam-reporting — official scam-reporting
+  contacts for the US, UK, Canada, Australia, and India.
+- https://scamchecker.app/blog — latest scam alerts and safety news.
+
+## Owner
+
+- Site: https://shubhamsingla.tech
+- GitHub: https://github.com/BeastBoyShubhz
+- Author: Shubham Singla (cybersecurity background, security-first design)
+
+## Focus areas
+
+- Cybersecurity
+- Scam detection
+- Phishing prevention
+- Fraud awareness
+
+## Privacy
+
+- We do not store anything users paste into the scam checker.
+- Analysis runs client-side; pasted content is never sent to our servers.
+- Submitted reports store only what the reporter chooses to provide; we do
+  not collect personal identifiers from the reporter.
+- We do not send pasted content, URLs, phone numbers, email addresses, file
+  names, or OCR text to analytics.
+
+## Sitemap
+
+https://scamchecker.app/sitemap.xml
