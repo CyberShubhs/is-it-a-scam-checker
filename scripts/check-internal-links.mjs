@@ -62,6 +62,7 @@ const BLOG_CATEGORY_HUBS = [
     '/blog/phishing',
     '/blog/fake-websites',
     '/blog/crypto-scams',
+    '/blog/job-scams',
     '/blog/marketplace-scams',
     '/blog/text-message-scams',
 ];

@@ -229,7 +229,7 @@ function generateSummary(level: RiskLevel, signals: ScanSignal[], urls: { url: s
     const highRiskSignals = signals.filter(s => s.points >= 40);
     const mainSignal = highRiskSignals.length > 0 ? highRiskSignals[0] : signals[0];
 
-    let reasonText = mainSignal ? mainSignal.explanation : "Multiple suspicious patterns detected.";
+    const reasonText = mainSignal ? mainSignal.explanation : "Multiple suspicious patterns detected.";
 
     if (urls.some(u => u.risk.riskLevel === 'High')) {
         const riskyUrl = urls.find(u => u.risk.riskLevel === 'High');

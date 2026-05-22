@@ -11,6 +11,125 @@ export interface Guide {
 
 export const guides: Guide[] = [
   {
+    slug: 'job-scams',
+    title: 'Job Scam Checker: How to Spot a Fake Job Offer Before You Reply',
+    excerpt: 'Verify a job offer, recruiter, and employer — red flags for fake jobs, task scams, equipment purchase frauds, and check-cashing setups.',
+    metaDescription: 'How to check if a job offer is a scam. Verify the recruiter, employer, and offer details. Spot task scams, fake checks, and equipment-purchase fraud.',
+    date: '2026-05-22',
+    relatedSlugs: ['is-this-website-legit', 'email-phishing-examples', 'facebook-marketplace-scams'],
+    content: `
+<div class="bg-primary/10 border border-primary/20 rounded-xl p-6 mb-8">
+  <p class="font-semibold text-lg mb-2">Just received a job offer that seems off?</p>
+  <p class="text-slate-600 mb-4">Paste the recruiter message, the offer letter, or the company URL into our free scam checker — it scans for the patterns fake-job campaigns actually use.</p>
+  <a href="/check" class="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary/90">Check the job offer →</a>
+</div>
+
+<p>Fake job offers are now one of the highest-grossing scam categories worldwide. The FBI&apos;s 2024 IC3 report logged over $501 million in employment-scam losses in the US alone. The pattern is almost identical everywhere: an unsolicited message about a remote role, a fast offer, a request that involves your money or your identity, and then silence.</p>
+
+<p>This guide walks through how to verify a job offer is real before you reply, share documents, or cash a cheque.</p>
+
+<h2>Quick Verdict</h2>
+<div class="bg-amber-50 border border-amber-200 rounded-lg p-4 my-4">
+  <p><strong>What it usually is:</strong> identity theft via fake onboarding documents, money laundering via fake &quot;equipment reimbursement&quot;, or theft via fake-cheque overpayment.</p>
+  <p><strong>Who gets targeted:</strong> students, recent graduates, parents returning to work, anyone visible on LinkedIn, Indeed, Seek, Naukri, or Glassdoor.</p>
+</div>
+
+<h2>The 6 most common job-scam patterns</h2>
+
+<h3>1. The task / swiping scam</h3>
+<p>You are added to a WhatsApp or Telegram group offering simple tasks (&quot;like products&quot;, &quot;rate hotels&quot;) for daily &quot;commissions&quot;. After a few small payouts to build trust, you are asked to &quot;top up&quot; your account to unlock higher-paying tasks. The top-up disappears.</p>
+
+<h3>2. The equipment-purchase scam</h3>
+<p>You accept a remote role. HR sends you a cheque to buy a laptop / monitor / software from &quot;an approved supplier&quot;. The cheque clears on day one and bounces on day three. The supplier was always the scammer. You owe your bank the money.</p>
+
+<h3>3. The fake-cheque overpayment</h3>
+<p>An &quot;employer&quot; sends a cheque larger than your first pay, then asks you to send the difference to a third party or back to them. Same outcome — cheque bounces, the money you sent is gone.</p>
+
+<h3>4. Identity-theft &quot;onboarding&quot;</h3>
+<p>The offer is fake. The forms are real-looking — driver&apos;s licence, passport, tax ID, bank details, photo of you holding your ID. The job never starts. Your identity is sold.</p>
+
+<h3>5. Recruitment-fee scams</h3>
+<p>A &quot;recruiter&quot; or &quot;visa agent&quot; demands an upfront fee for placement, training, or visa processing. Legitimate recruiters are paid by the employer, never by candidates.</p>
+
+<h3>6. Crypto / investment job pivot</h3>
+<p>The job description shifts from &quot;customer support&quot; to &quot;help us trade on this platform&quot;. The platform is fake. Your &quot;commissions&quot; are screen numbers. Withdrawals are blocked behind &quot;tax&quot;.</p>
+
+<h2>Red Flags to Look For</h2>
+<ul>
+  <li><strong>Unsolicited contact</strong> referring to a CV you don&apos;t remember uploading.</li>
+  <li><strong>WhatsApp- or Telegram-only interviews.</strong> Real employers use email, video, or phone systems they own.</li>
+  <li><strong>Pay-to-play.</strong> Training fee, equipment deposit, platform top-up, visa processing fee.</li>
+  <li><strong>A cheque or payment <em>before</em> you start.</strong> No legitimate employer prepays an unverified hire.</li>
+  <li><strong>Generic email addresses</strong> — <code>hr.amazon.recruit@gmail.com</code> instead of <code>@amazon.com</code>.</li>
+  <li><strong>Salary far above market rate</strong> for a junior remote role with no experience required.</li>
+  <li><strong>Pressure to accept &quot;today&quot;</strong> or &quot;before end of day&quot;.</li>
+  <li><strong>Bank-account or onboarding documents requested before a signed contract.</strong></li>
+  <li><strong>No real company website</strong>, no LinkedIn employees, no Companies House / ABN registration, or a website registered in the last 6 months.</li>
+</ul>
+
+<h2>How to verify a job offer is real</h2>
+<ol>
+  <li><strong>Verify the company.</strong> Look up the official website by typing the name into Google directly (don&apos;t click the recruiter&apos;s link). Cross-check with LinkedIn, Companies House (UK), ABN Lookup (AU), or your local equivalent.</li>
+  <li><strong>Verify the recruiter.</strong> Find their LinkedIn independently. Does the email domain match the company? Is the company tagged as their current employer? Is the profile older than a year?</li>
+  <li><strong>Verify the offer.</strong> Read the contract end-to-end. Search the exact job title and salary — fake roles are often pasted across dozens of victim posts.</li>
+  <li><strong>Verify the email domain.</strong> Real employers do not send offers from <code>@gmail.com</code>, <code>@outlook.com</code>, or freshly registered domains.</li>
+  <li><strong>Never pay to work.</strong> Equipment, training, software — paid by the employer, deducted from pay, never up front.</li>
+  <li><strong>Never share banking details</strong> until you have a signed contract on company letterhead and have verified the company exists.</li>
+</ol>
+
+<h2>What a real employer will ask for</h2>
+<p>The line between an acceptable onboarding request and a scam can feel blurry. Here is a short, accurate version:</p>
+<ul>
+  <li><strong>OK after a signed contract:</strong> tax ID number (TFN, SSN, NI), bank account for payroll, address for tax forms, ID for right-to-work checks (in person or via a real verification service).</li>
+  <li><strong>Never appropriate:</strong> photo of you holding your ID before a signed contract; full passport scan emailed to a personal Gmail; bank login or PIN; payment to the employer for any reason; cashing a cheque on their behalf.</li>
+</ul>
+
+<h2>If you already shared information or money</h2>
+<div class="bg-red-50 border border-red-200 rounded-lg p-4 my-4">
+  <p class="mb-3">Speed matters most in the first hour.</p>
+  <ul>
+    <li><strong>Sent money:</strong> call your bank&apos;s fraud line immediately. Credit card and bank-transfer reversals are time-sensitive.</li>
+    <li><strong>Cashed a cheque:</strong> contact your bank — the cheque almost certainly will bounce. Do not spend the funds.</li>
+    <li><strong>Shared ID documents:</strong> contact a free identity-theft support service (IDCARE in Australia/NZ on <code>1800 595 160</code>; IdentityTheft.gov in the US; Action Fraud in the UK).</li>
+    <li><strong>Report:</strong>
+      <ul>
+        <li>🇦🇺 Australia: <a href="https://www.scamwatch.gov.au/report-a-scam" class="text-red-700 underline">Scamwatch</a></li>
+        <li>🇺🇸 USA: <a href="https://reportfraud.ftc.gov/" class="text-red-700 underline">FTC ReportFraud</a> + the FBI&apos;s <a href="https://www.ic3.gov/" class="text-red-700 underline">IC3</a></li>
+        <li>🇬🇧 UK: <a href="https://www.actionfraud.police.uk/" class="text-red-700 underline">Action Fraud</a></li>
+        <li>🌐 <a href="/global-scam-reporting" class="text-red-700 underline">Find the right body in your country</a></li>
+      </ul>
+    </li>
+    <li><strong>Damage-control walkthrough:</strong> open the <a href="/have-i-been-scammed" class="text-red-700 underline font-semibold">have-I-been-scammed checklist</a>.</li>
+  </ul>
+</div>
+
+<h2>Frequently Asked Questions</h2>
+<div class="space-y-4 my-6">
+  <details class="bg-white border rounded-lg p-4">
+    <summary class="font-semibold cursor-pointer">Is it a scam if a company sends me a cheque before I start?</summary>
+    <p class="mt-2 text-slate-600">Almost always. Real employers don&apos;t prepay laptop or training expenses to someone they haven&apos;t verified. If a cheque arrives early, do not cash it and do not spend any of the funds — it is almost certainly the start of an overpayment / fake-cheque scam.</p>
+  </details>
+  <details class="bg-white border rounded-lg p-4">
+    <summary class="font-semibold cursor-pointer">Should an employer ask for my banking information during onboarding?</summary>
+    <p class="mt-2 text-slate-600">Only after a signed contract, and only the routing/BSB and account number used for payroll. They should never ask for your bank login, password, PIN, or full card number.</p>
+  </details>
+  <details class="bg-white border rounded-lg p-4">
+    <summary class="font-semibold cursor-pointer">A recruiter contacted me on WhatsApp — is that normal?</summary>
+    <p class="mt-2 text-slate-600">Treat it as a strong red flag. Real recruiters use email and LinkedIn first. WhatsApp/Telegram-only contact is the most consistent signal in modern fake-job campaigns.</p>
+  </details>
+  <details class="bg-white border rounded-lg p-4">
+    <summary class="font-semibold cursor-pointer">How do I verify a remote job offer that seems too good to be true?</summary>
+    <p class="mt-2 text-slate-600">Search the company name + &quot;scam&quot;. Look for an independently verifiable phone number on the company&apos;s real website. Call that number and ask if the recruiter and role are real. Use{' '}
+    <a href="/check" class="text-blue-700 underline">our scam checker</a> to scan the messages for known job-scam patterns.</p>
+  </details>
+  <details class="bg-white border rounded-lg p-4">
+    <summary class="font-semibold cursor-pointer">Where do I report a fake job offer?</summary>
+    <p class="mt-2 text-slate-600">In the US, the FTC (<code>reportfraud.ftc.gov</code>) and the FBI&apos;s IC3. In the UK, Action Fraud. In Australia, Scamwatch and ReportCyber. Also report fake listings to the platform you saw them on (LinkedIn, Indeed, Seek).</p>
+  </details>
+</div>
+    `,
+  },
+  {
     slug: 'is-this-website-legit',
     title: 'Is This Website Legit? How to Check Before You Buy',
     excerpt: 'Quick checks before entering card details on unfamiliar websites.',

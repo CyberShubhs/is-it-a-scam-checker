@@ -13,6 +13,7 @@ const expectedSlugs = [
     'facebook-marketplace-scams',
     'parcel-delivery-scams-australia',
     'what-to-do-if-youve-been-scammed',
+    'job-scams',
 ];
 
 describe('Guides', () => {

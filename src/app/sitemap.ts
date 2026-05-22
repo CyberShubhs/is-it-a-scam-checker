@@ -65,6 +65,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
         '/i-got-a-scam-message',
         '/global-scam-reporting',
         '/reports',
+        // Keyword-targeted SEO pages — see SEO/KWResults.csv for demand.
+        '/scam-website-checker',
+        '/scam-phone-number-checker',
+        '/crypto-scam-checker',
+        '/scam-checker-australia',
+        '/scam-website-checker-uk',
     ].map((route) => ({
         url: `${baseUrl}${route}`,
         lastModified: new Date(),

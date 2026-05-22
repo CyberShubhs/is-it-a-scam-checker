@@ -28,6 +28,184 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // Build assets are not pages. Google was indexing stale hashed chunk
+      // URLs (with ?dpl=... query params) as "Crawled - currently not
+      // indexed" / 404 noise. We don't block them in robots.txt — Google
+      // needs JS and CSS to render — but they shouldn't be treated as
+      // indexable documents.
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex, nofollow',
+          },
+        ],
+      },
+    ];
+  },
+  async redirects() {
+    return [
+      // Legacy guide URLs surfaced as 404s in Google Search Console
+      // (export dated 2026-05-22). Mapped to the closest current resource
+      // so existing backlinks and recrawls don't keep returning 404.
+      {
+        source: '/guides/check-scam-invoices-pdf',
+        destination: '/guides/email-phishing-examples',
+        permanent: true,
+      },
+      {
+        source: '/guides/is-this-a-scam-message',
+        destination: '/check',
+        permanent: true,
+      },
+      {
+        source: '/guides/ato-scams-australia',
+        destination: '/guides/ato-scam-text-email',
+        permanent: true,
+      },
+      // Consolidate the byte-identical Scam Watch roundup duplicate to the
+      // canonical shorter slug.
+      {
+        source: '/blog/2026-02-22-scam-watch-roundup-general-advice-to-sta-691b7f',
+        destination: '/blog/2026-02-22-scam-watch-roundup-general-advice',
+        permanent: true,
+      },
+      // Thin / unsourced / generated blog posts under 500 words. Each one
+      // is mapped to the closest stronger cluster hub, guide, or tool page.
+      // The source MDX files have been removed so they no longer populate
+      // the sitemap. See SEO/reports/2026-05-22-235309-AEST-gsc-82-url-triage.md
+      // for the full rationale per URL.
+      {
+        source: '/blog/2026-04-14-australia-loses-5m-to-new-ato-refund-scam-8b29d8',
+        destination: '/guides/ato-scam-text-email',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-14-crypto-app-scam-australians-lose-30m-to-fake-tradi-3b0eb0',
+        destination: '/crypto-scam-checker',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-14-job-seeker-scam-alert-1-5m-lost-09b290',
+        destination: '/guides/job-scams',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-14-student-loan-scam-alert-3-5m-lost-32637a',
+        destination: '/check',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-15-data-breach-hits-300-000-check-your-info-now-1de6c9',
+        destination: '/have-i-been-scammed',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-15-tax-season-scam-costs-10m-61797d',
+        destination: '/check',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-16-crypto-payment-scam-alert-1-2m-lost-89175f',
+        destination: '/crypto-scam-checker',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-16-data-breach-exposes-1-5m-users-0263c6',
+        destination: '/have-i-been-scammed',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-17-fbi-warns-of-10m-romance-scam-062bfa',
+        destination: '/check',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-18-1-5m-exposed-cyber-breach-alert-f548b1',
+        destination: '/have-i-been-scammed',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-19-new-bank-text-scam-hits-10-000-3da7dd',
+        destination: '/guides/bank-impersonation-scams',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-20-nigeria-s-n20m-text-scam-hits-8-000-443ce4',
+        destination: '/guides/scam-text-message-examples',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-21-fbi-warns-of-15m-social-security-scam-980b96',
+        destination: '/blog/2026-04-17-ssa-scam-alert-imposters-steal-millions-from-us-se-e809ce',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-22-tax-season-scam-alert-15m-lost-694527',
+        destination: '/check',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-23-2-5m-hit-by-latest-phishing-scam-ee86c5',
+        destination: '/guides/email-phishing-examples',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-24-elderly-lose-8m-to-scam-calls-f3e54b',
+        destination: '/scam-phone-number-checker',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-27-dating-app-scam-10m-lost-in-6-months-9c58e2',
+        destination: '/check',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-27-employment-scam-costs-4m-ed6311',
+        destination: '/guides/job-scams',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-29-4-500-uk-seniors-lose-1-2m-to-pension-scam-03b54a',
+        destination: '/check',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-04-29-new-phishing-tactic-steals-6m-37f8b1',
+        destination: '/guides/email-phishing-examples',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-05-05-may-2026-13-000-uk-citizens-lose-8-5m-928998',
+        destination: '/check',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-05-05-nz-3-6m-lost-to-fake-bill-scam-de1bfd',
+        destination: '/check',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-05-07-data-breach-8-million-affected-346733',
+        destination: '/have-i-been-scammed',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-05-11-elderly-lose-10m-to-fake-tech-support-64672d',
+        destination: '/scam-phone-number-checker',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-05-15-2-5m-lost-to-new-invoice-scam-0e7ed7',
+        destination: '/guides/email-phishing-examples',
+        permanent: true,
+      },
+      {
+        source: '/blog/2026-05-18-10m-lost-to-fake-job-scams-4c6c3d',
+        destination: '/guides/job-scams',
+        permanent: true,
+      },
     ];
   },
 };

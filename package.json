@@ -12,6 +12,7 @@
     "test:smoke": "node scripts/smoke-test.js",
     "test:links": "node scripts/check-internal-links.mjs",
     "test:seo": "node scripts/check-seo-hygiene.mjs",
+    "test:blog-quality": "node scripts/check-blog-quality.mjs",
     "generate-blog": "npx tsx scripts/generate-scam-post.ts",
     "postinstall": "prisma generate"
   },

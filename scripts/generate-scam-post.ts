@@ -16,16 +16,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
-
-// ── Types ──────────────────────────────────────────────────────────────────
-
-interface GeneratedPost {
-    title: string;
-    summary: string;
-    tags: string[];
-    sources: string[];
-    body: string;
-}
+import {
+    validateGeneratedPostQuality,
+    type GeneratedPost,
+} from '../src/lib/post-quality';
 
 // ── Safety guardrails ──────────────────────────────────────────────────────
 
@@ -340,6 +334,84 @@ function getExistingTitles(): string[] {
         .filter(Boolean);
 }
 
+interface ExistingPostSignal {
+    slug: string;
+    title: string;
+    summary: string;
+    tags: string[];
+    /** Inferred from tags + title — used for cluster-level dedupe. */
+    cluster: string | null;
+    /** Named entities: agencies, brand names, dollar amounts. Cheap regex. */
+    entities: string[];
+}
+
+const CLUSTER_TAG_HINTS: Record<string, string[]> = {
+    'job-scams': ['job', 'employment', 'recruitment', 'onboarding'],
+    'crypto-checker': ['crypto', 'bitcoin', 'wallet', 'staking', 'mining', 'pig-butchering', 'defi'],
+    'sms-checker': ['sms', 'text', 'whatsapp', 'smishing'],
+    'phone-checker': ['phone', 'call', 'voice'],
+    'email-checker': ['phishing', 'email', 'bec'],
+    'website-checker': ['website', 'store', 'shop', 'marketplace', 'rental'],
+    australia: ['australia', 'ato', 'mygov', 'auspost', 'scamwatch'],
+    uk: ['uk', 'hmrc', 'royal-mail', 'evri', 'action-fraud', 'dvla'],
+};
+
+function inferCluster(haystack: string): string | null {
+    const lower = haystack.toLowerCase();
+    for (const [cluster, hints] of Object.entries(CLUSTER_TAG_HINTS)) {
+        if (hints.some((h) => lower.includes(h))) return cluster;
+    }
+    return null;
+}
+
+function extractEntities(haystack: string): string[] {
+    const out = new Set<string>();
+    const lower = haystack.toLowerCase();
+    // Agency / brand keywords
+    const tokens = [
+        'fbi', 'ftc', 'irs', 'ic3', 'scamwatch', 'reportcyber', 'ato', 'mygov', 'auspost',
+        'hmrc', 'dvla', 'royal mail', 'evri', 'action fraud', 'ncsc',
+        'commbank', 'nab', 'anz', 'westpac', 'barclays', 'lloyds', 'hsbc', 'monzo', 'santander',
+        'paypal', 'venmo', 'zelle', 'payid', 'cashapp',
+        'linkt', 'binance', 'coinbase', 'kraken',
+        'careconnect', 'foodiefast',
+    ];
+    for (const t of tokens) if (lower.includes(t)) out.add(t);
+    // Dollar amounts e.g. "$5m", "$1.2 million", "£750k"
+    for (const m of haystack.match(/[$£€]\s?\d[\d.,]*\s?(m|million|k|thousand|bn|billion)?/gi) ?? []) {
+        out.add(m.toLowerCase().replace(/\s+/g, ''));
+    }
+    return [...out];
+}
+
+function getExistingPostSignals(): ExistingPostSignal[] {
+    const blogDir = path.join(process.cwd(), 'content', 'blog');
+    if (!fs.existsSync(blogDir)) return [];
+
+    return fs
+        .readdirSync(blogDir)
+        .filter((f) => f.endsWith('.mdx') && !f.startsWith('_'))
+        .map((f) => {
+            const raw = fs.readFileSync(path.join(blogDir, f), 'utf-8');
+            const title = (raw.match(/^title:\s*"(.+)"/m)?.[1] ?? '').toLowerCase();
+            const summary = (raw.match(/^summary:\s*"(.+)"/m)?.[1] ?? '').toLowerCase();
+            const tagsRaw = raw.match(/^tags:\s*\[(.*?)\]/m)?.[1] ?? '';
+            const tags = tagsRaw
+                .split(',')
+                .map((t) => t.replace(/["'\s]/g, '').toLowerCase())
+                .filter(Boolean);
+            const signalHaystack = `${title} ${summary} ${tags.join(' ')} ${raw}`;
+            return {
+                slug: f.replace(/\.mdx$/, ''),
+                title,
+                summary,
+                tags,
+                cluster: inferCluster(signalHaystack),
+                entities: extractEntities(signalHaystack),
+            };
+        });
+}
+
 // ── Gemini API call with model fallback ────────────────────────────────────
 
 const GEMINI_MODELS = [
@@ -623,33 +695,126 @@ function slugify(text: string): string {
         .replace(/^-|-$/g, '');
 }
 
-function buildPrompt(existingTitles: string[]): string {
+/**
+ * Topic clusters mapped to live keyword demand (SEO/KWResults.csv) and the
+ * FindQuestions PDF (SEO/blog-topics-scam-checker.pdf). Every generated post
+ * must be tagged with one primary cluster before writing — this keeps posts
+ * tied to a query intent instead of producing generic "alerts" that get
+ * marked Crawled - currently not indexed.
+ */
+const KEYWORD_CLUSTERS = [
+    {
+        slug: 'website-checker',
+        primaryQueries: ['scam website checker', 'scam site checker', 'free website scam checker', 'online store scam checker', 'shopping website scam checker'],
+        notes: 'Fake online stores, lookalike domains, checkout fraud, dropshipping scams, social-ad-driven fake sales.',
+        relatedInternalRoutes: ['/scam-website-checker', '/check-scam-link', '/guides/is-this-website-legit'],
+    },
+    {
+        slug: 'link-checker',
+        primaryQueries: ['scam link checker', 'scam url checker', 'is this link a scam checker'],
+        notes: 'Lookalike domains, URL shorteners, phishing links, subdomain tricks.',
+        relatedInternalRoutes: ['/check-scam-link', '/guides/how-to-spot-a-fake-link'],
+    },
+    {
+        slug: 'email-checker',
+        primaryQueries: ['scam email checker', 'is this email a scam checker'],
+        notes: 'Phishing, fake invoices, business email compromise, fake refund emails, sender header spoofing.',
+        relatedInternalRoutes: ['/check-scam-email', '/guides/email-phishing-examples'],
+    },
+    {
+        slug: 'sms-checker',
+        primaryQueries: ['scam message checker', 'scam text checker', 'text scam checker'],
+        notes: 'SMS/WhatsApp phishing, OTP harvesting, parcel-redelivery, family-impersonation, bank fraud SMS.',
+        relatedInternalRoutes: ['/check-scam-text', '/guides/scam-text-message-examples', '/guides/whatsapp-scams-examples'],
+    },
+    {
+        slug: 'phone-checker',
+        primaryQueries: ['scam phone number checker', 'scam call checker', 'scam call number checker', 'free scam call checker'],
+        notes: 'Robocalls, fake bank fraud-team calls, tax-authority arrest threats, tech-support scams, voicemail phishing.',
+        relatedInternalRoutes: ['/scam-phone-number-checker', '/guides/bank-impersonation-scams', '/reports/phone-numbers'],
+    },
+    {
+        slug: 'crypto-checker',
+        primaryQueries: ['crypto scam checker'],
+        notes: 'Wallet drainers, fake exchanges, pig-butchering, fake staking, seed-phrase harvesting, recovery scams.',
+        relatedInternalRoutes: ['/crypto-scam-checker', '/blog/crypto-scams', '/reports/crypto-wallets'],
+    },
+    {
+        slug: 'australia',
+        primaryQueries: ['scam checker australia', 'scam website checker australia'],
+        notes: 'ATO/myGov scams, Scamwatch campaigns, AusPost/Linkt SMS, AU bank impersonation, PayID/Marketplace fraud.',
+        relatedInternalRoutes: ['/scam-checker-australia', '/guides/ato-scam-text-email', '/guides/payid-scams-australia'],
+    },
+    {
+        slug: 'uk',
+        primaryQueries: ['scam website checker uk'],
+        notes: 'HMRC, DVLA, Royal Mail/Evri redelivery scams, Action Fraud campaigns, UK bank impersonation.',
+        relatedInternalRoutes: ['/scam-website-checker-uk'],
+    },
+    {
+        slug: 'job-scams',
+        primaryQueries: ['job scam', 'fake job offer', 'is my job offer a scam', 'employment scam', 'remote job scam'],
+        notes: 'Task scams, fake-cheque overpayments, equipment-purchase scams, identity-theft onboarding, recruitment-fee scams. Source: FindQuestions PDF.',
+        relatedInternalRoutes: ['/guides/job-scams', '/blog/job-scams', '/check'],
+    },
+] as const;
+
+type KeywordCluster = (typeof KEYWORD_CLUSTERS)[number];
+
+interface BuiltPrompt {
+    prompt: string;
+    cluster: KeywordCluster;
+}
+
+function buildPrompt(existingTitles: string[]): BuiltPrompt {
     const existingContext = existingTitles.length > 0
         ? `\n\nALREADY PUBLISHED (you MUST write about a DIFFERENT topic):\n${existingTitles.map((t) => `- ${t}`).join('\n')}`
         : '';
 
     const today = new Date().toISOString().split('T')[0];
 
+    // Pick a primary keyword cluster first. The post is built around that
+    // cluster's intent — not around a generic "alert" angle. This is the
+    // single biggest lever for moving posts out of "Crawled - currently not
+    // indexed" status in Google Search Console.
+    const cluster = KEYWORD_CLUSTERS[Math.floor(Math.random() * KEYWORD_CLUSTERS.length)];
+    const clusterBrief = `
+PRIMARY KEYWORD CLUSTER FOR THIS POST: ${cluster.slug}
+Primary search queries to target: ${cluster.primaryQueries.join(', ')}
+Cluster scope: ${cluster.notes}
+You MUST naturally include 1-2 of the primary search queries in the title or first H2.
+Link to at least one of these related internal routes in the body using a normal markdown link: ${cluster.relatedInternalRoutes.join(', ')}.
+`;
+
     const angles = [
-        'Focus on a specific new scam reported in the last 48 hours. Name the exact scam, the country affected, and how many people have been hit.',
-        'Write about a new phishing technique or social engineering tactic that criminals are using right now. Be extremely specific about how the attack works technically.',
-        'Cover a recent data breach or cybersecurity incident and explain what ordinary people should do to protect themselves.',
-        'Write about a scam targeting a specific demographic (elderly, students, small business owners, job seekers) with a real recent example.',
-        'Investigate a new type of fraud involving cryptocurrency, investment apps, or payment platforms. Use real platform names and specific dollar amounts.',
-        'Cover a government warning or law enforcement action against scammers. Reference the specific agency and their advisory.',
+        'Focus on a specific new scam reported in the last 48 hours. Name the exact scam, the country affected, and how many people have been hit. Only use real, named incidents — do not invent statistics, victim names, or company names.',
+        'Write about a new phishing technique or social engineering tactic that criminals are using right now. Be extremely specific about how the attack works technically. Cite at least one credible source URL.',
+        'Cover a recent data breach or cybersecurity incident and explain what ordinary people should do to protect themselves. Use the breach\'s real reported numbers from the source URL.',
+        'Write about a scam targeting a specific demographic (elderly, students, small business owners, job seekers) with a real recent example. Cite government or major news sources.',
+        'Investigate a new type of fraud involving cryptocurrency, investment apps, or payment platforms. Use real platform names. Dollar amounts must be sourced — do not invent.',
+        'Cover a government warning or law enforcement action against scammers. Reference the specific agency and their advisory by URL.',
         'Write about a scam exploiting current events (tax season, holidays, natural disasters, new tech releases). Be timely and specific.',
         'Expose a romance scam, employment scam, or rental scam technique with step-by-step details of how the con unfolds.',
     ];
     const randomAngle = angles[Math.floor(Math.random() * angles.length)];
 
-    return `You are writing a blog post for scamchecker.app — a free tool that helps people check if messages, emails, and links are scams.
+    const promptText = `You are writing a blog post for scamchecker.app — a free tool that helps people check if messages, emails, and links are scams.
 
 CRITICAL RULE: You are NOT an AI assistant writing a blog post. You ARE a cybersecurity journalist named "The Scam Checker Team". Write as if you personally investigated this story. Never refer to yourself as AI. Never use phrases like "here is" or "I've compiled" or "below is". The reader should have ZERO indication this was written by AI.
 
 YOUR ASSIGNMENT: ${randomAngle}
+${clusterBrief}
 ${existingContext}
 
 DATE: ${today}
+
+INSTANT-REJECT CRITERIA (the post will be discarded and rewritten if any of these are true):
+- The post invents incident names, victim names, company names, or dollar amounts that are not in your cited sources.
+- The post has fewer than 2 real, working source URLs from government agencies, recognised news outlets, or established security firms.
+- The post lacks ANY of these practical sections: "How the Scam Works", "Red Flags to Watch For", "What to Do Before You Click/Reply/Pay", "What to Do If You've Already Been Affected", "Where to Report", "Related Scam Checker pages".
+- The post has no internal links to any Scam Checker route (must include at least 2 of: /check, /check-scam-text, /check-scam-email, /check-scam-link, /scam-website-checker, /scam-phone-number-checker, /crypto-scam-checker, /guides/job-scams, /have-i-been-scammed, /reports, /global-scam-reporting, plus the cluster-specific routes listed above).
+- The post duplicates the topic, primary keyword, or victim story of an already-published post in the list below.
+- The post is a generic "urgent alert" with no clear query intent or no verifiable specifics.
 
 WRITING VOICE — these rules are non-negotiable:
 - Write like a crime reporter at The Guardian or BBC. Short, punchy paragraphs. Active voice. No fluff.
@@ -680,21 +845,23 @@ SEO REQUIREMENTS:
 - Primary keyword should appear 3-5 times naturally in the body
 - Include 2-3 subheadings phrased as questions people would search on Google
 
-REQUIRED STRUCTURE:
-1. Opening hook: A startling specific fact. No preamble. Example: "More than 4,000 Australians lost a combined $12 million to fake toll road texts last month."
+REQUIRED STRUCTURE (every section must be present — no exceptions):
+1. Opening hook: A startling specific fact, sourced from one of your URLs. No preamble. Example: "The FTC's 2024 IC3 report recorded $501 million in US job-scam losses." Never invent numbers.
 2. "## How This Scam Works" — Prose, step by step with specifics. No bullet points here.
 3. "## Who Is Being Targeted" — Be specific: age groups, regions, platforms, occupations.
-4. "## Red Flags to Watch For" — Use 🚩 emoji bullets here (this is the ONE section where bullets are appropriate):
+4. "## Red Flags to Watch For" — Use 🚩 emoji bullets (the ONLY section where bullets are appropriate):
    - 🚩 Flag 1
    - 🚩 Flag 2
    - etc (4-6 flags)
-5. "## What to Do If You've Been Hit" — Numbered steps, 1-5 max, practical and direct.
-6. "## Where to Report" — Use these exact links:
+5. "## What to Do Before You Click, Reply, or Pay" — Numbered steps, 3-5 items. Must include running the message through [our free scam checker](/check) or the relevant cluster-specific checker page.
+6. "## What to Do If You've Already Been Affected" — Numbered steps, 3-5 items, practical and direct. Must link to [/have-i-been-scammed](/have-i-been-scammed).
+7. "## Where to Report" — Use these exact links:
    - 🇦🇺 Australia: [Scamwatch](https://www.scamwatch.gov.au/report-a-scam)
    - 🇺🇸 USA: [FTC ReportFraud](https://reportfraud.ftc.gov/)
    - 🇬🇧 UK: [Action Fraud](https://www.actionfraud.police.uk/)
    - 🌐 International: [Global Scam Reporting Directory](/global-scam-reporting)
-7. A single closing sentence with this internal link naturally included: [free scam checker](/check)
+8. "## Related Scam Checker pages" — A short bullet list linking to 2-3 of the cluster's related internal routes (listed above) and any other relevant /check-*, /guides/*, or /reports/* routes.
+9. A single closing sentence with this internal link naturally included: [free scam checker](/check)
 
 WORD COUNT: Between 800 and 1200 words (body only, not frontmatter).
 
@@ -709,6 +876,11 @@ CRITICAL: All newlines in the body MUST be encoded as \\n inside the JSON string
 }
 
 SOURCES: 2-4 real, plausible URLs from government agencies (scamwatch.gov.au, ftc.gov, actionfraud.police.uk), major news (BBC, ABC, Reuters), or security firms (Kaspersky, Norton, ESET).`;
+
+    return {
+        prompt: promptText,
+        cluster,
+    };
 }
 
 /**
@@ -737,9 +909,14 @@ async function tryProvider(
     return parsed;
 }
 
-async function generatePost(): Promise<GeneratedPost> {
+interface GeneratedPostWithCluster {
+    post: GeneratedPost;
+    cluster: KeywordCluster;
+}
+
+async function generatePost(): Promise<GeneratedPostWithCluster> {
     const existingTitles = getExistingTitles();
-    const prompt = buildPrompt(existingTitles);
+    const { prompt, cluster } = buildPrompt(existingTitles);
 
     // Build provider list: Gemini first, Groq fallback
     const providers: { name: string; fn: (p: string) => Promise<string> }[] = [];
@@ -757,7 +934,7 @@ async function generatePost(): Promise<GeneratedPost> {
     for (const { name, fn } of providers) {
         try {
             const post = await tryProvider(name, fn, prompt);
-            return post;
+            return { post, cluster };
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : String(err);
             lastError = msg;
@@ -786,12 +963,13 @@ async function main(): Promise<void> {
 
     console.log('🔍 Generating blog post via AI (Gemini → Groq fallback)...');
 
-    const post = await generatePost();
+    const { post, cluster } = await generatePost();
 
     console.log(`📝 Topic: ${post.title}`);
+    console.log(`📂 Cluster: ${cluster.slug} (routes: ${cluster.relatedInternalRoutes.join(', ')})`);
 
     // Strip any AI patterns that slipped through
-    let body = stripAIPatterns(post.body);
+    const body = stripAIPatterns(post.body);
 
     // Detect remaining AI patterns (log warning but don't block)
     const remaining = detectAIPatterns(body);
@@ -823,24 +1001,76 @@ ${body}
     // Safety check
     validateContent(content);
 
-    // Check for duplicate topics
-    const existingTitles = getExistingTitles();
+    // Dedupe across title, slug, tags, and summary so future posts don't
+    // duplicate existing topical coverage (which would cause Google to mark
+    // them "Crawled - currently not indexed").
+    const existingSignals = getExistingPostSignals();
     const newTitleLower = post.title.toLowerCase();
+    const newSummaryLower = post.summary.toLowerCase();
+    const newTagsLower = post.tags.map((t) => t.toLowerCase());
 
     // Skip common/short words for better dedup
-    const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'to', 'in', 'of', 'for', 'is', 'on', 'at', 'by', 'it', 'as', 'how', 'what', 'you', 'your', 'are', 'from', 'with', 'this', 'that', 'new', '–', '-', '—']);
+    const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'to', 'in', 'of', 'for', 'is', 'on', 'at', 'by', 'it', 'as', 'how', 'what', 'you', 'your', 'are', 'from', 'with', 'this', 'that', 'new', '–', '-', '—', 'scam', 'scams']);
     const meaningfulWords = (text: string) =>
-        text.split(/\s+/).filter((w) => w.length > 2 && !stopWords.has(w));
+        text.split(/[^a-z0-9]+/i).filter((w) => w.length > 2 && !stopWords.has(w.toLowerCase()));
 
-    const isDuplicate = existingTitles.some((existing) => {
-        const existingWords = new Set(meaningfulWords(existing));
-        const newWords = meaningfulWords(newTitleLower);
-        const overlap = newWords.filter((w) => existingWords.has(w)).length;
-        return overlap / Math.max(newWords.length, 1) > 0.5;
+    const newTitleWords = new Set(meaningfulWords(newTitleLower));
+    const newSummaryWords = new Set(meaningfulWords(newSummaryLower));
+
+    const newSignalHaystack = `${newTitleLower} ${newSummaryLower} ${newTagsLower.join(' ')} ${body}`;
+    const newCluster = inferCluster(newSignalHaystack);
+    const newEntities = new Set(extractEntities(newSignalHaystack));
+
+    const isDuplicate = existingSignals.some((existing) => {
+        const titleWords = new Set(meaningfulWords(existing.title));
+        const summaryWords = new Set(meaningfulWords(existing.summary));
+
+        const titleOverlap = [...newTitleWords].filter((w) => titleWords.has(w)).length;
+        const titleScore = titleOverlap / Math.max(newTitleWords.size, 1);
+
+        const summaryOverlap = [...newSummaryWords].filter((w) => summaryWords.has(w)).length;
+        const summaryScore = summaryOverlap / Math.max(newSummaryWords.size, 1);
+
+        const tagOverlap = newTagsLower.filter((t) => existing.tags.includes(t)).length;
+        const tagScore = tagOverlap / Math.max(newTagsLower.length, 1);
+
+        // Slug match (when the AI happens to regenerate near the same slug).
+        if (existing.slug.includes(post.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 30))) {
+            return true;
+        }
+
+        // Trip if the title is highly similar, or if title is moderately
+        // similar AND summary or tags also overlap heavily — catches the
+        // "different headline, same topic" failure mode.
+        if (titleScore > 0.5) return true;
+        if (titleScore > 0.3 && (summaryScore > 0.4 || tagScore > 0.6)) return true;
+
+        // Cluster + entity overlap — same agency or dollar amount in the
+        // same cluster is almost always a topical duplicate.
+        if (newCluster && newCluster === existing.cluster) {
+            const sharedEntities = existing.entities.filter((e) => newEntities.has(e)).length;
+            if (sharedEntities >= 2 && titleScore > 0.2) return true;
+        }
+        return false;
     });
 
     if (isDuplicate) {
         console.log('⚠️  Generated topic too similar to an existing post. Skipping.');
+        return;
+    }
+
+    // Deterministic quality gate. Every gate is unit-tested in
+    // src/lib/post-quality.test.ts so it can't quietly weaken. The cluster
+    // selected at prompt-build time is passed through so the validator can
+    // enforce the cluster-specific internal-link requirement, not just the
+    // generic "at least 2 internal links" floor.
+    const qualityReasons = validateGeneratedPostQuality(post, body, {
+        clusterRoutes: cluster.relatedInternalRoutes,
+    });
+    if (qualityReasons.length > 0) {
+        console.log('⚠️  Generated post failed quality gate:');
+        for (const r of qualityReasons) console.log(`     - ${r}`);
+        console.log('Skipping.');
         return;
     }
 

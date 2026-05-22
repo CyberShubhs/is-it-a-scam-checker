@@ -32,7 +32,12 @@ export function ReportModal({ isOpen, onClose, initialValue = '' }: ReportModalP
     const [type, setType] = useState('url');
     const [notes, setNotes] = useState('');
 
+    // Re-seed the input with whatever URL/text triggered the modal each time
+    // it's reopened. Calling setState here re-renders the modal once on open
+    // — acceptable cost since the alternative (mounting via key) would lose
+    // every other modal-local state on every re-render of the parent page.
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (isOpen && initialValue) setValue(initialValue);
     }, [isOpen, initialValue]);
 

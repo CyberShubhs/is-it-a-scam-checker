@@ -115,11 +115,29 @@ export const BLOG_CATEGORIES: BlogCategory[] = [
         keywords: ['crypto', 'bitcoin', 'wallet', 'investment scam', 'pig butchering', 'mining'],
     },
     {
-        slug: 'marketplace-scams',
-        title: 'Marketplace, jobs, and rental scams',
+        slug: 'job-scams',
+        title: 'Job scams and fake employment offers',
         description:
-            'Buyer/seller fraud on online marketplaces, fake job offers, employment scams, and rental scams.',
-        keywords: ['marketplace', 'rental', 'job scam', 'employment', 'recruitment', 'reshipping'],
+            'Fake job offers, fake recruiters, task scams, equipment-purchase scams, and onboarding fraud — how they work and how to verify the employer before you reply.',
+        keywords: [
+            'job scam',
+            'employment scam',
+            'recruitment',
+            'remote job',
+            'fake check',
+            'job offer',
+            'onboarding',
+            'i-9',
+            'recruiter',
+            'task scam',
+        ],
+    },
+    {
+        slug: 'marketplace-scams',
+        title: 'Marketplace and rental scams',
+        description:
+            'Buyer/seller fraud on online marketplaces, overpayment scams, fake courier collection, and rental scams.',
+        keywords: ['marketplace', 'rental', 'reshipping'],
     },
     {
         slug: 'text-message-scams',

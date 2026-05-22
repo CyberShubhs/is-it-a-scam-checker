@@ -133,10 +133,19 @@ const blogSlugs = fs.existsSync(blogDir)
           .map((f) => f.replace(/\.mdx$/, ''))
     : [];
 
+// Blog categories are added to the sitemap dynamically via BLOG_CATEGORIES
+// in src/lib/posts.ts. Extract the slug list so the required-route check
+// below sees /blog/<category> entries.
+const postsSrc = readFile(path.join(ROOT, 'src', 'lib', 'posts.ts'));
+const blogCategorySlugs = [...postsSrc.matchAll(/^\s*slug:\s*'([^']+)'/gm)].map(
+    (m) => m[1],
+);
+
 const sitemapPaths = new Set([
     ...sitemapLiterals,
     ...guideSlugs.map((s) => `/guides/${s}`),
     ...blogSlugs.map((s) => `/blog/${s}`),
+    ...blogCategorySlugs.map((s) => `/blog/${s}`),
 ]);
 
 const seen = new Set();
@@ -153,6 +162,173 @@ for (const route of sitemapPaths) {
     if (!appRouteExists(route)) {
         failures.push(
             `[sitemap-404] ${route} is referenced in sitemap but no matching app route exists — Google will mark it Not found`,
+        );
+    }
+}
+
+// --------------------------------------------------------------------------
+// 2b. next.config.ts must satisfy four invariants for Search Console hygiene:
+//
+//   1. Each legacy 404 source path must have an exact-destination permanent
+//      redirect (no source = re-introduces 404s; wrong destination = breaks
+//      backlinks; non-permanent = wrong status code for SEO).
+//   2. `/_next/static/:path*` must carry `X-Robots-Tag: noindex, nofollow`.
+//   3. Sitemap output must never contain `/_next/static`.
+//   4. Every keyword-targeted route added in this SEO pass must remain in
+//      the sitemap.
+// --------------------------------------------------------------------------
+
+/**
+ * Pulled from:
+ *   - the GSC 404 export (the 3 legacy guide URLs)
+ *   - SEO/reports/2026-05-22-235309-AEST-gsc-82-url-triage.md (the 27 thin/
+ *     duplicate blog posts and the 1 consolidated roundup duplicate)
+ *
+ * Each entry is enforced below with exact source, exact destination, and
+ * permanent: true. If anyone touches next.config.ts and removes or rewires
+ * one of these, this test fails — preventing the previous "Crawled - currently
+ * not indexed" / 404 problems from quietly returning.
+ *
+ * Treat this list as the source of truth. If a redirect is removed
+ * intentionally, update both this list and the triage report in the same
+ * commit so the rationale stays in sync.
+ */
+const REQUIRED_LEGACY_REDIRECTS = [
+    // Legacy 404 guide URLs (from GSC Table.csv).
+    { source: '/guides/check-scam-invoices-pdf', destination: '/guides/email-phishing-examples' },
+    { source: '/guides/is-this-a-scam-message', destination: '/check' },
+    { source: '/guides/ato-scams-australia', destination: '/guides/ato-scam-text-email' },
+
+    // Consolidated Scam Watch roundup duplicate (byte-identical content).
+    {
+        source: '/blog/2026-02-22-scam-watch-roundup-general-advice-to-sta-691b7f',
+        destination: '/blog/2026-02-22-scam-watch-roundup-general-advice',
+    },
+
+    // Thin / unsourced / generated blog posts redirected to cluster hubs.
+    // See SEO/reports/2026-05-22-235309-AEST-gsc-82-url-triage.md for the
+    // per-URL rationale.
+    { source: '/blog/2026-04-14-australia-loses-5m-to-new-ato-refund-scam-8b29d8', destination: '/guides/ato-scam-text-email' },
+    { source: '/blog/2026-04-14-crypto-app-scam-australians-lose-30m-to-fake-tradi-3b0eb0', destination: '/crypto-scam-checker' },
+    { source: '/blog/2026-04-14-job-seeker-scam-alert-1-5m-lost-09b290', destination: '/guides/job-scams' },
+    { source: '/blog/2026-04-14-student-loan-scam-alert-3-5m-lost-32637a', destination: '/check' },
+    { source: '/blog/2026-04-15-data-breach-hits-300-000-check-your-info-now-1de6c9', destination: '/have-i-been-scammed' },
+    { source: '/blog/2026-04-15-tax-season-scam-costs-10m-61797d', destination: '/check' },
+    { source: '/blog/2026-04-16-crypto-payment-scam-alert-1-2m-lost-89175f', destination: '/crypto-scam-checker' },
+    { source: '/blog/2026-04-16-data-breach-exposes-1-5m-users-0263c6', destination: '/have-i-been-scammed' },
+    { source: '/blog/2026-04-17-fbi-warns-of-10m-romance-scam-062bfa', destination: '/check' },
+    { source: '/blog/2026-04-18-1-5m-exposed-cyber-breach-alert-f548b1', destination: '/have-i-been-scammed' },
+    { source: '/blog/2026-04-19-new-bank-text-scam-hits-10-000-3da7dd', destination: '/guides/bank-impersonation-scams' },
+    { source: '/blog/2026-04-20-nigeria-s-n20m-text-scam-hits-8-000-443ce4', destination: '/guides/scam-text-message-examples' },
+    {
+        source: '/blog/2026-04-21-fbi-warns-of-15m-social-security-scam-980b96',
+        destination: '/blog/2026-04-17-ssa-scam-alert-imposters-steal-millions-from-us-se-e809ce',
+    },
+    { source: '/blog/2026-04-22-tax-season-scam-alert-15m-lost-694527', destination: '/check' },
+    { source: '/blog/2026-04-23-2-5m-hit-by-latest-phishing-scam-ee86c5', destination: '/guides/email-phishing-examples' },
+    { source: '/blog/2026-04-24-elderly-lose-8m-to-scam-calls-f3e54b', destination: '/scam-phone-number-checker' },
+    { source: '/blog/2026-04-27-dating-app-scam-10m-lost-in-6-months-9c58e2', destination: '/check' },
+    { source: '/blog/2026-04-27-employment-scam-costs-4m-ed6311', destination: '/guides/job-scams' },
+    { source: '/blog/2026-04-29-4-500-uk-seniors-lose-1-2m-to-pension-scam-03b54a', destination: '/check' },
+    { source: '/blog/2026-04-29-new-phishing-tactic-steals-6m-37f8b1', destination: '/guides/email-phishing-examples' },
+    { source: '/blog/2026-05-05-may-2026-13-000-uk-citizens-lose-8-5m-928998', destination: '/check' },
+    { source: '/blog/2026-05-05-nz-3-6m-lost-to-fake-bill-scam-de1bfd', destination: '/check' },
+    { source: '/blog/2026-05-07-data-breach-8-million-affected-346733', destination: '/have-i-been-scammed' },
+    { source: '/blog/2026-05-11-elderly-lose-10m-to-fake-tech-support-64672d', destination: '/scam-phone-number-checker' },
+    { source: '/blog/2026-05-15-2-5m-lost-to-new-invoice-scam-0e7ed7', destination: '/guides/email-phishing-examples' },
+    { source: '/blog/2026-05-18-10m-lost-to-fake-job-scams-4c6c3d', destination: '/guides/job-scams' },
+];
+
+/**
+ * Parse the redirects() return value out of next.config.ts. Cheap because
+ * the config is hand-written and stable — we look for `{ source: 'x',
+ * destination: 'y', permanent: true|false }` literal objects.
+ */
+function parseRedirectsFromConfig(src) {
+    const out = [];
+    const re = /\{\s*source:\s*['"]([^'"]+)['"]\s*,\s*destination:\s*['"]([^'"]+)['"]\s*,\s*permanent:\s*(true|false)\s*,?\s*\}/g;
+    let m;
+    while ((m = re.exec(src)) !== null) {
+        out.push({ source: m[1], destination: m[2], permanent: m[3] === 'true' });
+    }
+    return out;
+}
+
+const nextConfigPath = path.join(ROOT, 'next.config.ts');
+if (fs.existsSync(nextConfigPath)) {
+    const nextConfigSrc = readFile(nextConfigPath);
+    const redirects = parseRedirectsFromConfig(nextConfigSrc);
+    const redirectsBySource = new Map(redirects.map((r) => [r.source, r]));
+
+    for (const expected of REQUIRED_LEGACY_REDIRECTS) {
+        const actual = redirectsBySource.get(expected.source);
+        if (!actual) {
+            failures.push(
+                `[missing-legacy-redirect] next.config.ts no longer redirects ${expected.source} — Google Search Console will log this as Not found (404)`,
+            );
+            continue;
+        }
+        if (actual.destination !== expected.destination) {
+            failures.push(
+                `[wrong-redirect-destination] ${expected.source} should redirect to ${expected.destination}, got ${actual.destination}`,
+            );
+        }
+        if (actual.permanent !== true) {
+            failures.push(
+                `[non-permanent-redirect] ${expected.source} redirect must be permanent: true (gives a 308); currently permanent: ${actual.permanent}`,
+            );
+        }
+    }
+
+    // X-Robots-Tag invariant: must apply to /_next/static/:path* with the
+    // exact value `noindex, nofollow`.
+    const headerBlockRe = /source:\s*['"]\/_next\/static\/:path\*['"][\s\S]*?headers:\s*\[([\s\S]*?)\]/;
+    const headerBlock = nextConfigSrc.match(headerBlockRe);
+    if (!headerBlock) {
+        failures.push(
+            `[missing-asset-noindex] next.config.ts must keep the X-Robots-Tag header on /_next/static/:path* so build assets are not indexed`,
+        );
+    } else {
+        const block = headerBlock[1];
+        const keyRe = /key:\s*['"]X-Robots-Tag['"]/;
+        const valRe = /value:\s*['"]noindex,\s*nofollow['"]/;
+        if (!keyRe.test(block) || !valRe.test(block)) {
+            failures.push(
+                `[wrong-asset-noindex] /_next/static/:path* must set X-Robots-Tag to exactly "noindex, nofollow"`,
+            );
+        }
+    }
+} else {
+    failures.push('[missing-file] expected next.config.ts to exist');
+}
+
+// --------------------------------------------------------------------------
+// 2c. Sitemap must include every keyword-targeted SEO route and must not
+//     include `/_next/static`.
+// --------------------------------------------------------------------------
+
+const REQUIRED_SITEMAP_ROUTES = [
+    '/scam-website-checker',
+    '/scam-phone-number-checker',
+    '/crypto-scam-checker',
+    '/scam-checker-australia',
+    '/scam-website-checker-uk',
+    '/blog/job-scams',
+    '/guides/job-scams',
+];
+
+for (const route of REQUIRED_SITEMAP_ROUTES) {
+    if (!sitemapPaths.has(route)) {
+        failures.push(
+            `[missing-required-route] ${route} must be emitted by sitemap.ts but was not found`,
+        );
+    }
+}
+
+for (const route of sitemapPaths) {
+    if (typeof route === 'string' && route.includes('/_next/static')) {
+        failures.push(
+            `[sitemap-static-asset] sitemap.ts must never emit /_next/static URLs; found ${route}`,
         );
     }
 }

@@ -197,6 +197,65 @@ export default function Home() {
                                 </p>
                             </Link>
                         </li>
+                        <li>
+                            <Link
+                                href="/scam-website-checker"
+                                className="block h-full p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-primary hover:shadow-md transition-all"
+                            >
+                                <h3 className="font-semibold text-slate-900 mb-1">
+                                    Is this online store or website a scam?
+                                </h3>
+                                <p className="text-slate-600 text-sm">
+                                    Use the scam website checker for shopping
+                                    sites and lookalike domains before you pay.
+                                </p>
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/scam-phone-number-checker"
+                                className="block h-full p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-primary hover:shadow-md transition-all"
+                            >
+                                <h3 className="font-semibold text-slate-900 mb-1">
+                                    Is this phone number or call a scam?
+                                </h3>
+                                <p className="text-slate-600 text-sm">
+                                    Paste an SMS, voicemail transcript, or
+                                    caller&apos;s script into the scam phone
+                                    number checker.
+                                </p>
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/crypto-scam-checker"
+                                className="block h-full p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-primary hover:shadow-md transition-all"
+                            >
+                                <h3 className="font-semibold text-slate-900 mb-1">
+                                    Is this crypto site or DM a scam?
+                                </h3>
+                                <p className="text-slate-600 text-sm">
+                                    Use the crypto scam checker for wallet
+                                    drainers, fake exchanges, and investment
+                                    groups.
+                                </p>
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/guides/job-scams"
+                                className="block h-full p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-primary hover:shadow-md transition-all"
+                            >
+                                <h3 className="font-semibold text-slate-900 mb-1">
+                                    Is this job offer or recruiter a scam?
+                                </h3>
+                                <p className="text-slate-600 text-sm">
+                                    Use the job scam checker for fake recruiter
+                                    DMs, task scams, and fake-cheque onboarding
+                                    setups.
+                                </p>
+                            </Link>
+                        </li>
                     </ul>
                 </div>
             </section>

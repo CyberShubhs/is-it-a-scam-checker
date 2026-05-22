@@ -36,66 +36,64 @@ export default function HaveIBeenScammedPage() {
         startedRef.current = false;
     };
 
-    const Assessment = () => {
-        if (step === 1) {
-            return (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div>
-                        <h2 className="text-xl font-bold mb-2">Did you click a link in a suspicious message or email?</h2>
-                        <p className="text-slate-600 mb-6">This includes checking 'tracking' links, verifying accounts, or claiming prizes.</p>
-                        <div className="grid grid-cols-2 gap-4">
-                            <Button onClick={() => handleAnswer('clicked_link', true)} variant="outline" className="h-24 text-lg border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300">
-                                Yes, I clicked
-                            </Button>
-                            <Button onClick={() => handleAnswer('clicked_link', false)} variant="outline" className="h-24 text-lg border-slate-200 hover:bg-slate-50 hover:border-slate-300">
-                                No, I didn't click
-                            </Button>
-                        </div>
+    // Render the current assessment step inline. Declaring this as a nested
+    // component would reset Results' useEffect/useRef on every parent render
+    // and trips react-hooks/components-during-render.
+    let stepContent: React.ReactNode;
+    if (step === 1) {
+        stepContent = (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div>
+                    <h2 className="text-xl font-bold mb-2">Did you click a link in a suspicious message or email?</h2>
+                    <p className="text-slate-600 mb-6">This includes checking 'tracking' links, verifying accounts, or claiming prizes.</p>
+                    <div className="grid grid-cols-2 gap-4">
+                        <Button onClick={() => handleAnswer('clicked_link', true)} variant="outline" className="h-24 text-lg border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300">
+                            Yes, I clicked
+                        </Button>
+                        <Button onClick={() => handleAnswer('clicked_link', false)} variant="outline" className="h-24 text-lg border-slate-200 hover:bg-slate-50 hover:border-slate-300">
+                            No, I didn't click
+                        </Button>
                     </div>
                 </div>
-            );
-        }
-
-        if (step === 2) {
-            return (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div>
-                        <h2 className="text-xl font-bold mb-2">Did you enter any personal information?</h2>
-                        <p className="text-slate-600 mb-6">Passwords, email address, phone number, date of birth, or address.</p>
-                        <div className="grid grid-cols-2 gap-4">
-                            <Button onClick={() => handleAnswer('shared_info', true)} variant="outline" className="h-24 text-lg border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300">
-                                Yes, shared details
-                            </Button>
-                            <Button onClick={() => handleAnswer('shared_info', false)} variant="outline" className="h-24 text-lg border-slate-200 hover:bg-slate-50 hover:border-slate-300">
-                                No
-                            </Button>
-                        </div>
+            </div>
+        );
+    } else if (step === 2) {
+        stepContent = (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div>
+                    <h2 className="text-xl font-bold mb-2">Did you enter any personal information?</h2>
+                    <p className="text-slate-600 mb-6">Passwords, email address, phone number, date of birth, or address.</p>
+                    <div className="grid grid-cols-2 gap-4">
+                        <Button onClick={() => handleAnswer('shared_info', true)} variant="outline" className="h-24 text-lg border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300">
+                            Yes, shared details
+                        </Button>
+                        <Button onClick={() => handleAnswer('shared_info', false)} variant="outline" className="h-24 text-lg border-slate-200 hover:bg-slate-50 hover:border-slate-300">
+                            No
+                        </Button>
                     </div>
                 </div>
-            );
-        }
-
-        if (step === 3) {
-            return (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div>
-                        <h2 className="text-xl font-bold mb-2">Did you provide financial details or send money?</h2>
-                        <p className="text-slate-600 mb-6">Credit card numbers, bank transfers, crypto, or gift card codes.</p>
-                        <div className="grid grid-cols-2 gap-4">
-                            <Button onClick={() => handleAnswer('sent_money', true)} variant="outline" className="h-24 text-lg border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300">
-                                Yes, shared/sent
-                            </Button>
-                            <Button onClick={() => handleAnswer('sent_money', false)} variant="outline" className="h-24 text-lg border-slate-200 hover:bg-slate-50 hover:border-slate-300">
-                                No
-                            </Button>
-                        </div>
+            </div>
+        );
+    } else if (step === 3) {
+        stepContent = (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div>
+                    <h2 className="text-xl font-bold mb-2">Did you provide financial details or send money?</h2>
+                    <p className="text-slate-600 mb-6">Credit card numbers, bank transfers, crypto, or gift card codes.</p>
+                    <div className="grid grid-cols-2 gap-4">
+                        <Button onClick={() => handleAnswer('sent_money', true)} variant="outline" className="h-24 text-lg border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300">
+                            Yes, shared/sent
+                        </Button>
+                        <Button onClick={() => handleAnswer('sent_money', false)} variant="outline" className="h-24 text-lg border-slate-200 hover:bg-slate-50 hover:border-slate-300">
+                            No
+                        </Button>
                     </div>
                 </div>
-            );
-        }
-
-        return <Results answers={answers} reset={reset} />;
-    };
+            </div>
+        );
+    } else {
+        stepContent = <Results answers={answers} reset={reset} />;
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 py-12">
@@ -112,7 +110,7 @@ export default function HaveIBeenScammedPage() {
 
                 <Card className="border-0 shadow-lg mb-12">
                     <CardContent className="p-8 md:p-12">
-                        <Assessment />
+                        {stepContent}
                     </CardContent>
                 </Card>
 

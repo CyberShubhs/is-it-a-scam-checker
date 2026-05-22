@@ -1,5 +1,4 @@
 import { getDomain, getHostname, getSubdomain } from 'tldts';
-// @ts-ignore
 import levenshtein from 'fast-levenshtein';
 
 export interface UrlRiskResult {
@@ -87,8 +86,9 @@ export function analyzeUrlRisk(inputUrl: string): UrlRiskResult {
     }
 
     // 4. Branding impersonation
-    let brandDetected = false;
-    let officialBrandDomain = '';
+    //
+    // (`brandDetected` was previously tracked here as a side flag; it is
+    // unused downstream so removed.)
 
     for (const brand of BRANDS) {
         const strippedHostname = hostnameFn.replace(/[-.]/g, '');
@@ -114,7 +114,6 @@ export function analyzeUrlRisk(inputUrl: string): UrlRiskResult {
                 }
             } else {
                 // It contains the brand name, but the eTLD+1 is NOT the official brand domain.
-                brandDetected = true;
 
                 // Subdomain Impersonation: e.g. commbank.support.com
                 if (subdomainFn.includes(brand.name)) {

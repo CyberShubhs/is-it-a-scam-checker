@@ -19,19 +19,19 @@ declare global {
 
 beforeEach(() => {
     globalThis.__gtagCalls = [];
-    // Stub a gtag-like function on window.
-    (global as unknown as { window: typeof window }).window =
-        (global as unknown as { window?: typeof window }).window ||
-        ({} as Window);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).gtag = (...args: unknown[]) => {
+    // Stub a gtag-like function on window for Node-side tests where the DOM
+    // globals don't exist. Cast through `unknown` so we don't have to satisfy
+    // the full Window & typeof globalThis shape just to attach gtag.
+    const g = global as unknown as { window?: { gtag?: unknown } };
+    g.window = g.window ?? {};
+    g.window.gtag = (...args: unknown[]) => {
         globalThis.__gtagCalls.push(args);
     };
 });
 
 afterEach(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (window as any).gtag;
+    const g = global as unknown as { window?: { gtag?: unknown } };
+    if (g.window) delete g.window.gtag;
 });
 
 describe('sanitizeParams', () => {
@@ -69,14 +69,15 @@ describe('sanitizeParams', () => {
         const safe = sanitizeParams({
             check_type: undefined,
             risk_level: '',
-            // @ts-expect-error testing runtime resilience
+            // sanitizeParams now accepts a permissive `object`, so a runtime
+            // null here flows through the type checker; the assertion is a
+            // runtime-resilience test.
             page_path: null,
         });
         expect(Object.keys(safe)).toHaveLength(0);
     });
 
     it('drops keys not in the allowlist', () => {
-        // @ts-expect-error intentionally passing an unknown key
         const safe = sanitizeParams({ totally_random_key: 'x', check_type: 'url' });
         expect(safe).toEqual({ check_type: 'url' });
     });
@@ -142,8 +143,8 @@ describe('trackEvent + wrappers', () => {
     });
 
     it('does nothing when gtag is missing', () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        delete (window as any).gtag;
+        const g = global as unknown as { window?: { gtag?: unknown } };
+        if (g.window) delete g.window.gtag;
         expect(() =>
             trackEvent('no_gtag', { check_type: 'url' }),
         ).not.toThrow();
