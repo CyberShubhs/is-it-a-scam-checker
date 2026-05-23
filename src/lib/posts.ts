@@ -2,13 +2,39 @@ import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 
-/** Frontmatter fields required in every blog post. */
+/**
+ * Frontmatter fields required in every blog post.
+ *
+ * Optional schema-ready fields (added 2026-05-23) carry GEO/AEO/E-E-A-T
+ * metadata for new generated posts. Older posts that predate these fields
+ * still parse — every consumer must treat the optional fields as `undefined`.
+ */
+export type SearchIntent =
+    | 'informational'
+    | 'commercial'
+    | 'transactional'
+    | 'navigational';
+
+/** ISO 3166 region codes we currently target. `global` = no specific country. */
+export type RegionCode = 'global' | 'us' | 'uk' | 'au' | 'ca' | 'nz' | 'in';
+
 export interface PostFrontmatter {
     title: string;
     date: string; // YYYY-MM-DD
     summary: string;
     tags: string[];
     sources: string[];
+
+    /** Optional, schema-ready fields for newly generated posts. */
+    updated?: string;
+    category?: string; // must map to a BLOG_CATEGORIES slug where possible
+    primaryKeyword?: string;
+    searchIntent?: SearchIntent;
+    audience?: string;
+    region?: RegionCode | string;
+    author?: string;
+    reviewer?: string;
+    lastReviewed?: string;
 }
 
 export interface Post {
@@ -183,6 +209,64 @@ export function getCategoriesForPost(slug: string): BlogCategory[] {
  * Pick up to `limit` posts most relevant to the given post.
  * Ranking: shared-tag count, then recency. Falls back to newest posts.
  */
+/**
+ * Build the BlogPosting JSON-LD payload for a post. Exported so the page
+ * component can render it AND tests can introspect the shape without
+ * coupling to the page renderer.
+ */
+export function buildBlogPostingJsonLd(post: Post): Record<string, unknown> {
+    const url = `https://scamchecker.app/blog/${post.slug}`;
+    const fm = post.frontmatter;
+    const dateModified = fm.updated || fm.lastReviewed || fm.date;
+    const sources = Array.isArray(fm.sources)
+        ? fm.sources.filter((s) => typeof s === 'string' && /^https?:\/\//i.test(s))
+        : [];
+    const articleSection =
+        fm.category || (Array.isArray(fm.tags) && fm.tags.length > 0 ? fm.tags[0] : undefined);
+
+    const node: Record<string, unknown> = {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: fm.title,
+        description: fm.summary,
+        datePublished: fm.date,
+        dateModified,
+        author: {
+            '@type': 'Person',
+            name: fm.author || 'The Scam Checker Team',
+            url: 'https://scamchecker.app/about',
+        },
+        publisher: {
+            '@type': 'Organization',
+            name: 'Scam Checker',
+            url: 'https://scamchecker.app',
+            logo: {
+                '@type': 'ImageObject',
+                url: 'https://scamchecker.app/icon.png',
+            },
+        },
+        mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': url,
+        },
+        isAccessibleForFree: true,
+        inLanguage: 'en',
+        url,
+    };
+    if (Array.isArray(fm.tags) && fm.tags.length > 0) {
+        node.keywords = fm.tags.join(', ');
+    }
+    if (articleSection) node.articleSection = articleSection;
+    if (sources.length > 0) node.citation = sources;
+    if (fm.reviewer) {
+        node.reviewedBy = {
+            '@type': 'Person',
+            name: fm.reviewer,
+        };
+    }
+    return node;
+}
+
 export function getRelatedPosts(currentSlug: string, limit: number = 4): Post[] {
     const all = getAllPosts().filter((p) => p.slug !== currentSlug);
     const current = getPostBySlug(currentSlug);

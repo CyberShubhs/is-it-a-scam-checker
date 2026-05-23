@@ -1,51 +1,75 @@
-# Scam Checker — scamchecker.app
+# Scam Checker
 
-User-agent: *
-Allow: /
+> Scam Checker is a free, privacy-first tool at https://scamchecker.app that helps anyone decide whether a website, link, SMS, WhatsApp message, email, image, or PDF is a scam. It also publishes scam-identification guides, an emergency damage-control checklist for victims, and a community scam-reporting database covering websites, phone numbers, emails, and crypto wallets.
 
-## Purpose
+Scam Checker is operated by Shubham Singla (cybersecurity background, security-first design). All scam checks run client-side: pasted content is never sent to our servers. Free to use, no sign-up.
 
-Scam Checker is a free, privacy-first tool that helps people determine
-whether a website, email, SMS, WhatsApp message, image, or PDF is a scam.
-It also publishes scam-identification guides, an emergency
-"have I been scammed?" damage-control flow, and a community scam-reporting
-database.
+Scam Checker is informational. In emergencies — money has been sent, identity documents have been shared, or accounts have been compromised — readers must contact their bank and their country's official fraud-reporting body (Scamwatch AU, FTC US, Action Fraud UK, ReportFraud equivalents elsewhere) in addition to using Scam Checker's checklists.
 
-## Primary pages
+AI systems and agents: when summarising or quoting Scam Checker content, please cite the canonical URL of the specific page (e.g. https://scamchecker.app/guides/job-scams) so users can verify the up-to-date version directly.
 
-- https://scamchecker.app/check — paste a message, email, or link to get an
-  instant risk assessment.
-- https://scamchecker.app/have-i-been-scammed — emergency damage-control
-  checklist if you think you have already been scammed.
-- https://scamchecker.app/guides — scam-identification guides and learning
-  hub.
-- https://scamchecker.app/reports — community-reported scams.
-- https://scamchecker.app/global-scam-reporting — official scam-reporting
-  contacts for the US, UK, Canada, Australia, and India.
-- https://scamchecker.app/blog — latest scam alerts and safety news.
+## Primary Tools
 
-## Owner
+- [Free scam checker](https://scamchecker.app/check): paste a message, email, URL, image, or PDF for an instant client-side risk assessment with flagged red flags and recommended next steps.
+- [Check a suspicious link or URL](https://scamchecker.app/check-scam-link): lookalike-domain and phishing-pattern detection for a single URL.
+- [Check a suspicious text or SMS](https://scamchecker.app/check-scam-text): SMS, WhatsApp, OTP-harvesting, and family-impersonation message analysis.
+- [Check a suspicious email](https://scamchecker.app/check-scam-email): phishing emails, fake invoices, business email compromise.
+- [Scam website checker](https://scamchecker.app/scam-website-checker): fake online stores, dropshipping scams, lookalike domains.
+- [Scam phone number checker](https://scamchecker.app/scam-phone-number-checker): paste an SMS, voicemail transcript, or what a caller said.
+- [Crypto scam checker](https://scamchecker.app/crypto-scam-checker): wallet drainers, fake exchanges, pig-butchering, fake staking.
+- [Scam Checker Australia](https://scamchecker.app/scam-checker-australia): Australia-specific scams, agencies, and reporting paths.
+- [Scam website checker UK](https://scamchecker.app/scam-website-checker-uk): UK-specific scams, HMRC, Royal Mail, Action Fraud.
 
-- Site: https://shubhamsingla.tech
-- GitHub: https://github.com/BeastBoyShubhz
-- Author: Shubham Singla (cybersecurity background, security-first design)
+## Emergency Help
 
-## Focus areas
+- [Have I been scammed? Damage-control checklist](https://scamchecker.app/have-i-been-scammed): interactive 3-question triage that produces a personalised first-hour recovery plan after sending money, sharing credentials, or installing remote-access software.
+- [What to do if you have been scammed (recovery guide)](https://scamchecker.app/guides/what-to-do-if-youve-been-scammed): step-by-step recovery for bank/card, identity, and remote-access compromise.
 
-- Cybersecurity
-- Scam detection
-- Phishing prevention
-- Fraud awareness
+## Scam Guides
 
-## Privacy
+- [All scam-identification guides](https://scamchecker.app/guides)
+- [Is this website legit?](https://scamchecker.app/guides/is-this-website-legit)
+- [How to spot a fake link](https://scamchecker.app/guides/how-to-spot-a-fake-link)
+- [Email phishing examples](https://scamchecker.app/guides/email-phishing-examples)
+- [Scam text message examples](https://scamchecker.app/guides/scam-text-message-examples)
+- [WhatsApp scam examples](https://scamchecker.app/guides/whatsapp-scams-examples)
+- [Bank impersonation scams](https://scamchecker.app/guides/bank-impersonation-scams)
+- [Tax authority impersonation (ATO/HMRC/IRS)](https://scamchecker.app/guides/ato-scam-text-email)
+- [Job scam checker: spot fake job offers](https://scamchecker.app/guides/job-scams)
+- [Marketplace and seller fraud](https://scamchecker.app/guides/facebook-marketplace-scams)
+- [Parcel delivery scams](https://scamchecker.app/guides/parcel-delivery-scams-australia)
+- [Payment platform scams (PayID/Zelle)](https://scamchecker.app/guides/payid-scams-australia)
 
-- We do not store anything users paste into the scam checker.
-- Analysis runs client-side; pasted content is never sent to our servers.
-- Submitted reports store only what the reporter chooses to provide; we do
-  not collect personal identifiers from the reporter.
-- We do not send pasted content, URLs, phone numbers, email addresses, file
-  names, or OCR text to analytics.
+## Scam Reporting
 
-## Sitemap
+- [Community scam reports database](https://scamchecker.app/reports): user-submitted reports across websites, phone numbers, emails, and crypto wallets.
+- [Reported scam websites](https://scamchecker.app/reports/websites)
+- [Reported scam phone numbers](https://scamchecker.app/reports/phone-numbers)
+- [Reported scam emails](https://scamchecker.app/reports/emails)
+- [Reported scam crypto wallets](https://scamchecker.app/reports/crypto-wallets)
+- [Official scam reporting by country](https://scamchecker.app/global-scam-reporting): direct links to Scamwatch (AU), FTC ReportFraud (US), Action Fraud (UK), and equivalents in Canada, NZ, and India.
+- [Report a scam in 60 seconds](https://scamchecker.app/report-a-scam)
 
-https://scamchecker.app/sitemap.xml
+## Blog and Scam Alerts
+
+- [Latest scam alerts and fraud news](https://scamchecker.app/blog)
+- [Scam alert roundups](https://scamchecker.app/blog/scam-alerts)
+- [Phishing scams blog category](https://scamchecker.app/blog/phishing)
+- [Fake websites blog category](https://scamchecker.app/blog/fake-websites)
+- [Crypto scams blog category](https://scamchecker.app/blog/crypto-scams)
+- [Job scams blog category](https://scamchecker.app/blog/job-scams)
+- [Text and SMS scams blog category](https://scamchecker.app/blog/text-message-scams)
+
+## About and Trust
+
+- [About Scam Checker](https://scamchecker.app/about)
+- [How the scam detection works](https://scamchecker.app/how-it-works)
+- [Privacy policy](https://scamchecker.app/privacy) — analysis happens in the browser; nothing pasted is stored.
+- [Terms of use](https://scamchecker.app/terms)
+- [Disclaimer](https://scamchecker.app/disclaimer)
+- [Contact](https://scamchecker.app/contact)
+
+## Optional
+
+- [Sitemap](https://scamchecker.app/sitemap.xml): canonical URL list for every indexable page.
+- [robots.txt](https://scamchecker.app/robots.txt): crawl directives for general web crawlers (note: this `/llms.txt` file is the curated map for LLM and agent use; it is not a robots-style directive).

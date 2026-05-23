@@ -3,6 +3,7 @@ import {
     getAllPosts,
     getRelatedPosts,
     getCategoriesForPost,
+    buildBlogPostingJsonLd,
 } from '@/lib/posts';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
@@ -27,18 +28,25 @@ export async function generateMetadata({
     const post = getPostBySlug(slug);
     if (!post) return { title: 'Not Found' };
 
+    const url = `https://scamchecker.app/blog/${slug}`;
     return {
         title: `${post.frontmatter.title} | Scam Checker Blog`,
         description: post.frontmatter.summary,
-        alternates: {
-            canonical: `https://scamchecker.app/blog/${slug}`,
-        },
+        alternates: { canonical: url },
         openGraph: {
             title: post.frontmatter.title,
             description: post.frontmatter.summary,
             type: 'article',
             publishedTime: post.frontmatter.date,
-            url: `https://scamchecker.app/blog/${slug}`,
+            modifiedTime: post.frontmatter.updated || post.frontmatter.lastReviewed,
+            authors: [post.frontmatter.author || 'The Scam Checker Team'],
+            tags: post.frontmatter.tags,
+            url,
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: post.frontmatter.title,
+            description: post.frontmatter.summary,
         },
     };
 }
@@ -116,35 +124,12 @@ export default async function BlogPostPage({
                         </ul>
                     </header>
 
-                    {/* Article JSON-LD */}
+                    {/* BlogPosting JSON-LD — built by buildBlogPostingJsonLd so
+                        tests and hygiene checks can introspect the same shape. */}
                     <script
                         type="application/ld+json"
                         dangerouslySetInnerHTML={{
-                            __html: JSON.stringify({
-                                '@context': 'https://schema.org',
-                                '@type': 'Article',
-                                headline: post.frontmatter.title,
-                                description: post.frontmatter.summary,
-                                datePublished: post.frontmatter.date,
-                                dateModified: post.frontmatter.date,
-                                author: {
-                                    '@type': 'Person',
-                                    name: 'Shubham Singla',
-                                    url: 'https://shubhamsingla.tech',
-                                },
-                                publisher: {
-                                    '@type': 'Organization',
-                                    name: 'Scam Checker',
-                                    logo: {
-                                        '@type': 'ImageObject',
-                                        url: 'https://scamchecker.app/icon.png',
-                                    },
-                                },
-                                mainEntityOfPage: {
-                                    '@type': 'WebPage',
-                                    '@id': `https://scamchecker.app/blog/${slug}`,
-                                },
-                            }),
+                            __html: JSON.stringify(buildBlogPostingJsonLd(post)),
                         }}
                     />
 

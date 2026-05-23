@@ -865,6 +865,20 @@ REQUIRED STRUCTURE (every section must be present — no exceptions):
 
 WORD COUNT: Between 800 and 1200 words (body only, not frontmatter).
 
+OPENING RULE: The body must start with an answer-first sentence — what the scam is and what a reader should do — not a generic introduction or hype.
+
+PRIMARY KEYWORD: pick exactly one phrase that this post should rank for. Not a comma-stuffed list. The value of \`primaryKeyword\` in the JSON must be that single phrase.
+
+SEARCH INTENT: choose one of "informational", "commercial", "transactional", "navigational" and put it in \`searchIntent\`.
+
+CLAIM SUPPORT: for every statistic, dollar amount, named agency warning, or named incident in the body, output a \`claimSupport\` entry pairing the exact text from the body with the URL from \`sources\` that backs it. Do not include a statistic if you cannot tie it to a source you cite.
+
+SOURCES: 2-4 real, reachable URLs from government agencies (scamwatch.gov.au, ftc.gov, actionfraud.police.uk, consumer.ftc.gov, ic3.gov), major news (BBC, ABC, Reuters), or established security firms (Kaspersky, Norton, ESET). Each source URL must:
+- be a real URL you would expect to load (no placeholder paths)
+- have a clean host (no \`www.www.\`, no extra dots, no whitespace)
+- be unique within the array
+- be referenced in the body either by full URL or by hostname mention so readers can see where the claim came from
+
 OUTPUT FORMAT — Return ONLY pure JSON. No markdown fences. No commentary. No text before or after.
 CRITICAL: All newlines in the body MUST be encoded as \\n inside the JSON string. Do NOT use literal newlines inside string values.
 {
@@ -872,10 +886,16 @@ CRITICAL: All newlines in the body MUST be encoded as \\n inside the JSON string
   "summary": "Your meta description (140-155 chars)",
   "tags": ["tag1", "tag2", "tag3"],
   "sources": ["https://url1.com/article", "https://url2.com/report"],
-  "body": "Full markdown body with \\n for newlines"
-}
-
-SOURCES: 2-4 real, plausible URLs from government agencies (scamwatch.gov.au, ftc.gov, actionfraud.police.uk), major news (BBC, ABC, Reuters), or security firms (Kaspersky, Norton, ESET).`;
+  "body": "Full markdown body with \\n for newlines",
+  "primaryKeyword": "scam phone number checker",
+  "searchIntent": "informational",
+  "audience": "Adults receiving suspicious calls or SMS in AU/UK/US",
+  "region": "global",
+  "category": "${cluster.slug}",
+  "claimSupport": [
+    { "claim": "exact text snippet from the body", "source": "https://url1.com/article" }
+  ]
+}`;
 
     return {
         prompt: promptText,
@@ -984,14 +1004,25 @@ async function main(): Promise<void> {
 
     const tagYaml = JSON.stringify(post.tags);
 
+    const today = new Date().toISOString().split('T')[0];
+    const yamlEscape = (s: string) => s.replace(/"/g, '\\"');
+    const optionalLine = (key: string, value: string | undefined) =>
+        value ? `${key}: "${yamlEscape(value)}"\n` : '';
+
+    const claimSupportYaml = Array.isArray(post.claimSupport) && post.claimSupport.length > 0
+        ? `claimSupport:\n${post.claimSupport
+              .map((c) => `  - claim: "${yamlEscape(c.claim)}"\n    source: "${yamlEscape(c.source)}"`)
+              .join('\n')}\n`
+        : '';
+
     const content = `---
-title: "${post.title.replace(/"/g, '\\"')}"
-date: "${new Date().toISOString().split('T')[0]}"
-summary: "${post.summary.replace(/"/g, '\\"')}"
+title: "${yamlEscape(post.title)}"
+date: "${today}"
+summary: "${yamlEscape(post.summary)}"
 tags: ${tagYaml}
 sources:
 ${sourceYaml}
----
+${optionalLine('updated', today)}${optionalLine('category', post.category ?? cluster.slug)}${optionalLine('primaryKeyword', post.primaryKeyword)}${optionalLine('searchIntent', post.searchIntent)}${optionalLine('audience', post.audience)}${optionalLine('region', post.region ?? 'global')}${optionalLine('author', post.author ?? 'The Scam Checker Team')}${optionalLine('reviewer', post.reviewer ?? 'Shubham Singla')}${optionalLine('lastReviewed', today)}${claimSupportYaml}---
 
 ${DISCLAIMER}
 

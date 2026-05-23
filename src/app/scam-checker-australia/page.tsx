@@ -17,9 +17,28 @@ export const metadata: Metadata = {
     },
 };
 
+const TOOL_JSON_LD = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    '@id': 'https://scamchecker.app/scam-checker-australia#tool',
+    name: 'Scam Checker (Australia)',
+    url: 'https://scamchecker.app/scam-checker-australia',
+    description:
+        'Free Australia-focused scam checker. Paste an SMS, ATO/myGov email, AusPost or Linkt text, or shopping URL to spot Scamwatch-tracked patterns and find the right Australian reporting body.',
+    applicationCategory: 'SecurityApplication',
+    operatingSystem: 'Web',
+    isAccessibleForFree: true,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'AUD' },
+    inLanguage: 'en-AU',
+};
+
 export default function ScamCheckerAustraliaPage() {
     return (
         <div className="flex flex-col min-h-screen">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(TOOL_JSON_LD) }}
+            />
             <section className="bg-slate-50 py-12 md:py-20">
                 <div className="container mx-auto px-4 text-center">
                     <div className="flex justify-center items-center gap-2 mb-6 text-sm text-slate-500">

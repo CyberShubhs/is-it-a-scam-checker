@@ -17,9 +17,28 @@ export const metadata: Metadata = {
     },
 };
 
+const TOOL_JSON_LD = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    '@id': 'https://scamchecker.app/scam-phone-number-checker#tool',
+    name: 'Scam Phone Number Checker',
+    url: 'https://scamchecker.app/scam-phone-number-checker',
+    description:
+        'Paste a phone number, voicemail transcript, or scam call script. The free scam phone number checker flags impersonation, urgency, OTP harvesting, and known robocall patterns. Does not run live carrier lookup.',
+    applicationCategory: 'SecurityApplication',
+    operatingSystem: 'Web',
+    isAccessibleForFree: true,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    inLanguage: 'en',
+};
+
 export default function ScamPhoneNumberCheckerPage() {
     return (
         <div className="flex flex-col min-h-screen">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(TOOL_JSON_LD) }}
+            />
             <section className="bg-slate-50 py-12 md:py-20">
                 <div className="container mx-auto px-4 text-center">
                     <div className="flex justify-center items-center gap-2 mb-6 text-sm text-slate-500">

@@ -36,7 +36,39 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
+      - name: Check whether a post was generated
+        id: precheck
+        run: |
+          git add content/blog/
+          if git diff --cached --quiet; then
+            echo "generated=false" >> "$GITHUB_OUTPUT"
+            echo "No new post generated (likely duplicate-topic skip). Stopping cleanly."
+          else
+            echo "generated=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate (type-check, lint, tests, links, SEO, blog quality, blog sources, build)
+        if: steps.precheck.outputs.generated == 'true'
+        run: |
+          set -e
+          npm run type-check
+          npm run lint
+          npm run test -- --run
+          npm run test:links
+          npm run test:seo
+          npm run test:blog-quality
+          # Static gate on every post.
+          npm run test:blog-sources
+          # Network gate only on the freshly generated post(s). Legacy 404s
+          # in older posts are surfaced separately by a non-blocking
+          # `--soft --network` audit (see SEO/reports/), but they do not
+          # block new commits.
+          git diff --cached --name-only -- 'content/blog/*.mdx' \
+            | node scripts/check-blog-sources.mjs --network --changed-only
+          npm run build
+
       - name: Commit and push
+        if: steps.precheck.outputs.generated == 'true'
         run: |
           echo "=== Debug: generated files ==="
           ls -la content/blog/ || echo "content/blog/ does not exist"
@@ -48,17 +80,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Stage first — git diff doesn't see untracked (new) files
-          git add content/blog/
-
           echo "=== Debug: git status after staging ==="
           git status --short
           echo ""
-
-          if git diff --cached --quiet; then
-            echo "No new posts generated (possible duplicate topic). Skipping."
-            exit 0
-          fi
 
           TITLE=$(git diff --cached --name-only | head -1 | xargs basename | sed 's/\.mdx//')
           echo "=== Debug: committing post: ${TITLE} ==="

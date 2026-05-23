@@ -17,9 +17,28 @@ export const metadata: Metadata = {
     },
 };
 
+const TOOL_JSON_LD = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    '@id': 'https://scamchecker.app/scam-website-checker-uk#tool',
+    name: 'Scam Website Checker (UK)',
+    url: 'https://scamchecker.app/scam-website-checker-uk',
+    description:
+        'Free UK-focused scam website checker. Spots fake Royal Mail, Evri, HMRC, DVLA, and shopping site fraud and links to Action Fraud reporting.',
+    applicationCategory: 'SecurityApplication',
+    operatingSystem: 'Web',
+    isAccessibleForFree: true,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'GBP' },
+    inLanguage: 'en-GB',
+};
+
 export default function ScamWebsiteCheckerUKPage() {
     return (
         <div className="flex flex-col min-h-screen">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(TOOL_JSON_LD) }}
+            />
             <section className="bg-slate-50 py-12 md:py-20">
                 <div className="container mx-auto px-4 text-center">
                     <div className="flex justify-center items-center gap-2 mb-6 text-sm text-slate-500">

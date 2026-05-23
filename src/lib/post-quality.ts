@@ -6,12 +6,37 @@
  * already on disk so CI fails until they're fixed or removed).
  */
 
+/**
+ * One claim → source note. The generator must emit one entry for every
+ * statistic, dollar amount, agency warning, or named incident in the body,
+ * each tied to the source URL that supports it.
+ */
+export interface ClaimSupport {
+    /** Exact phrase or sentence from the body that makes the factual claim. */
+    claim: string;
+    /** URL from the `sources` array that backs this claim. */
+    source: string;
+}
+
 export interface GeneratedPost {
     title: string;
     summary: string;
     tags: string[];
     sources: string[];
     body: string;
+
+    /** Optional schema-ready fields the generator now produces. */
+    updated?: string;
+    category?: string;
+    primaryKeyword?: string;
+    searchIntent?: 'informational' | 'commercial' | 'transactional' | 'navigational';
+    audience?: string;
+    region?: string;
+    author?: string;
+    reviewer?: string;
+    lastReviewed?: string;
+    /** Per-claim support notes. */
+    claimSupport?: ClaimSupport[];
 }
 
 /**
@@ -81,6 +106,34 @@ const PLACEHOLDER_SOURCE_PATTERNS = [
     'xxxxx',
 ];
 
+/**
+ * Patterns that indicate a malformed URL host. Hit during a real auto-blog
+ * post (2026-05-21 government-grant) where the AI emitted `www.www.ftc.gov`.
+ */
+const MALFORMED_HOST_PATTERNS: RegExp[] = [
+    /^https?:\/\/www\.www\./i, // double www
+    /^https?:\/\/\.+/i, // leading dots
+    /^https?:\/\/[^/]*\s/, // whitespace in host
+    /^https?:\/\/[^/]*--+\./, // double-dash in subdomain (typosquat-ish)
+    /^https?:\/\/[^/]*\.\./, // double dot
+];
+
+/** Heuristic patterns that look like a statistic or named-incident claim. */
+const CLAIM_PATTERNS: RegExp[] = [
+    /[$£€¥₹]\s?\d[\d.,]*\s?(million|billion|m|bn|k|thousand)?/gi, // money
+    /\b\d{1,3}(,\d{3})+\b/g, // big numbers with commas
+    /\b\d+(\.\d+)?\s?(million|billion|thousand)\b/gi, // "4.5 million"
+    /\bover\s+\d+\b/gi, // "over 4,000"
+];
+
+function hostnameOf(url: string): string {
+    try {
+        return new URL(url).hostname.toLowerCase();
+    } catch {
+        return '';
+    }
+}
+
 /** Count meaningful words in a markdown body. */
 export function countBodyWords(body: string): number {
     return body
@@ -129,19 +182,98 @@ export function validateGeneratedPostQuality(
         reasons.push(`Body is ${wc} words; needs at least ${minWordCount}.`);
     }
 
-    // Sources
+    // Sources — must be valid http(s), well-formed host, non-placeholder,
+    // and non-duplicate. Hit on real auto-published posts (e.g. 2026-05-21
+    // government-grant) emitting `www.www.ftc.gov`.
     const validSources = (post.sources || []).filter(
         (s) => typeof s === 'string' && /^https?:\/\//i.test(s.trim()),
     );
     if (validSources.length < 2) {
         reasons.push(`Only ${validSources.length} valid source URL(s); needs at least 2.`);
     }
+    const seenSources = new Set<string>();
     for (const src of post.sources || []) {
-        const lower = (src || '').toLowerCase();
+        const trimmed = (src || '').trim();
+        const lower = trimmed.toLowerCase();
         for (const bad of PLACEHOLDER_SOURCE_PATTERNS) {
             if (lower.includes(bad)) {
                 reasons.push(`Placeholder source URL detected: ${src}`);
                 break;
+            }
+        }
+        for (const re of MALFORMED_HOST_PATTERNS) {
+            if (re.test(trimmed)) {
+                reasons.push(`Malformed source host (likely a generator typo): ${src}`);
+                break;
+            }
+        }
+        const host = hostnameOf(trimmed);
+        if (host.startsWith('www.www.')) {
+            // Double-safety in case the regex above misses an edge case.
+            reasons.push(`Malformed source host (double www): ${src}`);
+        }
+        if (seenSources.has(lower)) {
+            reasons.push(`Duplicate source URL: ${src}`);
+        }
+        seenSources.add(lower);
+    }
+
+    // Source relevance — every source host must appear referenced somewhere
+    // in the body (raw URL OR hostname mention) so a post can't cite an
+    // unrelated authority page just to look credible.
+    if (validSources.length >= 2) {
+        const bodyLowerForRel = body.toLowerCase();
+        for (const src of validSources) {
+            const host = hostnameOf(src).replace(/^www\./, '');
+            if (!host) continue;
+            const base = host.split('.').slice(-2).join('.'); // e.g. ftc.gov
+            const referenced =
+                bodyLowerForRel.includes(host) ||
+                bodyLowerForRel.includes(base) ||
+                bodyLowerForRel.includes(src.toLowerCase());
+            if (!referenced) {
+                reasons.push(
+                    `Source ${src} is never referenced in the body — likely an unrelated authority cite.`,
+                );
+            }
+        }
+    }
+
+    // Ungrounded claims — every dollar amount / big number in the body must
+    // be backed by a claimSupport entry whose source is one of the cited
+    // URLs. Skipped when claimSupport is absent (back-compat for old posts).
+    if (Array.isArray(post.claimSupport)) {
+        const claimSet = new Set(post.claimSupport.map((c) => c.claim.toLowerCase()));
+        const claimSourceHosts = new Set(
+            post.claimSupport
+                .map((c) => hostnameOf(c.source).replace(/^www\./, ''))
+                .filter(Boolean),
+        );
+        const validSourceHosts = new Set(
+            validSources.map((s) => hostnameOf(s).replace(/^www\./, '')),
+        );
+        // Every claimSupport source must be in the post's source list.
+        for (const host of claimSourceHosts) {
+            if (!validSourceHosts.has(host)) {
+                reasons.push(
+                    `claimSupport references host ${host} which is not in the sources list.`,
+                );
+            }
+        }
+        // Every detectable statistic must have a claimSupport entry that
+        // contains it (substring match — generous on purpose).
+        const detectedClaims = new Set<string>();
+        for (const re of CLAIM_PATTERNS) {
+            for (const m of body.matchAll(re)) {
+                detectedClaims.add(m[0].toLowerCase());
+            }
+        }
+        for (const detected of detectedClaims) {
+            const supported = [...claimSet].some((c) => c.includes(detected));
+            if (!supported) {
+                reasons.push(
+                    `Claim "${detected}" appears in the body but is not in claimSupport.`,
+                );
             }
         }
     }

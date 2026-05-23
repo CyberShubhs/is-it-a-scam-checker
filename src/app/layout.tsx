@@ -53,25 +53,50 @@ export default function RootLayout({
                 <main className="flex-1">
                     {children}
                 </main>
+                {/* Site-wide Organization + WebSite JSON-LD. Kept here so
+                    every route inherits the entity definition. The home page
+                    can layer FAQ / WebApplication on top of this. */}
                 <script
                     type="application/ld+json"
                     dangerouslySetInnerHTML={{
                         __html: JSON.stringify({
-                            "@context": "https://schema.org",
-                            "@type": "Organization",
-                            "name": "Scam Checker",
-                            "url": "https://scamchecker.app",
-                            "logo": "https://scamchecker.app/icon.png",
-                            "sameAs": [
-                                "https://shubhamsingla.tech",
-                                "https://github.com/BeastBoyShubhz"
+                            '@context': 'https://schema.org',
+                            '@graph': [
+                                {
+                                    '@type': 'Organization',
+                                    '@id': 'https://scamchecker.app/#organization',
+                                    name: 'Scam Checker',
+                                    url: 'https://scamchecker.app',
+                                    logo: {
+                                        '@type': 'ImageObject',
+                                        url: 'https://scamchecker.app/icon.png',
+                                    },
+                                    description:
+                                        'Free, privacy-first scam checker. Paste a message, email, link, image, or PDF to detect fraud — analysis runs in the browser, nothing is stored.',
+                                    sameAs: [
+                                        'https://shubhamsingla.tech',
+                                        'https://github.com/BeastBoyShubhz',
+                                    ],
+                                    founder: {
+                                        '@type': 'Person',
+                                        name: 'Shubham Singla',
+                                        url: 'https://shubhamsingla.tech',
+                                    },
+                                },
+                                {
+                                    '@type': 'WebSite',
+                                    '@id': 'https://scamchecker.app/#website',
+                                    url: 'https://scamchecker.app',
+                                    name: 'Scam Checker',
+                                    description:
+                                        'Check if a message, link, email, SMS, image, or PDF is a scam. Free, private, no sign-up.',
+                                    inLanguage: 'en',
+                                    publisher: {
+                                        '@id': 'https://scamchecker.app/#organization',
+                                    },
+                                },
                             ],
-                            "founder": {
-                                "@type": "Person",
-                                "name": "Shubham Singla",
-                                "url": "https://shubhamsingla.tech"
-                            }
-                        })
+                        }),
                     }}
                 />
                 <Footer />

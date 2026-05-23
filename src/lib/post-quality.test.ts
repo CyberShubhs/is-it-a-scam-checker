@@ -24,10 +24,12 @@ function buildPassingBody(): string {
         )
         .join(' ');
     const sections = HEADINGS.map((h) => `${h}\n\n${filler}`).join('\n\n');
+    // Source hostnames must appear in the body so source-relevance passes.
     const links = `
 
 Use the [free scam checker](/check) and read the [job scam checker guide](/guides/job-scams) if relevant.
 Source: https://www.scamwatch.gov.au/something-real and https://reportfraud.ftc.gov/other-real.
+According to the FBI's IC3 report (ic3.gov) and the FTC's imposter-scam release (ftc.gov), the trend continues.
 `;
     return sections + links;
 }
@@ -168,5 +170,91 @@ describe('validateGeneratedPostQuality', () => {
             clusterRoutes: ['/guides/job-scams'],
         });
         expect(reasons.some((r) => r.includes('repeated') && r.includes('scamwatch.gov.au'))).toBe(true);
+    });
+
+    it('rejects malformed www.www. source hosts', () => {
+        const { post, body } = buildPassingPost();
+        const bad: GeneratedPost = {
+            ...post,
+            sources: ['https://www.www.ftc.gov/news', post.sources[1]],
+        };
+        const reasons = validateGeneratedPostQuality(bad, body, {
+            clusterRoutes: ['/guides/job-scams'],
+        });
+        expect(reasons.some((r) => r.includes('Malformed source host'))).toBe(true);
+    });
+
+    it('rejects duplicate source URLs', () => {
+        const { post, body } = buildPassingPost();
+        const dup: GeneratedPost = {
+            ...post,
+            sources: [post.sources[0], post.sources[0]],
+        };
+        const reasons = validateGeneratedPostQuality(dup, body, {
+            clusterRoutes: ['/guides/job-scams'],
+        });
+        expect(reasons.some((r) => r.includes('Duplicate source URL'))).toBe(true);
+    });
+
+    it('rejects sources never referenced anywhere in the body', () => {
+        const { post, body } = buildPassingPost();
+        const unrelated: GeneratedPost = {
+            ...post,
+            sources: [
+                'https://www.bbc.com/news/technology-99999',
+                'https://www.reuters.com/world/asia-pacific/foobar-99999',
+            ],
+        };
+        const reasons = validateGeneratedPostQuality(unrelated, body, {
+            clusterRoutes: ['/guides/job-scams'],
+        });
+        expect(reasons.some((r) => r.includes('never referenced in the body'))).toBe(true);
+    });
+
+    it('rejects ungrounded claims when claimSupport is present', () => {
+        const { post, body } = buildPassingPost();
+        const claimedNumber = ' Australians lost $4.5 million to this scam last month. ';
+        const bodyWithClaim = body + '\n\n' + claimedNumber;
+        const withSupport: GeneratedPost = {
+            ...post,
+            // claimSupport doesn't cover the $4.5 million claim
+            claimSupport: [
+                { claim: 'Something else entirely', source: post.sources[0] },
+            ],
+        };
+        const reasons = validateGeneratedPostQuality(withSupport, bodyWithClaim, {
+            clusterRoutes: ['/guides/job-scams'],
+        });
+        expect(reasons.some((r) => r.includes('not in claimSupport'))).toBe(true);
+    });
+
+    it('passes a post with claimSupport that covers every claim', () => {
+        const { post, body } = buildPassingPost();
+        const claimedNumber = 'Australians lost $4.5 million to this scam last month.';
+        const bodyWithClaim = body + '\n\n' + claimedNumber;
+        const withSupport: GeneratedPost = {
+            ...post,
+            claimSupport: [
+                { claim: claimedNumber, source: post.sources[0] },
+            ],
+        };
+        const reasons = validateGeneratedPostQuality(withSupport, bodyWithClaim, {
+            clusterRoutes: ['/guides/job-scams'],
+        });
+        expect(reasons).toEqual([]);
+    });
+
+    it('rejects claimSupport entries that cite sources not in the sources list', () => {
+        const { post, body } = buildPassingPost();
+        const withSupport: GeneratedPost = {
+            ...post,
+            claimSupport: [
+                { claim: 'something', source: 'https://unrelated.example.com/article' },
+            ],
+        };
+        const reasons = validateGeneratedPostQuality(withSupport, body, {
+            clusterRoutes: ['/guides/job-scams'],
+        });
+        expect(reasons.some((r) => r.includes('not in the sources list'))).toBe(true);
     });
 });

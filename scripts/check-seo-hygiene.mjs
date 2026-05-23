@@ -465,6 +465,102 @@ for (const { route, file } of CRITICAL_PAGES) {
 // Summary
 // --------------------------------------------------------------------------
 
+// --------------------------------------------------------------------------
+// 6. Blog page template must keep BlogPosting JSON-LD with author, publisher,
+//    citation, and the canonical mainEntityOfPage — these are emitted via
+//    buildBlogPostingJsonLd in src/lib/posts.ts. If anyone refactors and
+//    breaks the wiring, we want to know.
+// --------------------------------------------------------------------------
+
+const blogTemplatePath = path.join(APP, 'blog', '[slug]', 'page.tsx');
+const postsLibPath = path.join(ROOT, 'src', 'lib', 'posts.ts');
+
+if (fs.existsSync(blogTemplatePath)) {
+    const tpl = readFile(blogTemplatePath);
+    if (!tpl.includes('buildBlogPostingJsonLd')) {
+        failures.push(
+            `[blog-jsonld] ${relPath(blogTemplatePath)} must render JSON-LD via buildBlogPostingJsonLd so the BlogPosting shape stays uniform.`,
+        );
+    }
+    if (!tpl.includes('alternates') || !tpl.includes('canonical')) {
+        failures.push(
+            `[blog-canonical] ${relPath(blogTemplatePath)} must export a canonical URL in generateMetadata.`,
+        );
+    }
+}
+
+if (fs.existsSync(postsLibPath)) {
+    const libSrc = readFile(postsLibPath);
+    const required = [
+        "@type': 'BlogPosting'",
+        "'@type': 'BlogPosting'",
+        'publisher',
+        'mainEntityOfPage',
+        'citation',
+        'isAccessibleForFree',
+    ];
+    // Each required token must appear at least once in posts.ts (the JSON-LD
+    // builder source).
+    const missing = required.filter((token) => !libSrc.includes(token.replace("@type': 'BlogPosting'", '')));
+    // We do the check by stripping the surrounding quote-style ambiguity.
+    if (!libSrc.includes("'BlogPosting'") && !libSrc.includes('"BlogPosting"')) {
+        failures.push(`[blog-jsonld-shape] ${relPath(postsLibPath)} must produce '@type: BlogPosting' JSON-LD.`);
+    }
+    for (const token of ['publisher', 'mainEntityOfPage', 'citation', 'isAccessibleForFree']) {
+        if (!libSrc.includes(token)) {
+            failures.push(`[blog-jsonld-shape] ${relPath(postsLibPath)} BlogPosting builder must emit "${token}".`);
+        }
+    }
+    void missing;
+}
+
+// --------------------------------------------------------------------------
+// 7. public/llms.txt must follow the Answer.AI proposal shape and not
+//    masquerade as a robots.txt.
+// --------------------------------------------------------------------------
+
+const llmsPath = path.join(PUBLIC_DIR, 'llms.txt');
+if (fs.existsSync(llmsPath)) {
+    const body = readFile(llmsPath);
+    if (!/^# Scam Checker/m.test(body)) {
+        failures.push(`[llms-h1] public/llms.txt must start with an "# Scam Checker" H1.`);
+    }
+    if (!/^>\s+\S/m.test(body)) {
+        failures.push(`[llms-blockquote] public/llms.txt must contain a blockquote summary (line starting with "> ").`);
+    }
+    for (const h2 of [
+        '## Primary Tools',
+        '## Emergency Help',
+        '## Scam Guides',
+        '## Scam Reporting',
+        '## Blog and Scam Alerts',
+        '## About and Trust',
+    ]) {
+        if (!body.includes(h2)) {
+            failures.push(`[llms-section] public/llms.txt missing required H2: ${h2}`);
+        }
+    }
+    for (const requiredLink of [
+        '/check',
+        '/have-i-been-scammed',
+        '/guides',
+        '/reports',
+        '/global-scam-reporting',
+        '/blog',
+        '/sitemap.xml',
+    ]) {
+        if (!body.includes(requiredLink)) {
+            failures.push(`[llms-link] public/llms.txt missing required link: ${requiredLink}`);
+        }
+    }
+    if (/^User-agent:/mi.test(body) || /^Allow:\s*\//mi.test(body)) {
+        failures.push(`[llms-robots-leak] public/llms.txt must not contain robots.txt directives (User-agent / Allow). Those belong in robots.txt.`);
+    }
+    if (/example\.com|placeholder|yourdomain/i.test(body)) {
+        failures.push(`[llms-placeholder] public/llms.txt contains a placeholder URL.`);
+    }
+}
+
 console.log(`\nChecked ${sitemapPaths.size} sitemap routes.`);
 console.log(`Scanned ${SCAN_DIRS.length} directories for prompt-leak fragments.`);
 

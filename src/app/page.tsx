@@ -577,14 +577,25 @@ export default function Home() {
                     __html: JSON.stringify({
                         "@context": "https://schema.org",
                         "@graph": [
+                            // WebSite + Organization are now emitted site-wide
+                            // from src/app/layout.tsx. The previous SearchAction
+                            // here was misleading — there is no /?q= search
+                            // surface — so it was removed (structured data must
+                            // match visible content).
                             {
-                                "@type": "WebSite",
+                                "@type": "WebApplication",
+                                "@id": "https://scamchecker.app/#scam-checker-app",
                                 "name": "Scam Checker",
-                                "url": "https://scamchecker.app",
-                                "potentialAction": {
-                                    "@type": "SearchAction",
-                                    "target": "https://scamchecker.app/?q={search_term_string}",
-                                    "query-input": "required name=search_term_string"
+                                "url": "https://scamchecker.app/check",
+                                "description":
+                                    "Free, privacy-first scam checker. Paste a message, email, URL, SMS, image, or PDF and get an instant client-side risk assessment with the red flags called out.",
+                                "applicationCategory": "SecurityApplication",
+                                "operatingSystem": "Web",
+                                "isAccessibleForFree": true,
+                                "offers": {
+                                    "@type": "Offer",
+                                    "price": "0",
+                                    "priceCurrency": "USD"
                                 }
                             },
                             {
