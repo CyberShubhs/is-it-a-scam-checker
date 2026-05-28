@@ -36,19 +36,34 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
-      - name: Check whether a post was generated
+      - name: Detect what changed
         id: precheck
         run: |
-          git add content/blog/
-          if git diff --cached --quiet; then
-            echo "generated=false" >> "$GITHUB_OUTPUT"
-            echo "No new post generated (likely duplicate-topic skip). Stopping cleanly."
+          # Stage BOTH the new post (if any) AND the question-bank ledger.
+          # A single duplicate-topic skip used to stop the workflow with no
+          # ledger commit — that meant the same colliding question got
+          # re-picked the next day. Now the ledger is committed even when
+          # no post is generated, so the skip persists.
+          git add content/blog/ data/used-blog-questions.json
+
+          if git diff --cached --quiet -- content/blog/; then
+            echo "post_generated=false" >> "$GITHUB_OUTPUT"
+            echo "No new blog post staged."
           else
-            echo "generated=true" >> "$GITHUB_OUTPUT"
+            echo "post_generated=true" >> "$GITHUB_OUTPUT"
+            echo "New blog post staged."
+          fi
+
+          if git diff --cached --quiet -- data/used-blog-questions.json; then
+            echo "ledger_changed=false" >> "$GITHUB_OUTPUT"
+            echo "Question-bank ledger unchanged."
+          else
+            echo "ledger_changed=true" >> "$GITHUB_OUTPUT"
+            echo "Question-bank ledger changed."
           fi
 
       - name: Validate (type-check, lint, tests, links, SEO, blog quality, blog sources, build)
-        if: steps.precheck.outputs.generated == 'true'
+        if: steps.precheck.outputs.post_generated == 'true'
         run: |
           set -e
           npm run type-check
@@ -67,8 +82,8 @@ jobs:
             | node scripts/check-blog-sources.mjs --network --changed-only
           npm run build
 
-      - name: Commit and push
-        if: steps.precheck.outputs.generated == 'true'
+      - name: Commit and push (new blog post)
+        if: steps.precheck.outputs.post_generated == 'true'
         run: |
           echo "=== Debug: generated files ==="
           ls -la content/blog/ || echo "content/blog/ does not exist"
@@ -84,10 +99,36 @@ jobs:
           git status --short
           echo ""
 
-          TITLE=$(git diff --cached --name-only | head -1 | xargs basename | sed 's/\.mdx//')
+          TITLE=$(git diff --cached --name-only -- 'content/blog/*.mdx' | head -1 | xargs basename | sed 's/\.mdx//')
           echo "=== Debug: committing post: ${TITLE} ==="
+          # The commit includes the staged ledger update so the question is
+          # marked "used" in the same commit that publishes the post.
           git commit -m "blog: auto-publish ${TITLE}"
           echo ""
           echo "=== Debug: pushing to origin main ==="
           git push origin main
           echo "=== Done: push successful ==="
+
+      - name: Commit and push (ledger-only — duplicate-topic skips)
+        if: steps.precheck.outputs.post_generated == 'false' && steps.precheck.outputs.ledger_changed == 'true'
+        run: |
+          # The generator skipped one or more questions as duplicate-topic
+          # without producing a publishable post. We still commit the ledger
+          # so the same colliding questions do not stop tomorrow's run.
+          echo "=== Debug: ledger-only commit ==="
+          git diff --cached --stat
+          echo ""
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git commit -m "blog: record duplicate-topic skips in question-bank ledger"
+          git push origin main
+          echo "=== Done: ledger-only push successful ==="
+
+      - name: Nothing to commit
+        if: steps.precheck.outputs.post_generated == 'false' && steps.precheck.outputs.ledger_changed == 'false'
+        run: |
+          # No post, no ledger change — quality-gate failure or provider
+          # error. Exit cleanly; tomorrow's scheduled run will try again.
+          echo "No blog post and no ledger change to commit. Exiting cleanly."

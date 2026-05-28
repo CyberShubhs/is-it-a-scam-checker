@@ -20,6 +20,14 @@ import {
     validateGeneratedPostQuality,
     type GeneratedPost,
 } from '../src/lib/post-quality';
+import {
+    loadQuestionBank,
+    listRemainingQuestions,
+    pickUnusedQuestion,
+    recordUsedQuestion,
+    recordSkippedQuestion,
+    type QuestionBankEntry,
+} from '../src/lib/question-bank';
 
 // ── Safety guardrails ──────────────────────────────────────────────────────
 
@@ -319,100 +327,10 @@ function detectAIPatterns(content: string): string[] {
 
 // ── FindQuestions question bank ────────────────────────────────────────────
 //
-// The 40-question bank (data/findquestions-bank.json) is sourced from the
-// FindQuestions/HeyTony PDF in SEO/. The generator reserves one unused
-// question per run and writes a post that answers it in a clearly-framed
-// realistic-example-scenario format. Used IDs persist in
-// data/used-blog-questions.json so the same question never produces two
-// posts. When the bank is exhausted we fall back to the legacy
-// random-cluster prompt and log a clear warning.
-
-interface QuestionBankEntry {
-    id: string;
-    question: string;
-    intent: string;
-}
-
-interface QuestionBankFile {
-    source: string;
-    sourceLabel?: string;
-    notes?: string;
-    cluster?: string;
-    questions: QuestionBankEntry[];
-}
-
-interface UsedQuestionsFile {
-    used: { id: string; slug: string; date: string }[];
-}
-
-const QUESTION_BANK_PATH = path.join(
-    process.cwd(),
-    'data',
-    'findquestions-bank.json',
-);
-const USED_QUESTIONS_PATH = path.join(
-    process.cwd(),
-    'data',
-    'used-blog-questions.json',
-);
-
-function loadQuestionBank(): QuestionBankFile | null {
-    if (!fs.existsSync(QUESTION_BANK_PATH)) return null;
-    try {
-        const raw = fs.readFileSync(QUESTION_BANK_PATH, 'utf-8');
-        const parsed = JSON.parse(raw) as QuestionBankFile;
-        if (!Array.isArray(parsed.questions)) return null;
-        return parsed;
-    } catch (err) {
-        console.warn(`⚠️  Failed to read question bank: ${(err as Error).message}`);
-        return null;
-    }
-}
-
-function loadUsedQuestions(): UsedQuestionsFile {
-    if (!fs.existsSync(USED_QUESTIONS_PATH)) {
-        return { used: [] };
-    }
-    try {
-        const raw = fs.readFileSync(USED_QUESTIONS_PATH, 'utf-8');
-        const parsed = JSON.parse(raw);
-        if (!parsed || !Array.isArray(parsed.used)) return { used: [] };
-        return parsed as UsedQuestionsFile;
-    } catch (err) {
-        console.warn(`⚠️  Failed to read used-questions ledger: ${(err as Error).message}`);
-        return { used: [] };
-    }
-}
-
-function pickUnusedQuestion(): {
-    question: QuestionBankEntry;
-    bank: QuestionBankFile;
-} | null {
-    const bank = loadQuestionBank();
-    if (!bank) return null;
-    const used = loadUsedQuestions();
-    const usedIds = new Set(used.used.map((u) => u.id));
-    const remaining = bank.questions.filter((q) => !usedIds.has(q.id));
-    if (remaining.length === 0) return null;
-    // Pick the first unused question (deterministic) so the order of the
-    // bank also defines the editorial publishing order. Randomising would
-    // make schedule-checking harder for the editor.
-    return { question: remaining[0], bank };
-}
-
-function recordUsedQuestion(
-    questionId: string,
-    slug: string,
-    date: string,
-): void {
-    const ledger = loadUsedQuestions();
-    ledger.used.push({ id: questionId, slug, date });
-    fs.writeFileSync(
-        USED_QUESTIONS_PATH,
-        `${JSON.stringify(ledger, null, 2)}\n`,
-        'utf-8',
-    );
-}
+// The bank lives in data/findquestions-bank.json and the used/skipped
+// ledger in data/used-blog-questions.json. All pick/skip helpers are now
+// exported from src/lib/question-bank.ts so vitest can drive them against
+// a temp directory without invoking this CLI script.
 
 // ── Existing post dedup ────────────────────────────────────────────────────
 
@@ -1122,46 +1040,14 @@ async function tryProvider(
     return parsed;
 }
 
-interface GeneratedPostWithCluster {
-    post: GeneratedPost;
-    cluster: KeywordCluster;
-    /** Set when the post was generated from a FindQuestions-bank question. */
-    questionId?: string;
-}
-
-async function generatePost(): Promise<GeneratedPostWithCluster> {
-    const existingTitles = getExistingTitles();
-
-    // Prefer the FindQuestions bank — each unused question becomes one post.
-    // If the bank is exhausted (or missing), fall back to the legacy random
-    // cluster prompt so the action does not break.
-    const picked = pickUnusedQuestion();
-    let prompt: string;
-    let cluster: KeywordCluster;
-    let questionId: string | undefined;
-    if (picked) {
-        console.log(
-            `🧭 Using FindQuestions bank entry ${picked.question.id}: "${picked.question.question}"`,
-        );
-        const built = buildQuestionPrompt(picked.question, existingTitles);
-        prompt = built.prompt;
-        cluster = built.cluster;
-        questionId = built.questionId;
-    } else {
-        const bank = loadQuestionBank();
-        if (bank) {
-            console.warn(
-                '⚠️  Every question in data/findquestions-bank.json has been used. ' +
-                    'Falling back to the legacy random-cluster prompt. Refresh the ' +
-                    'question bank before relying on auto-blog again.',
-            );
-        }
-        const built = buildPrompt(existingTitles);
-        prompt = built.prompt;
-        cluster = built.cluster;
-    }
-
-    // Build provider list: Gemini first, Groq fallback
+/**
+ * Drive the configured providers (Gemini → Groq) against a single built
+ * prompt. Returns the parsed post or throws when every provider fails.
+ *
+ * Separated from question selection so the retry loop in main() can call
+ * this once per attempt without re-running pickUnusedQuestion logic.
+ */
+async function runProvidersForPrompt(prompt: string): Promise<GeneratedPost> {
     const providers: { name: string; fn: (p: string) => Promise<string> }[] = [];
     if (process.env.GEMINI_API_KEY) {
         providers.push({ name: 'Gemini', fn: callGemini });
@@ -1174,15 +1060,15 @@ async function generatePost(): Promise<GeneratedPostWithCluster> {
     }
 
     let lastError = '';
-    for (const { name, fn } of providers) {
+    for (let i = 0; i < providers.length; i++) {
+        const { name, fn } = providers[i];
         try {
-            const post = await tryProvider(name, fn, prompt);
-            return { post, cluster, questionId };
+            return await tryProvider(name, fn, prompt);
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : String(err);
             lastError = msg;
             console.log(`\n⚠️  ${name} failed: ${msg}`);
-            if (providers.indexOf({ name, fn }) < providers.length - 1) {
+            if (i < providers.length - 1) {
                 console.log(`🔄 Trying next provider...\n`);
             }
         }
@@ -1191,47 +1077,90 @@ async function generatePost(): Promise<GeneratedPostWithCluster> {
     throw new Error(`All AI providers failed. Last error: ${lastError}`);
 }
 
+// Note: the previous single-shot `generatePost()` helper was replaced by the
+// retry-aware `attemptOneQuestion()` loop in main(). Keeping a thin
+// wrapper around runProvidersForPrompt is no longer useful — there is no
+// other caller in the codebase.
+
 // ── Disclaimer ─────────────────────────────────────────────────────────────
 
 const DISCLAIMER =
     '> **Disclaimer:** This post is for informational purposes only and does not constitute legal or financial advice. If you believe you have been targeted, contact your bank and local authorities immediately.';
 
-// ── Main ───────────────────────────────────────────────────────────────────
+// ── Per-attempt result envelope ────────────────────────────────────────────
 
-async function main(): Promise<void> {
-    const blogDir = path.join(process.cwd(), 'content', 'blog');
-    if (!fs.existsSync(blogDir)) {
-        fs.mkdirSync(blogDir, { recursive: true });
+/**
+ * What happened when we tried to publish one generated post.
+ *
+ *  - `success`           — file written, ledger updated, action should commit.
+ *  - `duplicate-topic`   — dedupe gate rejected the draft; question is
+ *                          permanently skipped and the action should try the
+ *                          next question without stopping.
+ *  - `quality-fail`      — deterministic quality gate rejected the draft;
+ *                          the question is NOT skipped (the AI may produce
+ *                          something better next run) but we still try the
+ *                          next question in this run.
+ */
+type AttemptOutcome =
+    | { type: 'success'; slug: string; questionId?: string }
+    | {
+          type: 'duplicate-topic';
+          questionId?: string;
+          matched?: { slug?: string; title?: string };
+      }
+    | { type: 'quality-fail'; reasons: string[]; questionId?: string };
+
+/**
+ * Build prompt → call providers → dedupe → quality-gate → write MDX → record
+ * the ledger entry. Returns a structured outcome so the caller can decide
+ * whether to retry, skip, or stop.
+ */
+async function attemptOneQuestion(
+    blogDir: string,
+    questionEntry: QuestionBankEntry | null,
+): Promise<AttemptOutcome> {
+    const existingTitles = getExistingTitles();
+    let prompt: string;
+    let cluster: KeywordCluster;
+    let questionId: string | undefined;
+
+    if (questionEntry) {
+        console.log(
+            `🧭 Trying FindQuestions bank entry ${questionEntry.id}: "${questionEntry.question}"`,
+        );
+        const built = buildQuestionPrompt(questionEntry, existingTitles);
+        prompt = built.prompt;
+        cluster = built.cluster;
+        questionId = built.questionId;
+    } else {
+        // Bank exhausted — fall back to the legacy random-cluster prompt so
+        // the action still produces something useful on long-tail days.
+        const built = buildPrompt(existingTitles);
+        prompt = built.prompt;
+        cluster = built.cluster;
     }
 
-    console.log('🔍 Generating blog post via AI (Gemini → Groq fallback)...');
-
-    const { post, cluster, questionId } = await generatePost();
-
+    const post = await runProvidersForPrompt(prompt);
     console.log(`📝 Topic: ${post.title}`);
-    console.log(`📂 Cluster: ${cluster.slug} (routes: ${cluster.relatedInternalRoutes.join(', ')})`);
+    console.log(
+        `📂 Cluster: ${cluster.slug} (routes: ${cluster.relatedInternalRoutes.join(', ')})`,
+    );
 
-    // Strip any AI patterns that slipped through
     const body = stripAIPatterns(post.body);
-
-    // Detect remaining AI patterns (log warning but don't block)
     const remaining = detectAIPatterns(body);
     if (remaining.length > 0) {
         console.warn(`⚠️  AI patterns stripped: ${remaining.join(', ')}`);
     }
 
-    // Build the MDX content
+    // ── MDX assembly ──────────────────────────────────────────────────────
     const sourceYaml = post.sources.length > 0
         ? post.sources.map((s) => `  - "${s}"`).join('\n')
         : '  - "https://www.scamwatch.gov.au/"';
-
     const tagYaml = JSON.stringify(post.tags);
-
     const today = new Date().toISOString().split('T')[0];
     const yamlEscape = (s: string) => s.replace(/"/g, '\\"');
     const optionalLine = (key: string, value: string | undefined) =>
         value ? `${key}: "${yamlEscape(value)}"\n` : '';
-
     const claimSupportYaml = Array.isArray(post.claimSupport) && post.claimSupport.length > 0
         ? `claimSupport:\n${post.claimSupport
               .map((c) => `  - claim: "${yamlEscape(c.claim)}"\n    source: "${yamlEscape(c.source)}"`)
@@ -1252,55 +1181,42 @@ ${DISCLAIMER}
 ${body}
 `;
 
-    // Safety check
     validateContent(content);
 
-    // Dedupe across title, slug, tags, and summary so future posts don't
-    // duplicate existing topical coverage (which would cause Google to mark
-    // them "Crawled - currently not indexed").
+    // ── Duplicate-topic gate ──────────────────────────────────────────────
+    // Same scoring used previously — extracted here so we can return the
+    // colliding existing slug/title for the ledger entry.
     const existingSignals = getExistingPostSignals();
     const newTitleLower = post.title.toLowerCase();
     const newSummaryLower = post.summary.toLowerCase();
     const newTagsLower = post.tags.map((t) => t.toLowerCase());
-
-    // Skip common/short words for better dedup
     const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'to', 'in', 'of', 'for', 'is', 'on', 'at', 'by', 'it', 'as', 'how', 'what', 'you', 'your', 'are', 'from', 'with', 'this', 'that', 'new', '–', '-', '—', 'scam', 'scams']);
     const meaningfulWords = (text: string) =>
         text.split(/[^a-z0-9]+/i).filter((w) => w.length > 2 && !stopWords.has(w.toLowerCase()));
-
     const newTitleWords = new Set(meaningfulWords(newTitleLower));
     const newSummaryWords = new Set(meaningfulWords(newSummaryLower));
-
     const newSignalHaystack = `${newTitleLower} ${newSummaryLower} ${newTagsLower.join(' ')} ${body}`;
     const newCluster = inferCluster(newSignalHaystack);
     const newEntities = new Set(extractEntities(newSignalHaystack));
 
-    const isDuplicate = existingSignals.some((existing) => {
+    const duplicateOf = existingSignals.find((existing) => {
         const titleWords = new Set(meaningfulWords(existing.title));
         const summaryWords = new Set(meaningfulWords(existing.summary));
-
         const titleOverlap = [...newTitleWords].filter((w) => titleWords.has(w)).length;
         const titleScore = titleOverlap / Math.max(newTitleWords.size, 1);
-
         const summaryOverlap = [...newSummaryWords].filter((w) => summaryWords.has(w)).length;
         const summaryScore = summaryOverlap / Math.max(newSummaryWords.size, 1);
-
         const tagOverlap = newTagsLower.filter((t) => existing.tags.includes(t)).length;
         const tagScore = tagOverlap / Math.max(newTagsLower.length, 1);
-
-        // Slug match (when the AI happens to regenerate near the same slug).
-        if (existing.slug.includes(post.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 30))) {
+        if (
+            existing.slug.includes(
+                post.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 30),
+            )
+        ) {
             return true;
         }
-
-        // Trip if the title is highly similar, or if title is moderately
-        // similar AND summary or tags also overlap heavily — catches the
-        // "different headline, same topic" failure mode.
         if (titleScore > 0.5) return true;
         if (titleScore > 0.3 && (summaryScore > 0.4 || tagScore > 0.6)) return true;
-
-        // Cluster + entity overlap — same agency or dollar amount in the
-        // same cluster is almost always a topical duplicate.
         if (newCluster && newCluster === existing.cluster) {
             const sharedEntities = existing.entities.filter((e) => newEntities.has(e)).length;
             if (sharedEntities >= 2 && titleScore > 0.2) return true;
@@ -1308,32 +1224,32 @@ ${body}
         return false;
     });
 
-    if (isDuplicate) {
-        console.log('⚠️  Generated topic too similar to an existing post. Skipping.');
-        return;
+    if (duplicateOf) {
+        console.log(
+            `⚠️  Generated topic too similar to existing post "${duplicateOf.title}" (slug: ${duplicateOf.slug}).`,
+        );
+        return {
+            type: 'duplicate-topic',
+            questionId,
+            matched: { slug: duplicateOf.slug, title: duplicateOf.title },
+        };
     }
 
-    // Deterministic quality gate. Every gate is unit-tested in
-    // src/lib/post-quality.test.ts so it can't quietly weaken. The cluster
-    // selected at prompt-build time is passed through so the validator can
-    // enforce the cluster-specific internal-link requirement, not just the
-    // generic "at least 2 internal links" floor.
+    // ── Deterministic quality gate ────────────────────────────────────────
     const qualityReasons = validateGeneratedPostQuality(post, body, {
         clusterRoutes: cluster.relatedInternalRoutes,
     });
     if (qualityReasons.length > 0) {
         console.log('⚠️  Generated post failed quality gate:');
         for (const r of qualityReasons) console.log(`     - ${r}`);
-        console.log('Skipping.');
-        return;
+        return { type: 'quality-fail', reasons: qualityReasons, questionId };
     }
 
-    // Generate unique filename
-    const date = new Date().toISOString().split('T')[0];
+    // ── Write to disk + record ledger ─────────────────────────────────────
+    const date = today;
     const hash = crypto.randomBytes(3).toString('hex');
     const titleSlug = slugify(post.title);
     const shortSlug = titleSlug.substring(0, 50).replace(/-$/, '');
-
     const filename = `${date}-${shortSlug}-${hash}.mdx`;
     const filepath = path.join(blogDir, filename);
 
@@ -1344,13 +1260,145 @@ ${body}
     console.log(`   Sources: ${post.sources.length} referenced`);
     console.log(`   AI patterns found & stripped: ${remaining.length}`);
 
-    // Mark the question as used so the next run picks a different one.
-    // Only update the ledger AFTER the post survives every quality gate —
-    // otherwise a rejected post would burn a question forever.
+    const fileSlug = filename.replace(/\.mdx$/, '');
     if (questionId) {
-        const fileSlug = filename.replace(/\.mdx$/, '');
         recordUsedQuestion(questionId, fileSlug, date);
-        console.log(`   Question ${questionId} marked as used in data/used-blog-questions.json`);
+        console.log(
+            `   Question ${questionId} marked as used in data/used-blog-questions.json`,
+        );
+    }
+
+    return { type: 'success', slug: fileSlug, questionId };
+}
+
+// ── Main ───────────────────────────────────────────────────────────────────
+
+async function main(): Promise<void> {
+    const blogDir = path.join(process.cwd(), 'content', 'blog');
+    if (!fs.existsSync(blogDir)) {
+        fs.mkdirSync(blogDir, { recursive: true });
+    }
+
+    console.log('🔍 Generating blog post via AI (Gemini → Groq fallback)...');
+
+    const bank = loadQuestionBank();
+    const remainingAtStart = listRemainingQuestions();
+    console.log(
+        `🧮 Question bank state: ${remainingAtStart.length} unused/unskipped of ${bank?.questions.length ?? 0} total.`,
+    );
+
+    // Per-run safety cap. Equals the count of unprocessed questions plus a
+    // single legacy-fallback attempt so the loop is bounded but can still
+    // exhaust the bank if every question collides. Clamped to a small
+    // upper bound so a runaway loop can't burn the GitHub Action quota.
+    const MAX_ATTEMPTS = Math.max(1, Math.min(remainingAtStart.length + 1, 12));
+    console.log(`🔁 Up to ${MAX_ATTEMPTS} attempt(s) this run.`);
+
+    let success = false;
+    let attempts = 0;
+    let skippedCount = 0;
+    let qualityFailures = 0;
+    let lastFailure: string | null = null;
+
+    for (let i = 0; i < MAX_ATTEMPTS; i++) {
+        attempts = i + 1;
+        const picked = pickUnusedQuestion();
+        // listRemainingQuestions includes both used and skipped — re-derive
+        // each iteration so newly-recorded skips are visible.
+        const remainingNow = listRemainingQuestions();
+
+        if (!picked && bank) {
+            console.warn(
+                `⚠️  All ${bank.questions.length} questions in data/findquestions-bank.json are either used or skipped. ` +
+                    'Falling back to the legacy random-cluster prompt for this attempt only.',
+            );
+        }
+        const questionEntry = picked?.question ?? null;
+
+        console.log(
+            `\n🔄 Attempt ${attempts}/${MAX_ATTEMPTS}. ${remainingNow.length} unused/unskipped question(s) remaining before this attempt.`,
+        );
+
+        let outcome: AttemptOutcome;
+        try {
+            outcome = await attemptOneQuestion(blogDir, questionEntry);
+        } catch (err: unknown) {
+            // Provider/network errors bubble up — they're transient and
+            // don't tell us anything about the chosen question. Stop the
+            // loop and let the GitHub Action surface the error in logs.
+            const msg = err instanceof Error ? err.message : String(err);
+            lastFailure = msg;
+            console.error(`❌ Attempt ${attempts} aborted: ${msg}`);
+            break;
+        }
+
+        if (outcome.type === 'success') {
+            console.log(
+                `🏁 Final result: 1 post published after ${attempts} attempt(s).` +
+                    ` Selected question: ${outcome.questionId ?? '(legacy fallback)'}.` +
+                    ` ${skippedCount} question(s) skipped during this run.`,
+            );
+            success = true;
+            break;
+        }
+
+        if (outcome.type === 'duplicate-topic') {
+            if (outcome.questionId) {
+                recordSkippedQuestion(
+                    outcome.questionId,
+                    'duplicate-topic',
+                    new Date().toISOString().split('T')[0],
+                    outcome.matched,
+                );
+                console.log(
+                    `📌 Skipped ${outcome.questionId} (reason: duplicate-topic` +
+                        (outcome.matched?.slug
+                            ? `, collided with ${outcome.matched.slug}`
+                            : '') +
+                        `). Trying next question.`,
+                );
+                skippedCount += 1;
+                lastFailure = 'duplicate-topic';
+                continue;
+            }
+            // Legacy-fallback collisions don't have a question ID — there's
+            // nothing to skip, so stop the loop instead of looping forever.
+            console.log(
+                '📌 Legacy-fallback prompt produced a duplicate topic and no question ID to skip. Stopping.',
+            );
+            lastFailure = 'duplicate-topic (legacy fallback)';
+            break;
+        }
+
+        if (outcome.type === 'quality-fail') {
+            qualityFailures += 1;
+            lastFailure = `quality-gate: ${outcome.reasons[0] ?? 'unknown'}`;
+            // Quality failures intentionally do NOT skip the question — the
+            // next run may produce a better draft. But we still try the next
+            // question in this run so a bad day doesn't break publishing.
+            console.log(
+                `📌 Quality-gate failure on ${outcome.questionId ?? '(legacy fallback)'} — question NOT marked as skipped. Trying next question.`,
+            );
+            continue;
+        }
+    }
+
+    if (!success) {
+        if (skippedCount > 0) {
+            console.log(
+                `🏁 Final result: no post generated, but ${skippedCount} question(s) skipped this run. ` +
+                    'data/used-blog-questions.json has been updated and should be committed.',
+            );
+        } else if (qualityFailures > 0) {
+            console.log(
+                `🏁 Final result: no post generated after ${attempts} attempt(s). ` +
+                    `${qualityFailures} quality-gate failure(s); no ledger changes. Last failure: ${lastFailure}.`,
+            );
+        } else {
+            console.log(
+                `🏁 Final result: no post generated. Last failure: ${lastFailure ?? 'no candidates'}.`,
+            );
+        }
     }
 }
 
