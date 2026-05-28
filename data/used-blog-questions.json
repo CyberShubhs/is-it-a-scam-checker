@@ -1,11 +1,109 @@
 {
   "_comment": "Persistent ledger for the FindQuestions question bank. `used` lists questions that became published posts; `skipped` lists questions deterministically rejected (e.g. duplicate-topic) so the auto-blog action never re-picks them. Both arrays exclude IDs from the next pick. Pre-populated with question IDs already answered by existing 2026-05-22 posts so the action does not generate near-duplicates. Do not edit by hand unless you intend to recycle a question.",
   "used": [
-    { "id": "fq-001", "slug": "2026-05-22-is-my-job-offer-a-scam-red-flags", "date": "2026-05-22" },
-    { "id": "fq-002", "slug": "2026-05-22-company-sent-me-a-check-before-i-started", "date": "2026-05-22" },
-    { "id": "fq-006", "slug": "2026-05-22-how-to-verify-a-company-is-real-before-accepting-a-job", "date": "2026-05-22" },
-    { "id": "fq-007", "slug": "2026-05-22-remote-job-offers-too-good-to-be-true", "date": "2026-05-22" },
-    { "id": "fq-036", "slug": "2026-05-22-should-employer-ask-banking-information-onboarding", "date": "2026-05-22" }
+    {
+      "id": "fq-001",
+      "slug": "2026-05-22-is-my-job-offer-a-scam-red-flags",
+      "date": "2026-05-22"
+    },
+    {
+      "id": "fq-002",
+      "slug": "2026-05-22-company-sent-me-a-check-before-i-started",
+      "date": "2026-05-22"
+    },
+    {
+      "id": "fq-006",
+      "slug": "2026-05-22-how-to-verify-a-company-is-real-before-accepting-a-job",
+      "date": "2026-05-22"
+    },
+    {
+      "id": "fq-007",
+      "slug": "2026-05-22-remote-job-offers-too-good-to-be-true",
+      "date": "2026-05-22"
+    },
+    {
+      "id": "fq-036",
+      "slug": "2026-05-22-should-employer-ask-banking-information-onboarding",
+      "date": "2026-05-22"
+    }
   ],
-  "skipped": []
+  "skipped": [
+    {
+      "id": "fq-003",
+      "reason": "duplicate-topic",
+      "date": "2026-05-28",
+      "matchedExistingSlug": "2026-05-14-fake-recruitment-agency-scam-your-dream-job-is-a-l-59a272",
+      "matchedExistingTitle": "fake recruitment agency scam: your dream job is a lie"
+    },
+    {
+      "id": "fq-004",
+      "reason": "duplicate-topic",
+      "date": "2026-05-28",
+      "matchedExistingSlug": "2026-05-22-should-employer-ask-banking-information-onboarding",
+      "matchedExistingTitle": "should employers ask for banking information during onboarding?"
+    },
+    {
+      "id": "fq-005",
+      "reason": "duplicate-topic",
+      "date": "2026-05-28",
+      "matchedExistingSlug": "2026-05-22-company-sent-me-a-check-before-i-started",
+      "matchedExistingTitle": "company sent me a check before i started — is this normal?"
+    },
+    {
+      "id": "fq-008",
+      "reason": "duplicate-topic",
+      "date": "2026-05-28",
+      "matchedExistingSlug": "2026-04-24-package-reshipping-scam-your-work-from-home-job-co-b051de",
+      "matchedExistingTitle": "package reshipping scam: your 'work-from-home' job could be crime"
+    },
+    {
+      "id": "fq-009",
+      "reason": "duplicate-topic",
+      "date": "2026-05-28",
+      "matchedExistingSlug": "2026-05-14-fake-recruitment-agency-scam-your-dream-job-is-a-l-59a272",
+      "matchedExistingTitle": "fake recruitment agency scam: your dream job is a lie"
+    },
+    {
+      "id": "fq-010",
+      "reason": "duplicate-topic",
+      "date": "2026-05-28",
+      "matchedExistingSlug": "2026-05-14-fake-recruitment-agency-scam-your-dream-job-is-a-l-59a272",
+      "matchedExistingTitle": "fake recruitment agency scam: your dream job is a lie"
+    },
+    {
+      "id": "fq-011",
+      "reason": "duplicate-topic",
+      "date": "2026-05-28",
+      "matchedExistingSlug": "2026-04-24-package-reshipping-scam-your-work-from-home-job-co-b051de",
+      "matchedExistingTitle": "package reshipping scam: your 'work-from-home' job could be crime"
+    },
+    {
+      "id": "fq-012",
+      "reason": "duplicate-topic",
+      "date": "2026-05-28",
+      "matchedExistingSlug": "2026-04-24-package-reshipping-scam-your-work-from-home-job-co-b051de",
+      "matchedExistingTitle": "package reshipping scam: your 'work-from-home' job could be crime"
+    },
+    {
+      "id": "fq-013",
+      "reason": "duplicate-topic",
+      "date": "2026-05-28",
+      "matchedExistingSlug": "2026-05-22-remote-job-offers-too-good-to-be-true",
+      "matchedExistingTitle": "remote job offers that seem too good to be true — are they scams?"
+    },
+    {
+      "id": "fq-014",
+      "reason": "duplicate-topic",
+      "date": "2026-05-28",
+      "matchedExistingSlug": "2026-05-14-fake-recruitment-agency-scam-your-dream-job-is-a-l-59a272",
+      "matchedExistingTitle": "fake recruitment agency scam: your dream job is a lie"
+    },
+    {
+      "id": "fq-015",
+      "reason": "duplicate-topic",
+      "date": "2026-05-28",
+      "matchedExistingSlug": "2026-05-22-remote-job-offers-too-good-to-be-true",
+      "matchedExistingTitle": "remote job offers that seem too good to be true — are they scams?"
+    }
+  ]
 }
