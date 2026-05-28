@@ -59,3 +59,7 @@ credentials.json
 # Private SEO working notes & internal AI prompts — operator-facing
 # instructions that should not appear in the public repo.
 SEO/claude/
+
+# Source-health cache produced by scripts/check-blog-sources.mjs. Local-
+# only optimisation — re-derived from network probes on the next run.
+data/source-health-cache.json

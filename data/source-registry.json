@@ -1,0 +1,455 @@
+{
+  "_comment": "Curated, hand-verified source registry for blog post citations. Each entry is an EVERGREEN page on an official consumer-protection, cyber-agency, or major-platform-help site that is stable enough to be cited by name for years. The blog generator can only cite sources by `id` from this list; raw external URLs are rejected by the source-id resolver and by check-blog-sources.mjs. To add a source: pick a stable evergreen page (NOT a dated press release or news article), verify the URL returns 2xx (or a known bot-403 from a trusted host), then add it here with the correct categories.",
+  "schemaVersion": 1,
+  "lastReviewedAt": "2026-05-29",
+  "sources": [
+    {
+      "id": "ftc_scam_alerts",
+      "title": "FTC Consumer Alerts",
+      "url": "https://consumer.ftc.gov/scam-alerts",
+      "domain": "consumer.ftc.gov",
+      "categories": ["general-scam-advice", "reporting-scams"],
+      "region": "us",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29",
+      "notes": "Federal Trade Commission's evergreen consumer-alerts hub. Stable, indexable, deep-linked from many other regulators."
+    },
+    {
+      "id": "ftc_report_fraud",
+      "title": "ReportFraud.ftc.gov",
+      "url": "https://reportfraud.ftc.gov/",
+      "domain": "reportfraud.ftc.gov",
+      "categories": ["reporting-scams"],
+      "region": "us",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29",
+      "notes": "Official US reporting portal. Cite as 'how to report' rather than as evidence."
+    },
+    {
+      "id": "ftc_job_scams",
+      "title": "FTC: Job Scams",
+      "url": "https://consumer.ftc.gov/articles/job-scams",
+      "domain": "consumer.ftc.gov",
+      "categories": ["job-scams"],
+      "region": "us",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29",
+      "notes": "Evergreen explainer on fake employment offers."
+    },
+    {
+      "id": "ftc_fake_check_scams",
+      "title": "FTC: How to Spot, Avoid and Report Fake Check Scams",
+      "url": "https://consumer.ftc.gov/articles/how-spot-avoid-and-report-fake-check-scams",
+      "domain": "consumer.ftc.gov",
+      "categories": ["fake-cheque-scams", "job-scams"],
+      "region": "us",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "ftc_government_imposter_scams",
+      "title": "FTC: Imposter Scams",
+      "url": "https://consumer.ftc.gov/features/imposter-scams",
+      "domain": "consumer.ftc.gov",
+      "categories": ["government-impersonation"],
+      "region": "us",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "ftc_online_shopping_scams",
+      "title": "FTC: Online Shopping",
+      "url": "https://consumer.ftc.gov/online-shopping",
+      "domain": "consumer.ftc.gov",
+      "categories": ["marketplace-scams", "general-scam-advice"],
+      "region": "us",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "ftc_crypto_scams",
+      "title": "FTC: What to Know About Cryptocurrency and Scams",
+      "url": "https://consumer.ftc.gov/articles/what-know-about-cryptocurrency-and-scams",
+      "domain": "consumer.ftc.gov",
+      "categories": ["cryptocurrency-scams"],
+      "region": "us",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "ftc_phishing",
+      "title": "FTC: How to Recognize and Avoid Phishing Scams",
+      "url": "https://consumer.ftc.gov/articles/how-recognize-and-avoid-phishing-scams",
+      "domain": "consumer.ftc.gov",
+      "categories": ["phishing", "email-phishing"],
+      "region": "us",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "ftc_identity_theft",
+      "title": "FTC: IdentityTheft.gov",
+      "url": "https://www.identitytheft.gov/",
+      "domain": "identitytheft.gov",
+      "categories": ["identity-theft", "reporting-scams", "data-breaches"],
+      "region": "us",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29",
+      "notes": "Also the canonical FTC walkthrough for data-breach victims — replaces the previous /articles/what-do-after-data-breach which 404s."
+    },
+    {
+      "id": "ftc_romance_scams",
+      "title": "FTC: What You Need to Know About Romance Scams",
+      "url": "https://consumer.ftc.gov/articles/what-you-need-know-about-romance-scams",
+      "domain": "consumer.ftc.gov",
+      "categories": ["general-scam-advice"],
+      "region": "us",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "ic3_home",
+      "title": "FBI Internet Crime Complaint Center (IC3)",
+      "url": "https://www.ic3.gov/",
+      "domain": "ic3.gov",
+      "categories": ["reporting-scams", "general-scam-advice"],
+      "region": "us",
+      "sourceType": "cyber-agency",
+      "lastVerifiedAt": "2026-05-29",
+      "notes": "Annual cybercrime statistics are linked from the IC3 home page. Always cite the report year explicitly when referenced."
+    },
+    {
+      "id": "ssa_scams",
+      "title": "Social Security Administration: Scam Information",
+      "url": "https://www.ssa.gov/scam/",
+      "domain": "ssa.gov",
+      "categories": ["government-impersonation"],
+      "region": "us",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "irs_tax_scams",
+      "title": "IRS: Tax Scams / Consumer Alerts",
+      "url": "https://www.irs.gov/newsroom/tax-scams-consumer-alerts",
+      "domain": "irs.gov",
+      "categories": ["government-impersonation"],
+      "region": "us",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "cfpb_fake_check",
+      "title": "CFPB: I was sent a check and asked to return some of the money",
+      "url": "https://www.consumerfinance.gov/ask-cfpb/i-was-sent-a-check-and-asked-to-return-some-of-the-money-en-1101/",
+      "domain": "consumerfinance.gov",
+      "categories": ["fake-cheque-scams", "bank-payment-scams"],
+      "region": "us",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "cisa_phishing",
+      "title": "CISA: Recognize and Report Phishing",
+      "url": "https://www.cisa.gov/secure-our-world/recognize-and-report-phishing",
+      "domain": "cisa.gov",
+      "categories": ["phishing", "email-phishing", "sms-scams"],
+      "region": "us",
+      "sourceType": "cyber-agency",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "cisa_advisories",
+      "title": "CISA Cybersecurity Advisories",
+      "url": "https://www.cisa.gov/news-events/cybersecurity-advisories",
+      "domain": "cisa.gov",
+      "categories": ["data-breaches", "general-scam-advice"],
+      "region": "us",
+      "sourceType": "cyber-agency",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "scamwatch_home",
+      "title": "Scamwatch (Australia)",
+      "url": "https://www.scamwatch.gov.au/",
+      "domain": "scamwatch.gov.au",
+      "categories": ["general-scam-advice", "reporting-scams"],
+      "region": "au",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "scamwatch_report",
+      "title": "Scamwatch: Report a Scam",
+      "url": "https://www.scamwatch.gov.au/report-a-scam",
+      "domain": "scamwatch.gov.au",
+      "categories": ["reporting-scams"],
+      "region": "au",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "scamwatch_types",
+      "title": "Scamwatch: Types of Scams",
+      "url": "https://www.scamwatch.gov.au/types-of-scams",
+      "domain": "scamwatch.gov.au",
+      "categories": ["general-scam-advice"],
+      "region": "au",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "scamwatch_jobs",
+      "title": "Scamwatch: Jobs and Employment Scams",
+      "url": "https://www.scamwatch.gov.au/types-of-scams/jobs-and-employment-scams",
+      "domain": "scamwatch.gov.au",
+      "categories": ["job-scams"],
+      "region": "au",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "scamwatch_investments",
+      "title": "Scamwatch: Investment Scams",
+      "url": "https://www.scamwatch.gov.au/types-of-scams/investment-scams",
+      "domain": "scamwatch.gov.au",
+      "categories": ["cryptocurrency-scams"],
+      "region": "au",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "scamwatch_phishing",
+      "title": "Scamwatch: Phishing Scams",
+      "url": "https://www.scamwatch.gov.au/types-of-scams/phishing-scams",
+      "domain": "scamwatch.gov.au",
+      "categories": ["phishing", "email-phishing"],
+      "region": "au",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "scamwatch_text_sms",
+      "title": "Scamwatch: Text or SMS Scams",
+      "url": "https://www.scamwatch.gov.au/types-of-scams/text-or-sms-scams",
+      "domain": "scamwatch.gov.au",
+      "categories": ["sms-scams"],
+      "region": "au",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "scamwatch_email",
+      "title": "Scamwatch: Email Scams",
+      "url": "https://www.scamwatch.gov.au/types-of-scams/email-scams",
+      "domain": "scamwatch.gov.au",
+      "categories": ["email-phishing"],
+      "region": "au",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "scamwatch_website",
+      "title": "Scamwatch: Website Scams",
+      "url": "https://www.scamwatch.gov.au/types-of-scams/website-scams",
+      "domain": "scamwatch.gov.au",
+      "categories": ["marketplace-scams", "general-scam-advice"],
+      "region": "au",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "scamwatch_buying_selling",
+      "title": "Scamwatch: Buying and Selling Scams",
+      "url": "https://www.scamwatch.gov.au/types-of-scams/buying-and-selling-scams",
+      "domain": "scamwatch.gov.au",
+      "categories": ["marketplace-scams"],
+      "region": "au",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "scamwatch_account_takeover",
+      "title": "Scamwatch: Account or Identity Takeover Scams",
+      "url": "https://www.scamwatch.gov.au/types-of-scams/account-or-identity-takeover-scams",
+      "domain": "scamwatch.gov.au",
+      "categories": ["identity-theft", "account-security"],
+      "region": "au",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "acsc_home",
+      "title": "Australian Cyber Security Centre",
+      "url": "https://www.cyber.gov.au/",
+      "domain": "cyber.gov.au",
+      "categories": ["general-scam-advice", "account-security"],
+      "region": "au",
+      "sourceType": "cyber-agency",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "acsc_report",
+      "title": "ReportCyber (Australia)",
+      "url": "https://www.cyber.gov.au/report-and-recover/report-a-cybercrime",
+      "domain": "cyber.gov.au",
+      "categories": ["reporting-scams"],
+      "region": "au",
+      "sourceType": "cyber-agency",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "actionfraud_home",
+      "title": "Action Fraud (UK)",
+      "url": "https://www.actionfraud.police.uk/",
+      "domain": "actionfraud.police.uk",
+      "categories": ["general-scam-advice", "reporting-scams"],
+      "region": "uk",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29",
+      "notes": "Site frequently returns 403 to crawlers; treat 403 as bot-blocked, not dead."
+    },
+    {
+      "id": "actionfraud_az",
+      "title": "Action Fraud: A-Z of Fraud",
+      "url": "https://www.actionfraud.police.uk/a-z-of-fraud",
+      "domain": "actionfraud.police.uk",
+      "categories": ["general-scam-advice"],
+      "region": "uk",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29",
+      "notes": "Bot-blocked 403 is expected from automated probes."
+    },
+    {
+      "id": "ncsc_home",
+      "title": "UK National Cyber Security Centre",
+      "url": "https://www.ncsc.gov.uk/",
+      "domain": "ncsc.gov.uk",
+      "categories": ["general-scam-advice", "phishing", "account-security"],
+      "region": "uk",
+      "sourceType": "cyber-agency",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "ncsc_phishing_actions",
+      "title": "NCSC: Suspicious Email Actions",
+      "url": "https://www.ncsc.gov.uk/guidance/suspicious-email-actions",
+      "domain": "ncsc.gov.uk",
+      "categories": ["phishing", "email-phishing"],
+      "region": "uk",
+      "sourceType": "cyber-agency",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "ncsc_phishing_guidance",
+      "title": "NCSC: Phishing Attacks Guidance",
+      "url": "https://www.ncsc.gov.uk/guidance/phishing",
+      "domain": "ncsc.gov.uk",
+      "categories": ["phishing", "email-phishing"],
+      "region": "uk",
+      "sourceType": "cyber-agency",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "caf_home",
+      "title": "Canadian Anti-Fraud Centre",
+      "url": "https://antifraudcentre-centreantifraude.ca/index-eng.htm",
+      "domain": "antifraudcentre-centreantifraude.ca",
+      "categories": ["general-scam-advice", "reporting-scams"],
+      "region": "ca",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "getcybersafe_home",
+      "title": "Get Cyber Safe (Government of Canada)",
+      "url": "https://www.getcybersafe.gc.ca/",
+      "domain": "getcybersafe.gc.ca",
+      "categories": ["general-scam-advice", "account-security"],
+      "region": "ca",
+      "sourceType": "cyber-agency",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "microsoft_phishing_help",
+      "title": "Microsoft: Protect Yourself From Phishing",
+      "url": "https://support.microsoft.com/en-us/windows/protect-yourself-from-phishing-0c7ea947-ba98-3bd9-7184-430e1f860a44",
+      "domain": "support.microsoft.com",
+      "categories": ["phishing", "email-phishing", "platform-help"],
+      "region": "global",
+      "sourceType": "platform-help",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "google_account_recover",
+      "title": "Google: Find or Recover an Account",
+      "url": "https://support.google.com/accounts/answer/7682439",
+      "domain": "support.google.com",
+      "categories": ["account-security", "platform-help"],
+      "region": "global",
+      "sourceType": "platform-help",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "apple_phishing_help",
+      "title": "Apple: Recognize and Avoid Phishing",
+      "url": "https://support.apple.com/en-us/HT204759",
+      "domain": "support.apple.com",
+      "categories": ["phishing", "platform-help"],
+      "region": "global",
+      "sourceType": "platform-help",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "hibp_home",
+      "title": "Have I Been Pwned",
+      "url": "https://haveibeenpwned.com/",
+      "domain": "haveibeenpwned.com",
+      "categories": ["data-breaches", "account-security"],
+      "region": "global",
+      "sourceType": "security-research",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "krebs_home",
+      "title": "KrebsOnSecurity",
+      "url": "https://krebsonsecurity.com/",
+      "domain": "krebsonsecurity.com",
+      "categories": ["general-scam-advice", "security-research", "data-breaches"],
+      "region": "global",
+      "sourceType": "security-research",
+      "lastVerifiedAt": "2026-05-29",
+      "notes": "Reliable evergreen index; cite specific posts only after verifying the deep link still resolves."
+    },
+    {
+      "id": "ftc_sms_scams",
+      "title": "FTC: How to Recognize and Report Spam Text Messages",
+      "url": "https://consumer.ftc.gov/articles/how-recognize-and-report-spam-text-messages",
+      "domain": "consumer.ftc.gov",
+      "categories": ["sms-scams"],
+      "region": "us",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "ftc_bec",
+      "title": "FTC: Business Email Compromise (Small Business Guidance)",
+      "url": "https://www.ftc.gov/business-guidance/small-businesses/cybersecurity/email-authentication",
+      "domain": "ftc.gov",
+      "categories": ["email-phishing", "bank-payment-scams"],
+      "region": "us",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    },
+    {
+      "id": "ftc_phone_scams",
+      "title": "FTC: Phone Scams",
+      "url": "https://consumer.ftc.gov/articles/phone-scams",
+      "domain": "consumer.ftc.gov",
+      "categories": ["general-scam-advice", "government-impersonation"],
+      "region": "us",
+      "sourceType": "official",
+      "lastVerifiedAt": "2026-05-29"
+    }
+  ]
+}

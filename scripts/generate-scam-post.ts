@@ -28,6 +28,12 @@ import {
     recordSkippedQuestion,
     type QuestionBankEntry,
 } from '../src/lib/question-bank';
+import {
+    getSourcesForTopic,
+    resolveSourceIds,
+    rejectUnknownExternalUrls,
+    type SourceEntry,
+} from '../src/lib/source-registry';
 
 // ── Safety guardrails ──────────────────────────────────────────────────────
 
@@ -780,6 +786,12 @@ interface BuiltPrompt {
     prompt: string;
     cluster: KeywordCluster;
     questionId?: string;
+    /**
+     * Sources the generator has pre-curated from the registry for this
+     * question. The AI is told to reference only these sources (by ID),
+     * which guarantees every citation resolves to a real URL.
+     */
+    preselectedSources: SourceEntry[];
 }
 
 /**
@@ -808,6 +820,25 @@ function buildQuestionPrompt(
                   .map((t) => `- ${t}`)
                   .join('\n')}`
             : '';
+
+    // Pre-curate the citation list from the registry. The AI does NOT get
+    // to invent URLs — it can only reference these IDs. This is the single
+    // most important change preventing 404/401/hallucinated citations.
+    const preselectedSources = getSourcesForTopic(
+        {
+            categories: ['job-scams', 'fake-cheque-scams', 'general-scam-advice'],
+            region: 'global',
+            keywordHaystack: `${question.question} ${question.intent}`,
+        },
+        { min: 3, max: 4 },
+    );
+
+    const sourcesBlock = preselectedSources
+        .map(
+            (s, i) =>
+                `  ${i + 1}. id="${s.id}" — ${s.title} (${s.domain}) :: ${s.url}`,
+        )
+        .join('\n');
 
     const promptText = `You are writing a blog post for scamchecker.app — a free tool that helps people check if messages, emails, links, and job offers are scams.
 
@@ -843,9 +874,24 @@ REQUIRED STRUCTURE — every section must appear in this order using EXACTLY the
    - 🌐 International: [Global Scam Reporting Directory](/global-scam-reporting)
 11. "## Related Scam Checker pages" — bullet list of 2-3 internal links: at least one checker page, at least one pillar/guide or related blog category page, and /reports where relevant.
 12. A short closing sentence with a [free scam checker](/check) link.
-13. SOURCES (placed in the JSON "sources" array, also referenced naturally in the body) — 2-4 real working URLs from FBI/IC3, FTC, Action Fraud, Scamwatch, ReportCyber, ECC-Net, IRS, major newsrooms (BBC, Reuters, ABC) or established security firms.
 
 The headings #5 through #11 above are mandatory for the deterministic quality gate. Do not rename them. Their wording must match exactly.
+
+SOURCES — STRICT RULES (this is the most important section of these instructions):
+- You MAY ONLY cite sources from this approved registry. Do NOT invent URLs. Do NOT use BBC, Reuters, news articles, dated press releases, or any URL not in this list:
+
+${sourcesBlock}
+
+- In the JSON output, the "sources" array MUST contain ONLY the registry IDs you used (e.g. ["ftc_job_scams", "ic3_home"]). Do NOT put URLs in "sources".
+- In the markdown body, you MAY mention an agency by name (e.g. "the FTC", "Scamwatch", "Action Fraud") and OPTIONALLY include the exact URL from the registry above as a markdown link with descriptive anchor text. Any URL not exactly matching the registry above will cause the post to be rejected.
+- Pick at least 2 source IDs from the registry above. Prefer the ones with the most relevant title for the question.
+- Do NOT cite Reuters, BBC, the Guardian, Forbes, Bloomberg, the WSJ, the NYT, or other paywalled / bot-blocking newsrooms.
+- Do NOT claim "FTC warns X" or "FBI warns Y" unless that specific claim is directly supported by the title of the registry entry you cite.
+
+CLAIM RULES:
+- No invented statistics, dollar amounts, victim counts, dates, or incident names.
+- Quantitative claims ("millions lost", "thousands affected") are not allowed unless you are citing the IC3 annual report or an evergreen statistics page from the registry. When in doubt, write qualitative language ("widely reported", "common pattern") instead of numbers.
+- Frame the post as an evergreen explainer of the scam pattern. Do not pretend a specific news event is breaking unless a real news source is in the registry above.
 
 WORD COUNT: 800-1200 words in the body (not counting frontmatter).
 
@@ -853,7 +899,6 @@ VOICE rules (non-negotiable):
 - Plain English, short paragraphs, active voice.
 - No AI clichés. No "in today's digital landscape". No "delve", "leverage", "robust", "seamless", "paramount", "crucial", "invaluable".
 - No self-reference ("in this article", "we'll explore").
-- No invented statistics. Every dollar amount and big number must trace back to a sourced URL.
 - The example scenario is always framed as a composite — never claimed as a personal experience of the author.
 
 OUTPUT FORMAT — Return ONLY pure JSON. No markdown fences. No commentary. All newlines inside the body string must be escaped as \\n.
@@ -861,7 +906,7 @@ OUTPUT FORMAT — Return ONLY pure JSON. No markdown fences. No commentary. All 
   "title": "Title (50-65 chars) that answers the question",
   "summary": "Meta description (140-155 chars) that hooks searchers",
   "tags": ["job-scam", "fake-job-offer", "scam-alert"],
-  "sources": ["https://url1.gov/page", "https://url2.org/article"],
+  "sourceIds": ["${preselectedSources.map((s) => s.id).slice(0, 2).join('", "')}"],
   "body": "Full markdown body with the structure above",
   "primaryKeyword": "the single search phrase this post should rank for",
   "searchIntent": "informational",
@@ -870,11 +915,16 @@ OUTPUT FORMAT — Return ONLY pure JSON. No markdown fences. No commentary. All 
   "category": "${cluster.slug}",
   "questionId": "${question.id}",
   "claimSupport": [
-    { "claim": "exact snippet from the body that contains a statistic or named incident", "source": "https://url1.gov/page" }
+    { "claim": "exact snippet from the body that contains a statistic or named incident", "sourceId": "${preselectedSources[0]?.id ?? 'ftc_scam_alerts'}" }
   ]
 }`;
 
-    return { prompt: promptText, cluster, questionId: question.id };
+    return {
+        prompt: promptText,
+        cluster,
+        questionId: question.id,
+        preselectedSources,
+    };
 }
 
 function buildPrompt(existingTitles: string[]): BuiltPrompt {
@@ -896,6 +946,22 @@ Cluster scope: ${cluster.notes}
 You MUST naturally include 1-2 of the primary search queries in the title or first H2.
 Link to at least one of these related internal routes in the body using a normal markdown link: ${cluster.relatedInternalRoutes.join(', ')}.
 `;
+
+    // Preselect a few evergreen sources from the registry so the model
+    // never needs to invent URLs. Same mechanism as buildQuestionPrompt.
+    const legacyPreselected = getSourcesForTopic(
+        {
+            categories: ['general-scam-advice', 'reporting-scams'],
+            keywordHaystack: cluster.notes,
+        },
+        { min: 3, max: 4 },
+    );
+    const legacySourcesBlock = legacyPreselected
+        .map(
+            (s, i) =>
+                `  ${i + 1}. id="${s.id}" — ${s.title} (${s.domain}) :: ${s.url}`,
+        )
+        .join('\n');
 
     const angles = [
         'Focus on a specific new scam reported in the last 48 hours. Name the exact scam, the country affected, and how many people have been hit. Only use real, named incidents — do not invent statistics, victim names, or company names.',
@@ -982,13 +1048,16 @@ PRIMARY KEYWORD: pick exactly one phrase that this post should rank for. Not a c
 
 SEARCH INTENT: choose one of "informational", "commercial", "transactional", "navigational" and put it in \`searchIntent\`.
 
-CLAIM SUPPORT: for every statistic, dollar amount, named agency warning, or named incident in the body, output a \`claimSupport\` entry pairing the exact text from the body with the URL from \`sources\` that backs it. Do not include a statistic if you cannot tie it to a source you cite.
+CLAIM SUPPORT: for every statistic, dollar amount, named agency warning, or named incident in the body, output a \`claimSupport\` entry pairing the exact text from the body with the registry source ID that backs it.
 
-SOURCES: 2-4 real, reachable URLs from government agencies (scamwatch.gov.au, ftc.gov, actionfraud.police.uk, consumer.ftc.gov, ic3.gov), major news (BBC, ABC, Reuters), or established security firms (Kaspersky, Norton, ESET). Each source URL must:
-- be a real URL you would expect to load (no placeholder paths)
-- have a clean host (no \`www.www.\`, no extra dots, no whitespace)
-- be unique within the array
-- be referenced in the body either by full URL or by hostname mention so readers can see where the claim came from
+SOURCES — STRICT RULES:
+- You MAY ONLY cite sources from this approved registry:
+
+${legacySourcesBlock}
+
+- The "sourceIds" array MUST contain registry IDs only (e.g. ["ftc_scam_alerts", "ic3_home"]). Do NOT use URLs.
+- Do NOT cite Reuters, BBC, NYT, Forbes, Bloomberg, WSJ — these block bots and the source-check script rejects them.
+- Do NOT make quantitative claims ("X million lost") unless citing IC3 statistics. Default to qualitative descriptions.
 
 OUTPUT FORMAT — Return ONLY pure JSON. No markdown fences. No commentary. No text before or after.
 CRITICAL: All newlines in the body MUST be encoded as \\n inside the JSON string. Do NOT use literal newlines inside string values.
@@ -996,7 +1065,7 @@ CRITICAL: All newlines in the body MUST be encoded as \\n inside the JSON string
   "title": "Your Title Here (50-65 chars)",
   "summary": "Your meta description (140-155 chars)",
   "tags": ["tag1", "tag2", "tag3"],
-  "sources": ["https://url1.com/article", "https://url2.com/report"],
+  "sourceIds": ["${legacyPreselected.map((s) => s.id).slice(0, 2).join('", "')}"],
   "body": "Full markdown body with \\n for newlines",
   "primaryKeyword": "scam phone number checker",
   "searchIntent": "informational",
@@ -1004,13 +1073,14 @@ CRITICAL: All newlines in the body MUST be encoded as \\n inside the JSON string
   "region": "global",
   "category": "${cluster.slug}",
   "claimSupport": [
-    { "claim": "exact text snippet from the body", "source": "https://url1.com/article" }
+    { "claim": "exact text snippet from the body", "sourceId": "${legacyPreselected[0]?.id ?? 'ftc_scam_alerts'}" }
   ]
 }`;
 
     return {
         prompt: promptText,
         cluster,
+        preselectedSources: legacyPreselected,
     };
 }
 
@@ -1152,18 +1222,80 @@ async function attemptOneQuestion(
         console.warn(`⚠️  AI patterns stripped: ${remaining.join(', ')}`);
     }
 
+    // ── Source-ID resolution ──────────────────────────────────────────────
+    // The AI was told to emit `sourceIds` (registry IDs). We resolve those
+    // into real URLs here. Any unknown ID is a quality-fail. We also fall
+    // back to URLs in the legacy `sources` field for backward compatibility
+    // with older fixtures, but new posts should always use sourceIds.
+    const rawIds = Array.isArray(post.sourceIds)
+        ? post.sourceIds.filter((s) => typeof s === 'string')
+        : [];
+    let resolvedSources: SourceEntry[] = [];
+    if (rawIds.length > 0) {
+        const r = resolveSourceIds(rawIds);
+        if (r.missing.length > 0) {
+            return {
+                type: 'quality-fail',
+                reasons: [
+                    `Unknown source IDs: ${r.missing.join(', ')}. The AI may only cite IDs from data/source-registry.json.`,
+                ],
+                questionId,
+            };
+        }
+        resolvedSources = r.resolved;
+    }
+    if (resolvedSources.length < 2) {
+        return {
+            type: 'quality-fail',
+            reasons: [
+                `Only ${resolvedSources.length} resolved registry source(s); minimum is 2. The AI must emit at least 2 sourceIds.`,
+            ],
+            questionId,
+        };
+    }
+
+    // Ban any external URL in the body that isn't in the registry / on the
+    // reporting allowlist. This catches AI smuggling URLs into the prose.
+    const offenders = rejectUnknownExternalUrls(body);
+    if (offenders.length > 0) {
+        return {
+            type: 'quality-fail',
+            reasons: [
+                `Body contains ${offenders.length} external URL(s) outside the source registry: ${offenders.slice(0, 3).join(', ')}${offenders.length > 3 ? '…' : ''}`,
+            ],
+            questionId,
+        };
+    }
+
+    // Sources written to frontmatter are derived from the resolved registry
+    // entries — never from raw AI output. This is what guarantees no
+    // hallucinated URL ever lands in a published post.
+    const resolvedUrls = resolvedSources.map((s) => s.url);
+    // Keep `post.sources` (URL strings) in sync so existing validators that
+    // expect the legacy field continue to work.
+    post.sources = resolvedUrls;
+
     // ── MDX assembly ──────────────────────────────────────────────────────
-    const sourceYaml = post.sources.length > 0
-        ? post.sources.map((s) => `  - "${s}"`).join('\n')
-        : '  - "https://www.scamwatch.gov.au/"';
+    const sourceYaml = resolvedUrls.length > 0
+        ? resolvedUrls.map((s) => `  - "${s}"`).join('\n')
+        : '  - "https://consumer.ftc.gov/scam-alerts"';
     const tagYaml = JSON.stringify(post.tags);
     const today = new Date().toISOString().split('T')[0];
     const yamlEscape = (s: string) => s.replace(/"/g, '\\"');
     const optionalLine = (key: string, value: string | undefined) =>
         value ? `${key}: "${yamlEscape(value)}"\n` : '';
+    // Build a sourceIds frontmatter block so the repair script and the
+    // changed-post source check can verify registry membership directly.
+    const sourceIdsYaml = `sourceIds: ${JSON.stringify(rawIds)}\n`;
+    // claimSupport: prefer the new sourceId form, fall back to legacy URL.
     const claimSupportYaml = Array.isArray(post.claimSupport) && post.claimSupport.length > 0
         ? `claimSupport:\n${post.claimSupport
-              .map((c) => `  - claim: "${yamlEscape(c.claim)}"\n    source: "${yamlEscape(c.source)}"`)
+              .map((c) => {
+                  const lines = [`  - claim: "${yamlEscape(c.claim)}"`];
+                  if (c.sourceId) lines.push(`    sourceId: "${yamlEscape(c.sourceId)}"`);
+                  if (c.source) lines.push(`    source: "${yamlEscape(c.source)}"`);
+                  return lines.join('\n');
+              })
               .join('\n')}\n`
         : '';
 
@@ -1174,7 +1306,7 @@ summary: "${yamlEscape(post.summary)}"
 tags: ${tagYaml}
 sources:
 ${sourceYaml}
-${optionalLine('updated', today)}${optionalLine('category', post.category ?? cluster.slug)}${optionalLine('primaryKeyword', post.primaryKeyword)}${optionalLine('searchIntent', post.searchIntent)}${optionalLine('audience', post.audience)}${optionalLine('region', post.region ?? 'global')}${optionalLine('author', post.author ?? 'Shubham Singla')}${optionalLine('reviewer', post.reviewer ?? 'Shubham Singla')}${optionalLine('lastReviewed', today)}${optionalLine('questionId', questionId)}${claimSupportYaml}---
+${sourceIdsYaml}${optionalLine('updated', today)}${optionalLine('category', post.category ?? cluster.slug)}${optionalLine('primaryKeyword', post.primaryKeyword)}${optionalLine('searchIntent', post.searchIntent)}${optionalLine('audience', post.audience)}${optionalLine('region', post.region ?? 'global')}${optionalLine('author', post.author ?? 'Shubham Singla')}${optionalLine('reviewer', post.reviewer ?? 'Shubham Singla')}${optionalLine('lastReviewed', today)}${optionalLine('questionId', questionId)}${claimSupportYaml}---
 
 ${DISCLAIMER}
 

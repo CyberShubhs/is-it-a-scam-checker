@@ -14,8 +14,10 @@
 export interface ClaimSupport {
     /** Exact phrase or sentence from the body that makes the factual claim. */
     claim: string;
-    /** URL from the `sources` array that backs this claim. */
-    source: string;
+    /** URL from the `sources` array that backs this claim (legacy). */
+    source?: string;
+    /** Registry source ID that backs this claim (preferred). */
+    sourceId?: string;
 }
 
 export interface GeneratedPost {
@@ -39,6 +41,13 @@ export interface GeneratedPost {
     claimSupport?: ClaimSupport[];
     /** When sourced from the FindQuestions bank, the question's stable ID. */
     questionId?: string;
+    /**
+     * Registry source IDs the AI was told to use. This is the canonical
+     * citation surface now — the legacy `sources` (URL strings) field is
+     * still accepted to keep older fixtures parseable, but the generator
+     * always resolves `sourceIds` first and uses URLs for `sources`.
+     */
+    sourceIds?: string[];
 }
 
 /**
@@ -246,15 +255,20 @@ export function validateGeneratedPostQuality(
     // URLs. Skipped when claimSupport is absent (back-compat for old posts).
     if (Array.isArray(post.claimSupport)) {
         const claimSet = new Set(post.claimSupport.map((c) => c.claim.toLowerCase()));
+        // claimSupport entries may reference either a raw URL (legacy
+        // posts) OR a registry sourceId (new posts). We only check the URL
+        // form here; sourceId references are validated separately by the
+        // source-registry layer before write-time.
         const claimSourceHosts = new Set(
             post.claimSupport
-                .map((c) => hostnameOf(c.source).replace(/^www\./, ''))
+                .filter((c) => typeof c.source === 'string')
+                .map((c) => hostnameOf(c.source as string).replace(/^www\./, ''))
                 .filter(Boolean),
         );
         const validSourceHosts = new Set(
             validSources.map((s) => hostnameOf(s).replace(/^www\./, '')),
         );
-        // Every claimSupport source must be in the post's source list.
+        // Every claimSupport source URL must be in the post's source list.
         for (const host of claimSourceHosts) {
             if (!validSourceHosts.has(host)) {
                 reasons.push(

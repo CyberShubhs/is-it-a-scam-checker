@@ -72,12 +72,12 @@ jobs:
           npm run test:links
           npm run test:seo
           npm run test:blog-quality
-          # Static gate on every post.
+          # Static gate on every post (no network).
           npm run test:blog-sources
-          # Network gate only on the freshly generated post(s). Legacy 404s
-          # in older posts are surfaced separately by a non-blocking
-          # `--soft --network` audit (see SEO/reports/), but they do not
-          # block new commits.
+          # Strict network gate ONLY on the freshly generated post(s).
+          # Historical 404s in older posts are surfaced by the separate
+          # weekly audit workflow (.github/workflows/blog-source-audit.yml)
+          # and do not block daily publishing.
           git diff --cached --name-only -- 'content/blog/*.mdx' \
             | node scripts/check-blog-sources.mjs --network --changed-only
           npm run build

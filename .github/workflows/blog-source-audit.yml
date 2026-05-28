@@ -1,0 +1,52 @@
+name: Blog Source Audit (full)
+# Weekly + on-demand full audit of every published blog post's source URLs.
+# This workflow is intentionally SEPARATE from the daily auto-blog workflow:
+# we never want a historical 404 in a post from six months ago to block
+# today's newly-generated post.
+#
+# The audit runs in --soft mode by default: it reports issues but does not
+# fail the workflow unless invoked with the `strict` input. That way the
+# workflow stays green by default and surfaces problems in the job logs
+# (and, in future, in an open issue) rather than firing a red badge every
+# time Action Fraud's CDN throws a transient 5xx.
+
+on:
+  schedule:
+    # Sunday 03:00 UTC. Off-peak so we don't compete with daily auto-blog.
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+    inputs:
+      strict:
+        description: 'Treat 404 / DNS errors as hard failures (fail the run)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run full source audit
+        run: |
+          if [ "${{ github.event.inputs.strict }}" = "true" ]; then
+            echo "Running STRICT full audit (hard fail on 404/DNS)."
+            npm run test:blog-sources -- --network --full
+          else
+            echo "Running SOFT full audit (warnings only)."
+            npm run audit:blog-sources
+          fi
