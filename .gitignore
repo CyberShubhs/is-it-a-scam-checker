@@ -55,3 +55,7 @@ credentials.json
 # Local tooling artefacts
 /graphify-out/
 .graphifyignore
+
+# Private SEO working notes & internal AI prompts — operator-facing
+# instructions that should not appear in the public repo.
+SEO/claude/

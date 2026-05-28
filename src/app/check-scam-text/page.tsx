@@ -2,6 +2,8 @@
 import type { Metadata } from 'next';
 import { ScamChecker } from '@/components/ScamChecker';
 import { TrustSection } from '@/components/TrustSection';
+import { PageFAQ } from '@/components/PageFAQ';
+import { SMS_FAQS } from '@/lib/faqs';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
@@ -10,6 +12,21 @@ export const metadata: Metadata = {
     description: "Received a suspicious SMS or WhatsApp message? Use our free tool to instantly check if a text message is a scam. Protect yourself from smishing.",
     alternates: {
         canonical: 'https://scamchecker.app/check-scam-text',
+    },
+    // Per-page OG/Twitter so the social card matches the dedicated SMS
+    // checker intent rather than the generic site title.
+    openGraph: {
+        title: 'Check if a Text Message Is a Scam — Free SMS Scam Checker',
+        description:
+            'Paste a suspicious SMS or WhatsApp message and instantly see smishing red flags: fake delivery texts, bank impersonation, OTP harvesting and lookalike links.',
+        url: 'https://scamchecker.app/check-scam-text',
+        type: 'website',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'Check if a Text Message Is a Scam — Free SMS Scam Checker',
+        description:
+            'Spot fake delivery texts, smishing, OTP-harvesting SMS and bank impersonation in seconds. Free and private.',
     },
 };
 
@@ -176,6 +193,13 @@ export default function CheckScamTextPage() {
                     </div>
                 </div>
             </section>
+
+            {/* Visible SMS-specific FAQ — also emits matching FAQPage JSON-LD
+                so structured data is page-unique and matches visible content. */}
+            <PageFAQ
+                faqs={SMS_FAQS}
+                title="SMS and text scam — Frequently Asked Questions"
+            />
         </div>
     );
 }

@@ -1,0 +1,10 @@
+{
+  "_comment": "Persistent ledger of questions from data/findquestions-bank.json that have already been used as the primary topic of an auto-generated blog post. The auto-blog GitHub Action reads this file, picks an unused question, generates a post answering it, and commits both the new post and an updated copy of this file. Pre-populated with question IDs that are already answered by existing posts in content/blog so the action doesn't generate near-duplicates. Do not edit by hand unless you intend to recycle a question.",
+  "used": [
+    { "id": "fq-001", "slug": "2026-05-22-is-my-job-offer-a-scam-red-flags", "date": "2026-05-22" },
+    { "id": "fq-002", "slug": "2026-05-22-company-sent-me-a-check-before-i-started", "date": "2026-05-22" },
+    { "id": "fq-006", "slug": "2026-05-22-how-to-verify-a-company-is-real-before-accepting-a-job", "date": "2026-05-22" },
+    { "id": "fq-007", "slug": "2026-05-22-remote-job-offers-too-good-to-be-true", "date": "2026-05-22" },
+    { "id": "fq-036", "slug": "2026-05-22-should-employer-ask-banking-information-onboarding", "date": "2026-05-22" }
+  ]
+}

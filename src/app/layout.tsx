@@ -12,7 +12,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
     title: "Scam Checker – Check if a Message, Email or Link Is a Scam",
     description: "Free online scam checker that helps you identify fraud by analysing messages, emails and links in seconds. Private, instant, and works worldwide.",
-    keywords: ["scam checker", "is this a scam", "check scam message", "scam email check", "is this link safe", "phishing detector", "online scam checker", "fraud detection"],
+    // NOTE: meta `keywords` removed deliberately — Google has ignored it for
+    // years and Bing actively treats it as a spam signal. Page-level intent is
+    // now communicated via unique titles, descriptions and H1/H2 structure.
     openGraph: {
         type: "website",
         locale: "en",
@@ -79,8 +81,13 @@ export default function RootLayout({
                                     ],
                                     founder: {
                                         '@type': 'Person',
+                                        '@id': 'https://scamchecker.app/author/shubham-singla#person',
                                         name: 'Shubham Singla',
-                                        url: 'https://shubhamsingla.tech',
+                                        url: 'https://scamchecker.app/author/shubham-singla',
+                                        sameAs: [
+                                            'https://shubhamsingla.tech',
+                                            'https://github.com/BeastBoyShubhz',
+                                        ],
                                     },
                                 },
                                 {

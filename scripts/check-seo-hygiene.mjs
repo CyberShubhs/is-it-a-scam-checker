@@ -561,6 +561,75 @@ if (fs.existsSync(llmsPath)) {
     }
 }
 
+// --------------------------------------------------------------------------
+// 9. No `keywords:` field in Next.js Metadata exports.
+//
+// Google has ignored <meta name="keywords"> for years and Bing treats it
+// as a spam signal. The site previously emitted a keyword-stuffed array in
+// src/app/layout.tsx; we removed that. This check prevents anyone (or any
+// AI generator) from reintroducing it via metadata exports anywhere under
+// src/app/.
+// --------------------------------------------------------------------------
+
+const METADATA_KEYWORDS_PATTERN = /^\s*keywords\s*:\s*\[/m;
+for (const file of walkFiles(APP, ['.tsx', '.ts'])) {
+    const body = readFile(file);
+    if (
+        /export\s+(const|async\s+function|function)\s+(metadata|generateMetadata)\b/.test(
+            body,
+        ) &&
+        METADATA_KEYWORDS_PATTERN.test(body)
+    ) {
+        failures.push(
+            `[meta-keywords] ${relPath(file)} declares \`keywords:\` inside a Next.js Metadata export. Remove it — search engines ignore meta keywords and Bing treats them as spam.`,
+        );
+    }
+}
+
+// --------------------------------------------------------------------------
+// 10. Author profile page exists and the blog post template references it.
+//
+// E-E-A-T requires a visible author profile that the BlogPosting JSON-LD
+// can point at. Both must stay in lockstep.
+// --------------------------------------------------------------------------
+
+const AUTHOR_PAGE = path.join(APP, 'author', 'shubham-singla', 'page.tsx');
+if (!fs.existsSync(AUTHOR_PAGE)) {
+    failures.push(
+        `[author-missing] /author/shubham-singla page is missing. The BlogPosting JSON-LD links to it as the canonical Person profile.`,
+    );
+} else {
+    const authorBody = readFile(AUTHOR_PAGE);
+    if (!authorBody.includes('Shubham Singla')) {
+        failures.push(
+            `[author-bio-missing] ${relPath(AUTHOR_PAGE)} does not visibly contain "Shubham Singla". Visible authorship is a hard E-E-A-T requirement.`,
+        );
+    }
+    // The source file emits JSON.stringify(...) of an object literal that
+    // uses single-quoted keys/values. JSON.stringify will produce double
+    // quotes in the rendered HTML, but the SOURCE file uses single quotes.
+    // Match either form so this check stays robust to the author preferring
+    // single-quoted object literals.
+    const hasJsonLd = /application\/ld\+json/.test(authorBody);
+    const hasPerson =
+        /["']@type["']\s*:\s*["']Person["']/.test(authorBody);
+    if (!hasJsonLd || !hasPerson) {
+        failures.push(
+            `[author-jsonld-missing] ${relPath(AUTHOR_PAGE)} must emit Person JSON-LD so search engines can attribute the BlogPosting author to a real person.`,
+        );
+    }
+}
+
+const BLOG_POST_TEMPLATE = path.join(APP, 'blog', '[slug]', 'page.tsx');
+if (fs.existsSync(BLOG_POST_TEMPLATE)) {
+    const body = readFile(BLOG_POST_TEMPLATE);
+    if (!body.includes('/author/shubham-singla')) {
+        failures.push(
+            `[byline-missing] ${relPath(BLOG_POST_TEMPLATE)} does not link to /author/shubham-singla. Every blog post must show a visible author byline pointing at the canonical author profile.`,
+        );
+    }
+}
+
 console.log(`\nChecked ${sitemapPaths.size} sitemap routes.`);
 console.log(`Scanned ${SCAN_DIRS.length} directories for prompt-leak fragments.`);
 

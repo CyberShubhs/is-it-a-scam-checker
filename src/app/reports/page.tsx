@@ -6,6 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { AlertOctagon, BookOpen, ShieldCheck, Users, TrendingUp, Globe, Phone, Mail, Coins, Clock, Flame, ArrowRight } from 'lucide-react';
+import { PageFAQ } from '@/components/PageFAQ';
+import { REPORTS_FAQS } from '@/lib/faqs';
 
 // SEO note: /reports is the second-highest CTR page in GSC (2.9% at avg
 // position 5.91). Title/meta tuned for "scam reports", "reported scam
@@ -308,6 +310,12 @@ export default async function ReportsPage() {
                     </div>
                 )}
             </div>
+
+            {/* Reports-specific FAQ + matching FAQPage JSON-LD. */}
+            <PageFAQ
+                faqs={REPORTS_FAQS}
+                title="Scam reports — Frequently Asked Questions"
+            />
         </div>
     );
 }

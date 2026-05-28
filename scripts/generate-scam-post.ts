@@ -317,6 +317,103 @@ function detectAIPatterns(content: string): string[] {
     return found;
 }
 
+// ── FindQuestions question bank ────────────────────────────────────────────
+//
+// The 40-question bank (data/findquestions-bank.json) is sourced from the
+// FindQuestions/HeyTony PDF in SEO/. The generator reserves one unused
+// question per run and writes a post that answers it in a clearly-framed
+// realistic-example-scenario format. Used IDs persist in
+// data/used-blog-questions.json so the same question never produces two
+// posts. When the bank is exhausted we fall back to the legacy
+// random-cluster prompt and log a clear warning.
+
+interface QuestionBankEntry {
+    id: string;
+    question: string;
+    intent: string;
+}
+
+interface QuestionBankFile {
+    source: string;
+    sourceLabel?: string;
+    notes?: string;
+    cluster?: string;
+    questions: QuestionBankEntry[];
+}
+
+interface UsedQuestionsFile {
+    used: { id: string; slug: string; date: string }[];
+}
+
+const QUESTION_BANK_PATH = path.join(
+    process.cwd(),
+    'data',
+    'findquestions-bank.json',
+);
+const USED_QUESTIONS_PATH = path.join(
+    process.cwd(),
+    'data',
+    'used-blog-questions.json',
+);
+
+function loadQuestionBank(): QuestionBankFile | null {
+    if (!fs.existsSync(QUESTION_BANK_PATH)) return null;
+    try {
+        const raw = fs.readFileSync(QUESTION_BANK_PATH, 'utf-8');
+        const parsed = JSON.parse(raw) as QuestionBankFile;
+        if (!Array.isArray(parsed.questions)) return null;
+        return parsed;
+    } catch (err) {
+        console.warn(`⚠️  Failed to read question bank: ${(err as Error).message}`);
+        return null;
+    }
+}
+
+function loadUsedQuestions(): UsedQuestionsFile {
+    if (!fs.existsSync(USED_QUESTIONS_PATH)) {
+        return { used: [] };
+    }
+    try {
+        const raw = fs.readFileSync(USED_QUESTIONS_PATH, 'utf-8');
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Array.isArray(parsed.used)) return { used: [] };
+        return parsed as UsedQuestionsFile;
+    } catch (err) {
+        console.warn(`⚠️  Failed to read used-questions ledger: ${(err as Error).message}`);
+        return { used: [] };
+    }
+}
+
+function pickUnusedQuestion(): {
+    question: QuestionBankEntry;
+    bank: QuestionBankFile;
+} | null {
+    const bank = loadQuestionBank();
+    if (!bank) return null;
+    const used = loadUsedQuestions();
+    const usedIds = new Set(used.used.map((u) => u.id));
+    const remaining = bank.questions.filter((q) => !usedIds.has(q.id));
+    if (remaining.length === 0) return null;
+    // Pick the first unused question (deterministic) so the order of the
+    // bank also defines the editorial publishing order. Randomising would
+    // make schedule-checking harder for the editor.
+    return { question: remaining[0], bank };
+}
+
+function recordUsedQuestion(
+    questionId: string,
+    slug: string,
+    date: string,
+): void {
+    const ledger = loadUsedQuestions();
+    ledger.used.push({ id: questionId, slug, date });
+    fs.writeFileSync(
+        USED_QUESTIONS_PATH,
+        `${JSON.stringify(ledger, null, 2)}\n`,
+        'utf-8',
+    );
+}
+
 // ── Existing post dedup ────────────────────────────────────────────────────
 
 function getExistingTitles(): string[] {
@@ -764,6 +861,102 @@ type KeywordCluster = (typeof KEYWORD_CLUSTERS)[number];
 interface BuiltPrompt {
     prompt: string;
     cluster: KeywordCluster;
+    questionId?: string;
+}
+
+/**
+ * Build a prompt that asks the model to answer ONE specific question from
+ * the FindQuestions bank. This produces stronger search-intent alignment
+ * than the legacy random-angle prompt because every post is anchored to a
+ * real query a real person typed somewhere.
+ *
+ * The post is framed as a realistic-scenario Q&A so we never publish fake
+ * first-person stories. The author label remains "Shubham Singla" reviewing
+ * a composite case — never a fabricated personal anecdote.
+ */
+function buildQuestionPrompt(
+    question: QuestionBankEntry,
+    existingTitles: string[],
+): BuiltPrompt {
+    // Job-related questions get routed to the job-scams cluster so the
+    // cluster-specific internal-link gate in post-quality.ts is satisfied.
+    const cluster =
+        KEYWORD_CLUSTERS.find((c) => c.slug === 'job-scams') ?? KEYWORD_CLUSTERS[0];
+    const today = new Date().toISOString().split('T')[0];
+
+    const existingContext =
+        existingTitles.length > 0
+            ? `\n\nALREADY PUBLISHED (avoid duplicating these titles):\n${existingTitles
+                  .map((t) => `- ${t}`)
+                  .join('\n')}`
+            : '';
+
+    const promptText = `You are writing a blog post for scamchecker.app — a free tool that helps people check if messages, emails, links, and job offers are scams.
+
+The post must answer exactly this one question from a real reader:
+
+QUESTION ID: ${question.id}
+QUESTION: ${question.question}
+SEARCH INTENT BEHIND THE QUESTION: ${question.intent}
+
+You are writing as "Shubham Singla", the cybersecurity professional who runs scamchecker.app. The voice is calm, plain-English, security-first. Do NOT pretend you personally received this scam — instead, open with a clearly-labelled realistic example scenario / composite case based on common patterns reported on Reddit and to government scam agencies. Never invent specific victim names, employer names, dollar amounts, or laws that you cannot tie to a cited source.
+
+PRIMARY KEYWORD CLUSTER: ${cluster.slug}
+Cluster scope: ${cluster.notes}
+You MUST include at least one normal markdown link to one of these internal routes in the body: ${cluster.relatedInternalRoutes.join(', ')}.
+
+DATE: ${today}
+${existingContext}
+
+REQUIRED STRUCTURE — every section must appear in this order using EXACTLY these H2 headings (case-insensitive match is OK, do not abbreviate):
+1. SEO title (50-65 chars) that mirrors the question's intent.
+2. Short intro (2-3 sentences) explaining the scenario someone is in when they Google this question.
+3. "## ${question.question}" — restate the question verbatim as the first H2.
+4. "## Example scenario" — clearly labelled. Open with: "Here's a realistic composite scenario based on patterns reported to Action Fraud, the FTC and r/Scams:" then a 4-6 sentence first-person narrative. Add the disclaimer: "This is a realistic example built from common reports — not a single real person's story."
+5. "## How This Scam Works" — plain-English answer to the question, 200-350 words, no bullets. Mention the specific scam mechanics in answer to the question.
+6. "## Who Is Being Targeted" — 1-2 paragraphs naming who falls for this pattern (graduates, remote job seekers, etc.) and on which platforms.
+7. "## Red Flags to Watch For" — 4-6 🚩 emoji bullets.
+8. "## What to Do Before You Click, Reply, or Pay" — numbered steps, 3-5 items, must include a link to [our free scam checker](/check) or the cluster-specific checker.
+9. "## What to Do If You've Already Been Affected" — numbered steps, 3-5 items. Must link to [/have-i-been-scammed](/have-i-been-scammed).
+10. "## Where to Report" — official channels:
+   - 🇦🇺 Australia: [Scamwatch](https://www.scamwatch.gov.au/report-a-scam)
+   - 🇺🇸 USA: [FTC ReportFraud](https://reportfraud.ftc.gov/)
+   - 🇬🇧 UK: [Action Fraud](https://www.actionfraud.police.uk/)
+   - 🌐 International: [Global Scam Reporting Directory](/global-scam-reporting)
+11. "## Related Scam Checker pages" — bullet list of 2-3 internal links: at least one checker page, at least one pillar/guide or related blog category page, and /reports where relevant.
+12. A short closing sentence with a [free scam checker](/check) link.
+13. SOURCES (placed in the JSON "sources" array, also referenced naturally in the body) — 2-4 real working URLs from FBI/IC3, FTC, Action Fraud, Scamwatch, ReportCyber, ECC-Net, IRS, major newsrooms (BBC, Reuters, ABC) or established security firms.
+
+The headings #5 through #11 above are mandatory for the deterministic quality gate. Do not rename them. Their wording must match exactly.
+
+WORD COUNT: 800-1200 words in the body (not counting frontmatter).
+
+VOICE rules (non-negotiable):
+- Plain English, short paragraphs, active voice.
+- No AI clichés. No "in today's digital landscape". No "delve", "leverage", "robust", "seamless", "paramount", "crucial", "invaluable".
+- No self-reference ("in this article", "we'll explore").
+- No invented statistics. Every dollar amount and big number must trace back to a sourced URL.
+- The example scenario is always framed as a composite — never claimed as a personal experience of the author.
+
+OUTPUT FORMAT — Return ONLY pure JSON. No markdown fences. No commentary. All newlines inside the body string must be escaped as \\n.
+{
+  "title": "Title (50-65 chars) that answers the question",
+  "summary": "Meta description (140-155 chars) that hooks searchers",
+  "tags": ["job-scam", "fake-job-offer", "scam-alert"],
+  "sources": ["https://url1.gov/page", "https://url2.org/article"],
+  "body": "Full markdown body with the structure above",
+  "primaryKeyword": "the single search phrase this post should rank for",
+  "searchIntent": "informational",
+  "audience": "People searching: \\"${question.question.toLowerCase()}\\"",
+  "region": "global",
+  "category": "${cluster.slug}",
+  "questionId": "${question.id}",
+  "claimSupport": [
+    { "claim": "exact snippet from the body that contains a statistic or named incident", "source": "https://url1.gov/page" }
+  ]
+}`;
+
+    return { prompt: promptText, cluster, questionId: question.id };
 }
 
 function buildPrompt(existingTitles: string[]): BuiltPrompt {
@@ -932,11 +1125,41 @@ async function tryProvider(
 interface GeneratedPostWithCluster {
     post: GeneratedPost;
     cluster: KeywordCluster;
+    /** Set when the post was generated from a FindQuestions-bank question. */
+    questionId?: string;
 }
 
 async function generatePost(): Promise<GeneratedPostWithCluster> {
     const existingTitles = getExistingTitles();
-    const { prompt, cluster } = buildPrompt(existingTitles);
+
+    // Prefer the FindQuestions bank — each unused question becomes one post.
+    // If the bank is exhausted (or missing), fall back to the legacy random
+    // cluster prompt so the action does not break.
+    const picked = pickUnusedQuestion();
+    let prompt: string;
+    let cluster: KeywordCluster;
+    let questionId: string | undefined;
+    if (picked) {
+        console.log(
+            `🧭 Using FindQuestions bank entry ${picked.question.id}: "${picked.question.question}"`,
+        );
+        const built = buildQuestionPrompt(picked.question, existingTitles);
+        prompt = built.prompt;
+        cluster = built.cluster;
+        questionId = built.questionId;
+    } else {
+        const bank = loadQuestionBank();
+        if (bank) {
+            console.warn(
+                '⚠️  Every question in data/findquestions-bank.json has been used. ' +
+                    'Falling back to the legacy random-cluster prompt. Refresh the ' +
+                    'question bank before relying on auto-blog again.',
+            );
+        }
+        const built = buildPrompt(existingTitles);
+        prompt = built.prompt;
+        cluster = built.cluster;
+    }
 
     // Build provider list: Gemini first, Groq fallback
     const providers: { name: string; fn: (p: string) => Promise<string> }[] = [];
@@ -954,7 +1177,7 @@ async function generatePost(): Promise<GeneratedPostWithCluster> {
     for (const { name, fn } of providers) {
         try {
             const post = await tryProvider(name, fn, prompt);
-            return { post, cluster };
+            return { post, cluster, questionId };
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : String(err);
             lastError = msg;
@@ -983,7 +1206,7 @@ async function main(): Promise<void> {
 
     console.log('🔍 Generating blog post via AI (Gemini → Groq fallback)...');
 
-    const { post, cluster } = await generatePost();
+    const { post, cluster, questionId } = await generatePost();
 
     console.log(`📝 Topic: ${post.title}`);
     console.log(`📂 Cluster: ${cluster.slug} (routes: ${cluster.relatedInternalRoutes.join(', ')})`);
@@ -1022,7 +1245,7 @@ summary: "${yamlEscape(post.summary)}"
 tags: ${tagYaml}
 sources:
 ${sourceYaml}
-${optionalLine('updated', today)}${optionalLine('category', post.category ?? cluster.slug)}${optionalLine('primaryKeyword', post.primaryKeyword)}${optionalLine('searchIntent', post.searchIntent)}${optionalLine('audience', post.audience)}${optionalLine('region', post.region ?? 'global')}${optionalLine('author', post.author ?? 'The Scam Checker Team')}${optionalLine('reviewer', post.reviewer ?? 'Shubham Singla')}${optionalLine('lastReviewed', today)}${claimSupportYaml}---
+${optionalLine('updated', today)}${optionalLine('category', post.category ?? cluster.slug)}${optionalLine('primaryKeyword', post.primaryKeyword)}${optionalLine('searchIntent', post.searchIntent)}${optionalLine('audience', post.audience)}${optionalLine('region', post.region ?? 'global')}${optionalLine('author', post.author ?? 'Shubham Singla')}${optionalLine('reviewer', post.reviewer ?? 'Shubham Singla')}${optionalLine('lastReviewed', today)}${optionalLine('questionId', questionId)}${claimSupportYaml}---
 
 ${DISCLAIMER}
 
@@ -1120,6 +1343,15 @@ ${body}
     console.log(`   Tags: ${post.tags.join(', ')}`);
     console.log(`   Sources: ${post.sources.length} referenced`);
     console.log(`   AI patterns found & stripped: ${remaining.length}`);
+
+    // Mark the question as used so the next run picks a different one.
+    // Only update the ledger AFTER the post survives every quality gate —
+    // otherwise a rejected post would burn a question forever.
+    if (questionId) {
+        const fileSlug = filename.replace(/\.mdx$/, '');
+        recordUsedQuestion(questionId, fileSlug, date);
+        console.log(`   Question ${questionId} marked as used in data/used-blog-questions.json`);
+    }
 }
 
 main().catch((err) => {

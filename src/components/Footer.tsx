@@ -62,6 +62,7 @@ const sections: { heading: string; links: FooterLink[] }[] = [
         heading: 'Trust',
         links: [
             { href: '/about', label: 'About Scam Checker' },
+            { href: '/author/shubham-singla', label: 'Author: Shubham Singla' },
             { href: '/contact', label: 'Contact the team' },
             { href: '/privacy', label: 'Privacy policy' },
             { href: '/terms', label: 'Terms of use' },

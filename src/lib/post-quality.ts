@@ -37,6 +37,8 @@ export interface GeneratedPost {
     lastReviewed?: string;
     /** Per-claim support notes. */
     claimSupport?: ClaimSupport[];
+    /** When sourced from the FindQuestions bank, the question's stable ID. */
+    questionId?: string;
 }
 
 /**

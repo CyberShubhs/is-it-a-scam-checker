@@ -214,6 +214,28 @@ export function getCategoriesForPost(slug: string): BlogCategory[] {
  * component can render it AND tests can introspect the shape without
  * coupling to the page renderer.
  */
+/**
+ * Maps a free-text author byline to a stable canonical URL.
+ *
+ * The named author currently used in new posts is "Shubham Singla". That
+ * value gets routed to the dedicated author profile at /author/shubham-singla,
+ * which carries the Person JSON-LD and the visible bio Google/AI assistants
+ * need to attribute E-E-A-T signals to a real person rather than a team.
+ *
+ * Any other named author falls back to the /about page — keeps older posts
+ * working without breaking schema.
+ */
+export function authorProfileUrlFor(author?: string): string {
+    const name = (author || '').trim().toLowerCase();
+    if (!name || name === 'the scam checker team') {
+        return 'https://scamchecker.app/author/shubham-singla';
+    }
+    if (name === 'shubham singla' || name === 'shubham') {
+        return 'https://scamchecker.app/author/shubham-singla';
+    }
+    return 'https://scamchecker.app/about';
+}
+
 export function buildBlogPostingJsonLd(post: Post): Record<string, unknown> {
     const url = `https://scamchecker.app/blog/${post.slug}`;
     const fm = post.frontmatter;
@@ -223,6 +245,15 @@ export function buildBlogPostingJsonLd(post: Post): Record<string, unknown> {
         : [];
     const articleSection =
         fm.category || (Array.isArray(fm.tags) && fm.tags.length > 0 ? fm.tags[0] : undefined);
+    // Default named author for posts that predate the author field is
+    // "Shubham Singla" — the actual person reviewing every shipped post.
+    // The legacy "The Scam Checker Team" string is mapped to him by
+    // authorProfileUrlFor so Person JSON-LD stays connected to a real
+    // human entity (E-E-A-T).
+    const authorName = fm.author && fm.author.trim() !== 'The Scam Checker Team'
+        ? fm.author
+        : 'Shubham Singla';
+    const authorUrl = authorProfileUrlFor(authorName);
 
     const node: Record<string, unknown> = {
         '@context': 'https://schema.org',
@@ -233,11 +264,13 @@ export function buildBlogPostingJsonLd(post: Post): Record<string, unknown> {
         dateModified,
         author: {
             '@type': 'Person',
-            name: fm.author || 'The Scam Checker Team',
-            url: 'https://scamchecker.app/about',
+            '@id': `${authorUrl}#person`,
+            name: authorName,
+            url: authorUrl,
         },
         publisher: {
             '@type': 'Organization',
+            '@id': 'https://scamchecker.app/#organization',
             name: 'Scam Checker',
             url: 'https://scamchecker.app',
             logo: {

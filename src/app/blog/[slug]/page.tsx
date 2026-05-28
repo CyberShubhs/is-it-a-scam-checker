@@ -4,6 +4,7 @@ import {
     getRelatedPosts,
     getCategoriesForPost,
     buildBlogPostingJsonLd,
+    authorProfileUrlFor,
 } from '@/lib/posts';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
@@ -102,16 +103,89 @@ export default async function BlogPostPage({
                         <h1 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900">
                             {post.frontmatter.title}
                         </h1>
-                        <p className="text-slate-500 mb-6">
-                            Published{' '}
-                            <time dateTime={post.frontmatter.date}>
-                                {new Date(post.frontmatter.date).toLocaleDateString('en-AU', {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric',
-                                })}
-                            </time>
-                        </p>
+
+                        {/*
+                          Visible E-E-A-T block. Search engines and AI search
+                          systems weight authored content more heavily — and
+                          legitimately authored YMYL content (which scam advice
+                          is) needs a visible author, dates, and a reviewer
+                          when present. The "by" line links to the canonical
+                          author profile that carries the Person JSON-LD.
+                          Legacy posts with "The Scam Checker Team" author
+                          field are rendered under Shubham Singla because he
+                          is the human reviewer of every shipped post.
+                        */}
+                        {(() => {
+                            const fm = post.frontmatter;
+                            const displayAuthor =
+                                fm.author && fm.author.trim() !== 'The Scam Checker Team'
+                                    ? fm.author
+                                    : 'Shubham Singla';
+                            const authorUrl = authorProfileUrlFor(displayAuthor);
+                            const authorHref = authorUrl.startsWith('https://scamchecker.app')
+                                ? authorUrl.replace('https://scamchecker.app', '')
+                                : authorUrl;
+                            return (
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 mb-6">
+                                    <span>
+                                        By{' '}
+                                        <Link
+                                            href={authorHref}
+                                            className="font-medium text-slate-900 hover:underline"
+                                            rel="author"
+                                        >
+                                            {displayAuthor}
+                                        </Link>
+                                    </span>
+                                    <span className="text-slate-300" aria-hidden="true">
+                                        •
+                                    </span>
+                                    <span>
+                                        Published{' '}
+                                        <time dateTime={fm.date}>
+                                            {new Date(fm.date).toLocaleDateString('en-AU', {
+                                                day: 'numeric',
+                                                month: 'long',
+                                                year: 'numeric',
+                                            })}
+                                        </time>
+                                    </span>
+                                    {(fm.updated || fm.lastReviewed) &&
+                                        (fm.updated || fm.lastReviewed) !== fm.date && (
+                                            <>
+                                                <span className="text-slate-300" aria-hidden="true">
+                                                    •
+                                                </span>
+                                                <span>
+                                                    Updated{' '}
+                                                    <time dateTime={fm.updated || fm.lastReviewed}>
+                                                        {new Date(
+                                                            (fm.updated || fm.lastReviewed) as string,
+                                                        ).toLocaleDateString('en-AU', {
+                                                            day: 'numeric',
+                                                            month: 'long',
+                                                            year: 'numeric',
+                                                        })}
+                                                    </time>
+                                                </span>
+                                            </>
+                                        )}
+                                    {fm.reviewer && (
+                                        <>
+                                            <span className="text-slate-300" aria-hidden="true">
+                                                •
+                                            </span>
+                                            <span>
+                                                Reviewed by{' '}
+                                                <span className="font-medium text-slate-800">
+                                                    {fm.reviewer}
+                                                </span>
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
+                            );
+                        })()}
 
                         <ul className="flex flex-wrap gap-2 mb-2 list-none p-0">
                             {post.frontmatter.tags.map((tag) => (
@@ -122,6 +196,38 @@ export default async function BlogPostPage({
                                 </li>
                             ))}
                         </ul>
+
+                        {/* Compact author bio block — keeps visible E-E-A-T
+                            attribution on the article itself, not only in
+                            JSON-LD. Distinct from the meta byline above so
+                            the article still reads cleanly. */}
+                        <aside
+                            aria-label="About the author"
+                            className="mt-6 mb-2 flex items-start gap-3 p-4 rounded-lg bg-slate-50 border border-slate-200"
+                        >
+                            <ShieldCheck
+                                className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"
+                                aria-hidden="true"
+                            />
+                            <p className="text-sm text-slate-700 leading-relaxed">
+                                Written and reviewed for accuracy by{' '}
+                                <Link
+                                    href="/author/shubham-singla"
+                                    className="font-semibold text-slate-900 hover:underline"
+                                    rel="author"
+                                >
+                                    Shubham Singla
+                                </Link>
+                                , cybersecurity professional and founder of Scam
+                                Checker.{' '}
+                                <Link
+                                    href="/author/shubham-singla"
+                                    className="text-blue-700 hover:underline"
+                                >
+                                    Read about the editorial policy →
+                                </Link>
+                            </p>
+                        </aside>
                     </header>
 
                     {/* BlogPosting JSON-LD — built by buildBlogPostingJsonLd so

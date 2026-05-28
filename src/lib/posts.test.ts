@@ -32,9 +32,13 @@ describe('buildBlogPostingJsonLd', () => {
 
     it('emits author and publisher with logo', () => {
         const node = buildBlogPostingJsonLd(fixture());
+        // Default author is now Shubham Singla (the real reviewer of every
+        // shipped post) so the Person JSON-LD attaches to a real human
+        // entity instead of an anonymous "team" label.
         expect(node.author).toMatchObject({
             '@type': 'Person',
-            name: 'The Scam Checker Team',
+            name: 'Shubham Singla',
+            url: 'https://scamchecker.app/author/shubham-singla',
         });
         expect(node.publisher).toMatchObject({
             '@type': 'Organization',
@@ -42,6 +46,18 @@ describe('buildBlogPostingJsonLd', () => {
         });
         const publisher = node.publisher as { logo?: { url?: string } };
         expect(publisher.logo?.url).toBe('https://scamchecker.app/icon.png');
+    });
+
+    it('maps the legacy "The Scam Checker Team" byline to Shubham Singla', () => {
+        const node = buildBlogPostingJsonLd(
+            fixture({ author: 'The Scam Checker Team' }),
+        );
+        expect((node.author as { name: string; url: string }).name).toBe(
+            'Shubham Singla',
+        );
+        expect((node.author as { name: string; url: string }).url).toBe(
+            'https://scamchecker.app/author/shubham-singla',
+        );
     });
 
     it('emits citation from the sources array', () => {

@@ -11,6 +11,8 @@ import {
     type RiskLevel,
     type ResultBucket,
 } from '@/lib/analytics';
+import { PageFAQ } from '@/components/PageFAQ';
+import { HIBS_FAQS } from '@/lib/faqs';
 
 export default function HaveIBeenScammedPage() {
     const [step, setStep] = useState(1);
@@ -114,16 +116,24 @@ export default function HaveIBeenScammedPage() {
                     </CardContent>
                 </Card>
 
-                {/* SEO Content Section targeting panic keywords */}
+                {/* SEO Content Section targeting common scam-recovery search intents. */}
                 <div className="prose prose-slate max-w-none">
-                    <h2 className="text-2xl font-bold text-slate-900">What to do if you think you've been scammed</h2>
+                    <h2 className="text-2xl font-bold text-slate-900">What to do if you think you&apos;ve been scammed</h2>
                     <p>
-                        If you're sitting there thinking "<strong>I think I got scammed</strong>" or "<strong>I clicked a scam link</strong>", you are not alone. It happens to thousands of people every day. The most important thing is to act fast.
+                        If you&apos;re sitting there thinking &quot;<strong>I think I got scammed</strong>&quot; or &quot;<strong>I clicked a scam link</strong>&quot;, you are not alone. It happens to thousands of people every day. The most important thing is to act fast.
                     </p>
                     <p>
-                        Whether you <strong>gave your details to a scammer</strong>, replied to a <strong>scam message</strong>, or are just wondering "<strong>was this a scam?</strong>", the steps you take in the first hour can save your money and identity.
+                        Whether you <strong>gave your details to a scammer</strong>, replied to a <strong>scam message</strong>, or are just wondering &quot;<strong>was this a scam?</strong>&quot;, the steps you take in the first hour can save your money and identity.
                     </p>
                 </div>
+            </div>
+
+            {/* Page-specific FAQs + matching FAQPage JSON-LD. */}
+            <div className="container mx-auto px-4 max-w-4xl">
+                <PageFAQ
+                    faqs={HIBS_FAQS}
+                    title="Have I been scammed — Frequently Asked Questions"
+                />
             </div>
         </div>
     );

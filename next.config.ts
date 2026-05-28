@@ -206,6 +206,59 @@ const nextConfig: NextConfig = {
         destination: '/guides/job-scams',
         permanent: true,
       },
+
+      // ── Pillar-URL aliases ────────────────────────────────────────────
+      // Map the canonical pillar slugs requested in the SEO brief to the
+      // existing comprehensive coverage on the site. We deliberately do
+      // NOT create thin duplicate pillar pages: each destination is an
+      // existing page that already has the H1 / 700-1200-word coverage
+      // and the internal linking the brief calls for. Permanent (308)
+      // so search engines collapse the slugs into the canonical URL.
+      {
+        source: '/phishing-scams',
+        destination: '/guides/email-phishing-examples',
+        permanent: true,
+      },
+      {
+        source: '/email-scams',
+        destination: '/check-scam-email',
+        permanent: true,
+      },
+      {
+        source: '/sms-scams',
+        destination: '/check-scam-text',
+        permanent: true,
+      },
+      {
+        source: '/whatsapp-scams',
+        destination: '/check-scam-text',
+        permanent: true,
+      },
+      {
+        source: '/website-scams',
+        destination: '/scam-website-checker',
+        permanent: true,
+      },
+      {
+        source: '/crypto-scams',
+        destination: '/crypto-scam-checker',
+        permanent: true,
+      },
+      {
+        source: '/job-scams',
+        destination: '/guides/job-scams',
+        permanent: true,
+      },
+      {
+        source: '/marketplace-scams',
+        destination: '/blog/marketplace-scams',
+        permanent: true,
+      },
+      {
+        source: '/what-to-do-after-being-scammed',
+        destination: '/have-i-been-scammed',
+        permanent: true,
+      },
     ];
   },
 };

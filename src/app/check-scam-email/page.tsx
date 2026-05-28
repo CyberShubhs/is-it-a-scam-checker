@@ -2,6 +2,8 @@
 import type { Metadata } from 'next';
 import { ScamChecker } from '@/components/ScamChecker';
 import { TrustSection } from '@/components/TrustSection';
+import { PageFAQ } from '@/components/PageFAQ';
+import { EMAIL_FAQS } from '@/lib/faqs';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
@@ -10,6 +12,21 @@ export const metadata: Metadata = {
     description: "Not sure about an email? Paste it here to check for phishing scams, fake invoices, and imposter emails. Free instant email analysis.",
     alternates: {
         canonical: 'https://scamchecker.app/check-scam-email',
+    },
+    // Page-specific OG/Twitter — keeps social cards distinct from the
+    // root site OG and from the other checker pages.
+    openGraph: {
+        title: 'Check if an Email Is a Scam — Free Phishing Email Checker',
+        description:
+            'Paste a suspicious email and spot phishing tells: spoofed senders, fake invoices, hidden links, and bank-impersonation language.',
+        url: 'https://scamchecker.app/check-scam-email',
+        type: 'website',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'Check if an Email Is a Scam — Free Phishing Email Checker',
+        description:
+            'Phishing email check in seconds. Paste, read the red flags, decide if it is safe to open.',
     },
 };
 
@@ -173,6 +190,12 @@ export default function CheckScamEmailPage() {
                     </div>
                 </div>
             </section>
+
+            {/* Email-specific FAQs with matching FAQPage JSON-LD. */}
+            <PageFAQ
+                faqs={EMAIL_FAQS}
+                title="Phishing email — Frequently Asked Questions"
+            />
         </div>
     );
 }
