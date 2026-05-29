@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { AlertOctagon, BookOpen, ShieldCheck, Users, TrendingUp, Globe, Phone, Mail, Coins, Clock, Flame, ArrowRight } from 'lucide-react';
 import { PageFAQ } from '@/components/PageFAQ';
 import { REPORTS_FAQS } from '@/lib/faqs';
+import { maskReportValue, redactSensitive } from '@/lib/redact';
 
 // SEO note: /reports is the second-highest CTR page in GSC (2.9% at avg
 // position 5.91). Title/meta tuned for "scam reports", "reported scam
@@ -28,22 +29,11 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 
-function maskValue(type: string, val: string) {
-    if (!val) return '';
-    const t = type.toLowerCase();
-    if (t === 'phone' || t === 'sms' || t === 'text') {
-        if (val.length < 5) return val;
-        return val.substring(0, 3) + '****' + val.substring(val.length - 3);
-    }
-    if (t === 'email') {
-        const [u, d] = val.split('@');
-        if (!d) return val.substring(0, 3) + '...';
-        return (u.substring(0, 2) + '***@' + d);
-    }
-    // URL
-    if (val.length > 60) return val.substring(0, 57) + '...';
-    return val;
-}
+// Public-facing masking is now delegated to src/lib/redact.ts so the
+// API route and the page renderer never drift out of sync. URL values are
+// also rendered as the host only (path can carry tokens) — see
+// maskReportValue.
+const maskValue = (type: string, val: string) => maskReportValue(type, val);
 
 export default async function ReportsPage() {
     let reports: Report[] = [];
@@ -299,7 +289,10 @@ export default async function ReportsPage() {
                                             </div>
                                             {r.notes && (
                                                 <p className="text-sm text-slate-600 italic border-l-2 border-slate-200 pl-3">
-                                                    &quot;{r.notes}&quot;
+                                                    {/* Defence-in-depth: scrub on the read path
+                                                        so any legacy row with unscrubbed notes
+                                                        is still masked at render time. */}
+                                                    &quot;{redactSensitive(r.notes)}&quot;
                                                 </p>
                                             )}
                                         </div>

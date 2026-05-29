@@ -65,8 +65,12 @@ const sections: { heading: string; links: FooterLink[] }[] = [
             { href: '/author/shubham-singla', label: 'Author: Shubham Singla' },
             { href: '/contact', label: 'Contact the team' },
             { href: '/privacy', label: 'Privacy policy' },
+            { href: '/cookies', label: 'Cookie policy' },
             { href: '/terms', label: 'Terms of use' },
             { href: '/disclaimer', label: 'Disclaimer' },
+            { href: '/security', label: 'Security' },
+            { href: '/responsible-disclosure', label: 'Responsible disclosure' },
+            { href: '/data-removal', label: 'Data removal request' },
         ],
     },
 ];

@@ -55,6 +55,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
         '/privacy',
         '/terms',
         '/disclaimer',
+        // Policy + compliance surfaces added 2026-05-29.
+        '/cookies',
+        '/security',
+        '/data-removal',
+        '/responsible-disclosure',
         '/guides',
         '/blog',
         '/check-scam-text',

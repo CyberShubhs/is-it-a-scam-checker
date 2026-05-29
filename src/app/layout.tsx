@@ -6,6 +6,7 @@ import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -107,6 +108,10 @@ export default function RootLayout({
                     }}
                 />
                 <Footer />
+                {/* Consent-gated GA + the consent banner itself. Order
+                    doesn't matter — GA listens for the consent event and
+                    only mounts when granted. */}
+                <CookieConsentBanner />
                 <GoogleAnalytics />
                 <Analytics />
             </body>

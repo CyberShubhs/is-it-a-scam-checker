@@ -1,46 +1,126 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
+import Link from 'next/link';
+
+const URL = 'https://scamchecker.app/disclaimer';
 
 export const metadata: Metadata = {
-    title: 'Disclaimer: Limitations of Automated Scam Detection | Scam Checker',
-    description: 'Legal disclaimer for Scam Checker. Our automated analysis provides guidance, not certainty. Always verify with official sources.',
-    alternates: {
-        canonical: 'https://scamchecker.app/disclaimer',
-    },
+    title: 'Disclaimer | Scam Checker',
+    description:
+        'The checker is informational guidance, not certainty. We cannot recover funds, guarantee accuracy, or replace professional advice. Always verify high-stakes claims through official channels.',
+    alternates: { canonical: URL },
     openGraph: {
-        title: 'Disclaimer: Limitations of Automated Scam Detection',
-        description: 'Legal disclaimer for Scam Checker. Our analysis provides guidance, not certainty.',
-        url: 'https://scamchecker.app/disclaimer',
+        title: 'Disclaimer — Scam Checker',
+        description:
+            'Informational tool. False positives and false negatives are possible.',
+        url: URL,
     },
 };
 
 export default function DisclaimerPage() {
     return (
         <div className="container mx-auto px-4 py-12 max-w-4xl prose prose-slate">
-            <h1 className="text-3xl font-bold mb-4">Disclaimer: Limitations of Automated Scam Detection</h1>
-
-            <p className="mb-4 text-lg">
-                The Scam Checker tool provides automated analysis based on common patterns and known scam tactics. <strong>It is not a guarantee of safety or danger.</strong>
+            <h1>Disclaimer</h1>
+            <p className="text-sm text-muted-foreground">
+                Last updated: 2026-05-29.
             </p>
 
-            <h2 className="text-xl font-bold mt-6 mb-2">Not Professional Advice</h2>
-            <p className="mb-4">
-                The information provided by this website does not constitute legal, financial, or cybersecurity advice. You should not rely solely on our analysis to make financial decisions or share personal information. When in doubt, contact the supposed sender through official channels.
+            <p className="text-lg">
+                Scam Checker is automated guidance based on common scam
+                patterns. <strong>It is not a guarantee of safety or
+                danger.</strong> Use it alongside your own judgement — not
+                instead of it.
             </p>
 
-            <h2 className="text-xl font-bold mt-6 mb-2">False Positives and False Negatives</h2>
-            <p className="mb-4">
-                Our system may occasionally flag legitimate messages as suspicious (false positive) or fail to detect a new or sophisticated scam (false negative). Always verify sensitive requests through official channels — for example, call your bank directly using the number from their official website or the back of your card.
+            <h2>Results are informational only</h2>
+            <p>
+                A Low / Medium / High risk rating is our best
+                interpretation of the patterns in the content you pasted.
+                It is not a verdict. It is not legal, financial, or
+                cybersecurity advice.
             </p>
 
-            <h2 className="text-xl font-bold mt-6 mb-2">Third-Party Links</h2>
-            <p className="mb-4">
-                Our analysis may contain links to third-party websites for verification purposes (such as Scamwatch or official bank websites). We are not responsible for the content or privacy practices of these external sites.
+            <h2>When to escalate to a human</h2>
+            <p>
+                For anything with real consequences, contact:
+            </p>
+            <ul>
+                <li>
+                    Your <strong>bank or card issuer</strong> for
+                    suspected unauthorised payments (use the number on
+                    the back of your card, never one in the suspicious
+                    message).
+                </li>
+                <li>
+                    Your <strong>platform&apos;s support team</strong>{' '}
+                    (Apple, Google, Microsoft, Meta, etc.) for account
+                    takeover concerns.
+                </li>
+                <li>
+                    <strong>Police or cybercrime authority</strong> in
+                    your country — see{' '}
+                    <Link href="/global-scam-reporting">
+                        global scam reporting
+                    </Link>
+                    .
+                </li>
+                <li>
+                    A <strong>legal professional</strong> for matters
+                    that need legal advice.
+                </li>
+            </ul>
+
+            <h2>False positives and false negatives</h2>
+            <p>
+                The checker may flag legitimate messages as suspicious or
+                miss new / sophisticated scams. Always verify
+                high-stakes claims through an independent channel —
+                ideally one you went to first, not one the suspicious
+                message gave you.
             </p>
 
-            <h2 className="text-xl font-bold mt-6 mb-2">Limitation of Liability</h2>
-            <p className="mb-4">
-                Scam Checker is provided &quot;as is&quot; without warranty of any kind. We are not liable for any damages or losses arising from your use of this tool or reliance on its results. Use at your own risk and exercise independent judgement.
+            <h2>We can&apos;t recover funds</h2>
+            <p>
+                Scam Checker does not recover money, retrieve stolen
+                accounts, or chase scammers. Anyone offering you a
+                &quot;recovery service&quot; in our name is themselves a
+                scam — please report it to us via the{' '}
+                <Link href="/contact">contact page</Link>.
             </p>
+
+            <h2>Third-party links</h2>
+            <p>
+                Links to external agencies (FTC, IC3, Action Fraud,
+                Scamwatch, NCSC, CISA, Microsoft, Google, Apple, etc.)
+                are provided as helpful jumping-off points. We are not
+                responsible for content or privacy practices on those
+                sites.
+            </p>
+
+            <h2>No warranty</h2>
+            <p>
+                Scam Checker is provided &quot;as is&quot; without
+                warranty of any kind. To the extent permitted by law,
+                we&apos;re not liable for damages or losses arising from
+                your use of the tool or any decision you make based on
+                its output. Specific regional consumer-protection rights
+                that can&apos;t be excluded by contract still apply.
+            </p>
+
+            <h2>Related</h2>
+            <ul>
+                <li>
+                    <Link href="/terms">Terms of use</Link>
+                </li>
+                <li>
+                    <Link href="/privacy">Privacy policy</Link>
+                </li>
+                <li>
+                    <Link href="/security">Security</Link> and{' '}
+                    <Link href="/responsible-disclosure">
+                        responsible disclosure
+                    </Link>
+                </li>
+            </ul>
         </div>
     );
 }

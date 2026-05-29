@@ -129,11 +129,33 @@ export function ReportModal({ isOpen, onClose, initialValue = '' }: ReportModalP
                                 onChange={e => setNotes(e.target.value)}
                                 placeholder="Briefly describe what happened..."
                                 className="min-h-[80px]"
+                                maxLength={1000}
                             />
+                            {/* Submission-time warning. The server also scrubs
+                                sensitive patterns before the row is persisted
+                                (see src/lib/redact.ts) but the warning sets the
+                                right expectation up-front. */}
+                            <p
+                                role="note"
+                                className="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded p-2"
+                            >
+                                <strong>Do not include passwords, OTPs, card
+                                numbers, private addresses, bank details, or
+                                personal information.</strong> Reports are
+                                published publicly after masking — if you wouldn't
+                                share it on a public message board, leave it
+                                out. We automatically redact common sensitive
+                                patterns, but treating the field as public is
+                                safer.
+                            </p>
                         </div>
 
                         <div className="text-xs text-slate-500">
-                            By submitting, you agree that this information is accurate. We do not store your personal details, only the scammer's info.
+                            By submitting, you confirm the report is accurate
+                            and that you have not included your own private
+                            details. The scammer&apos;s value is masked before
+                            it is shown publicly (e.g. <code>j***@example.com</code>).
+                            See our <a href="/privacy" className="underline">privacy policy</a> and <a href="/data-removal" className="underline">data removal</a> page.
                         </div>
 
                         <div className="flex gap-3 pt-2">

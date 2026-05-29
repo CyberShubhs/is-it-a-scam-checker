@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { AlertOctagon, ShieldCheck, BookOpen, ArrowRight } from 'lucide-react';
+import { maskReportValue, redactSensitive } from '@/lib/redact';
 
 export const dynamic = 'force-dynamic';
 
@@ -175,21 +176,9 @@ export async function generateMetadata({
     };
 }
 
-function maskValue(type: string, val: string) {
-    if (!val) return '';
-    const t = type.toLowerCase();
-    if (t === 'phone' || t === 'sms' || t === 'text') {
-        if (val.length < 5) return val;
-        return val.substring(0, 3) + '****' + val.substring(val.length - 3);
-    }
-    if (t === 'email') {
-        const [u, d] = val.split('@');
-        if (!d) return val.substring(0, 3) + '...';
-        return u.substring(0, 2) + '***@' + d;
-    }
-    if (val.length > 60) return val.substring(0, 57) + '...';
-    return val;
-}
+// Delegates to the shared redactor so /reports, /reports/[category], and the
+// /api/report read path never drift apart.
+const maskValue = (type: string, val: string) => maskReportValue(type, val);
 
 /**
  * Trending = items reported more than once in the last 14 days, ranked by count.
@@ -385,7 +374,8 @@ export default async function ReportsCategoryPage({
                                             </div>
                                             {r.notes && (
                                                 <p className="text-sm text-slate-600 italic border-l-2 border-slate-200 pl-3">
-                                                    &quot;{r.notes}&quot;
+                                                    {/* Defence-in-depth scrub on read. */}
+                                                    &quot;{redactSensitive(r.notes)}&quot;
                                                 </p>
                                             )}
                                         </CardContent>

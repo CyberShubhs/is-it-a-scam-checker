@@ -630,6 +630,41 @@ if (fs.existsSync(BLOG_POST_TEMPLATE)) {
     }
 }
 
+// --------------------------------------------------------------------------
+// 11. Required policy / compliance pages exist.
+//
+// Privacy posture only counts when the docs are actually reachable. We
+// also check that the canonical URL declared in each page points back at
+// the same path (a regression caught a few times when copy-pasting).
+// --------------------------------------------------------------------------
+
+const REQUIRED_POLICY_PAGES = [
+    { path: '/privacy', file: 'privacy/page.tsx' },
+    { path: '/terms', file: 'terms/page.tsx' },
+    { path: '/disclaimer', file: 'disclaimer/page.tsx' },
+    { path: '/cookies', file: 'cookies/page.tsx' },
+    { path: '/security', file: 'security/page.tsx' },
+    { path: '/data-removal', file: 'data-removal/page.tsx' },
+    { path: '/responsible-disclosure', file: 'responsible-disclosure/page.tsx' },
+];
+
+for (const { path: routePath, file } of REQUIRED_POLICY_PAGES) {
+    const filepath = path.join(APP, file);
+    if (!fs.existsSync(filepath)) {
+        failures.push(
+            `[policy-page-missing] ${routePath} → expected page at src/app/${file} but it does not exist.`,
+        );
+        continue;
+    }
+    const body = readFile(filepath);
+    const canonical = `https://scamchecker.app${routePath}`;
+    if (!body.includes(canonical)) {
+        failures.push(
+            `[policy-canonical] src/app/${file} must declare canonical ${canonical}.`,
+        );
+    }
+}
+
 console.log(`\nChecked ${sitemapPaths.size} sitemap routes.`);
 console.log(`Scanned ${SCAN_DIRS.length} directories for prompt-leak fragments.`);
 

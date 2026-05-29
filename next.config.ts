@@ -2,30 +2,50 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   async headers() {
+    // Content-Security-Policy. The auto-blog generator and the page templates
+    // emit JSON-LD via `dangerouslySetInnerHTML`, so we keep `'unsafe-inline'`
+    // for script-src and style-src (Tailwind's inline runtime needs it too).
+    // We pin everything else: scripts only from self + Google Tag Manager
+    // (which only loads after consent), images from self + Vercel-hosted OG
+    // assets, fonts from self + the Inter subset Next ships, frame-ancestors
+    // 'none' so the page can't be embedded for clickjacking.
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https://www.google-analytics.com https://vercel.live",
+      "font-src 'self' data:",
+      "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://vitals.vercel-insights.com",
+      "frame-ancestors 'none'",
+      "form-action 'self'",
+      "base-uri 'self'",
+      "object-src 'none'",
+      "upgrade-insecure-requests",
+    ].join('; ');
+
     return [
       {
         source: '/:path*',
         headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          // HSTS — 2 years, includeSubDomains, preload-ready. The
+          // production domain serves HTTPS exclusively, Vercel handles
+          // certs and renewals.
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            value:
+              'camera=(), microphone=(), geolocation=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=(), midi=(), browsing-topics=()',
           },
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+          { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
+          { key: 'Content-Security-Policy', value: csp },
         ],
       },
       // Build assets are not pages. Google was indexing stale hashed chunk
