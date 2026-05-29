@@ -35,6 +35,11 @@
       "id": "fq-017",
       "slug": "2026-05-29-legitimate-jobs-never-ask-for-money-why-scammers-d-6f4826",
       "date": "2026-05-29"
+    },
+    {
+      "id": "fq-022",
+      "slug": "2026-05-29-what-to-do-when-a-recruiter-asks-for-money-upfront-828d90",
+      "date": "2026-05-29"
     }
   ],
   "skipped": [
@@ -114,6 +119,34 @@
       "date": "2026-05-28",
       "matchedExistingSlug": "2026-05-22-remote-job-offers-too-good-to-be-true",
       "matchedExistingTitle": "remote job offers that seem too good to be true — are they scams?"
+    },
+    {
+      "id": "fq-018",
+      "reason": "duplicate-topic",
+      "date": "2026-05-29",
+      "matchedExistingSlug": "2026-05-22-how-to-verify-a-company-is-real-before-accepting-a-job",
+      "matchedExistingTitle": "how to verify a company is real before accepting a job"
+    },
+    {
+      "id": "fq-019",
+      "reason": "duplicate-topic",
+      "date": "2026-05-29",
+      "matchedExistingSlug": "2026-05-19-warning-the-equipment-purchase-fake-job-scam-steal-da85c4",
+      "matchedExistingTitle": "warning: the 'equipment purchase' fake job scam steals savings"
+    },
+    {
+      "id": "fq-020",
+      "reason": "duplicate-topic",
+      "date": "2026-05-29",
+      "matchedExistingSlug": "2026-05-14-fake-recruitment-agency-scam-your-dream-job-is-a-l-59a272",
+      "matchedExistingTitle": "fake recruitment agency scam: your dream job is a lie"
+    },
+    {
+      "id": "fq-021",
+      "reason": "duplicate-topic",
+      "date": "2026-05-29",
+      "matchedExistingSlug": "2026-05-14-fake-recruitment-agency-scam-your-dream-job-is-a-l-59a272",
+      "matchedExistingTitle": "fake recruitment agency scam: your dream job is a lie"
     }
   ]
 }
