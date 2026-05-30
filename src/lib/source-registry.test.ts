@@ -119,7 +119,7 @@ describe('registry helpers on an ephemeral registry', () => {
                     {
                         id: 'generic_alerts',
                         title: 'FTC Scam Alerts',
-                        url: 'https://consumer.ftc.gov/scam-alerts',
+                        url: 'https://consumer.ftc.gov/scams',
                         domain: 'consumer.ftc.gov',
                         categories: ['general-scam-advice', 'reporting-scams'],
                         region: 'us',
@@ -144,11 +144,11 @@ describe('registry helpers on an ephemeral registry', () => {
 
     it('getSourceByUrl finds a registered URL with/without trailing slash', () => {
         writeRegistry();
-        expect(getSourceByUrl('https://consumer.ftc.gov/scam-alerts', registryPath)?.id).toBe(
+        expect(getSourceByUrl('https://consumer.ftc.gov/scams', registryPath)?.id).toBe(
             'generic_alerts',
         );
         expect(
-            getSourceByUrl('https://consumer.ftc.gov/scam-alerts/', registryPath)?.id,
+            getSourceByUrl('https://consumer.ftc.gov/scams/', registryPath)?.id,
         ).toBe('generic_alerts');
     });
 

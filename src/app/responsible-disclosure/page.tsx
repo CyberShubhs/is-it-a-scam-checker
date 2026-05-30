@@ -1,20 +1,14 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 
 const URL = 'https://scamchecker.app/responsible-disclosure';
 
-export const metadata: Metadata = {
-    title: 'Responsible Disclosure | Scam Checker',
-    description:
-        'Good-faith vulnerability reporting policy for Scam Checker. How to submit, what is in scope, what is out of scope, and what to expect back.',
-    alternates: { canonical: URL },
-    openGraph: {
-        title: 'Responsible Disclosure — Scam Checker',
-        description:
-            'Good-faith vulnerability reporting policy and scope.',
-        url: URL,
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Responsible Disclosure | Scam Checker",
+    description: "Good-faith vulnerability reporting policy for Scam Checker. How to submit, what is in scope, what is out of scope, and what to expect back.",
+    canonical: URL,
+});
 
 export default function ResponsibleDisclosurePage() {
     return (
@@ -60,7 +54,7 @@ export default function ResponsibleDisclosurePage() {
                 <li>
                     The public source code in{' '}
                     <a
-                        href="https://github.com/BeastBoyShubhz/is-it-a-scam-checker"
+                        href="https://github.com/CyberShubhs/is-it-a-scam-checker"
                         target="_blank"
                         rel="noopener noreferrer"
                     >

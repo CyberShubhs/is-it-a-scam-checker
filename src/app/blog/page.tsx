@@ -3,23 +3,15 @@ import { getAllPosts, BLOG_CATEGORIES } from '@/lib/posts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import { ArrowRight, Newspaper, ShieldCheck } from 'lucide-react';
 import { GuideCtaLink } from '@/components/TrackedLinks';
 
-export const metadata: Metadata = {
-    title: 'Blog – Latest Scam Alerts & Safety Advice | Scam Checker',
-    description:
-        'Stay informed with the latest scam alerts, fraud trends, and safety tips. Updated regularly to help you recognise and avoid new threats.',
-    alternates: {
-        canonical: 'https://scamchecker.app/blog',
-    },
-    openGraph: {
-        title: 'Blog – Latest Scam Alerts & Safety Advice | Scam Checker',
-        description:
-            'Stay informed with the latest scam alerts, fraud trends, and safety tips.',
-        url: 'https://scamchecker.app/blog',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Blog – Latest Scam Alerts & Safety Advice | Scam Checker",
+    description: "Stay informed with the latest scam alerts, fraud trends, and safety tips. Updated regularly to help you recognise and avoid new threats.",
+    canonical: "https://scamchecker.app/blog",
+});
 
 export default function BlogIndexPage() {
     const posts = getAllPosts();

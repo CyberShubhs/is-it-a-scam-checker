@@ -25,6 +25,14 @@ export interface PostFrontmatter {
     tags: string[];
     sources: string[];
 
+    /**
+     * Optional short title used ONLY for the <title> tag and og:title when the
+     * descriptive `title` (also the visible H1) would exceed ~60 characters.
+     * Keeps the article H1 rich while keeping the SERP title within Ahrefs'
+     * "Title too long" limit.
+     */
+    seoTitle?: string;
+
     /** Optional, schema-ready fields for newly generated posts. */
     updated?: string;
     category?: string; // must map to a BLOG_CATEGORIES slug where possible

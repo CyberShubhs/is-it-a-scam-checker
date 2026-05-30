@@ -1,20 +1,14 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 
 const URL = 'https://scamchecker.app/data-removal';
 
-export const metadata: Metadata = {
-    title: 'Data Removal & Correction Requests | Scam Checker',
-    description:
-        'How to request removal, correction, or a copy of any data Scam Checker holds. We treat removal requests as a privacy right, not a favour.',
-    alternates: { canonical: URL },
-    openGraph: {
-        title: 'Data Removal & Correction Requests — Scam Checker',
-        description:
-            'How to request removal, correction or a copy of any data we hold.',
-        url: URL,
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Data Removal & Correction Requests | Scam Checker",
+    description: "How to request removal, correction, or a copy of any data Scam Checker holds. We treat removal requests as a privacy right, not a favour.",
+    canonical: URL,
+});
 
 export default function DataRemovalPage() {
     return (

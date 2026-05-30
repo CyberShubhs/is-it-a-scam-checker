@@ -1,15 +1,14 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { ShieldCheck, AlertTriangle, XCircle, MessageSquare } from 'lucide-react';
 import { TrustSection } from '@/components/TrustSection';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
     title: "I Got a Scam Message - What To Do Immediately | Scam Checker",
     description: "Received a suspicious message? Don't panic. Here are the immediate steps to take if you got a scam text, email, or WhatsApp message.",
-    alternates: {
-        canonical: 'https://scamchecker.app/i-got-a-scam-message',
-    },
-};
+    canonical: "https://scamchecker.app/i-got-a-scam-message",
+});
 
 export default function IGotAScamMessagePage() {
     return (

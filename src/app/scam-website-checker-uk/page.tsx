@@ -1,21 +1,15 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { ScamChecker } from '@/components/ScamChecker';
 import { TrustSection } from '@/components/TrustSection';
 
-export const metadata: Metadata = {
-    title: 'Scam Website Checker UK: Check if a Website Is a Scam Before You Buy',
-    description: 'Free scam website checker for the UK. Paste a Royal Mail, HMRC, DVLA or shopping site URL to check for scam patterns — and find Action Fraud reporting steps.',
-    alternates: {
-        canonical: 'https://scamchecker.app/scam-website-checker-uk',
-    },
-    openGraph: {
-        title: 'Scam Website Checker UK: Check if a Website Is a Scam Before You Buy',
-        description: 'Free scam website checker for the UK. Paste a Royal Mail, HMRC, DVLA or shopping site URL to check for scam patterns — and find Action Fraud reporting steps.',
-        url: 'https://scamchecker.app/scam-website-checker-uk',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Scam Website Checker UK: Is This Site a Scam?",
+    description: "Free scam website checker for the UK. Paste a Royal Mail, HMRC, DVLA or shopping site URL to check for scam patterns — and find Action Fraud reporting steps.",
+    canonical: "https://scamchecker.app/scam-website-checker-uk",
+});
 
 const TOOL_JSON_LD = {
     '@context': 'https://schema.org',

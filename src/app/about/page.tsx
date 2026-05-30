@@ -1,18 +1,12 @@
 import { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import { ShieldCheck, Lock, UserCheck, Globe } from 'lucide-react';
 
-export const metadata: Metadata = {
-    title: 'About Scam Checker: Built by Cyber Security Professionals',
-    description: 'Learn about Scam Checker\'s mission to democratise cyber defence. Built by security professionals to help you detect fraud instantly.',
-    alternates: {
-        canonical: 'https://scamchecker.app/about',
-    },
-    openGraph: {
-        title: 'About Scam Checker: Built by Cyber Security Professionals',
-        description: 'Mission-driven tool helping people worldwide identify scam messages. Built by security experts.',
-        url: 'https://scamchecker.app/about',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "About Scam Checker: Built by Cyber Security Professionals",
+    description: "Learn about Scam Checker's mission to democratise cyber defence. Built by security professionals to help you detect fraud instantly.",
+    canonical: "https://scamchecker.app/about",
+});
 
 export default function AboutPage() {
     return (
@@ -42,12 +36,12 @@ export default function AboutPage() {
                         , a Cyber Security professional and Software Engineer. Source
                         is published on{' '}
                         <a
-                            href="https://github.com/BeastBoyShubhz"
+                            href="https://github.com/CyberShubhs"
                             className="text-blue-600 hover:underline font-medium"
                             target="_blank"
                             rel="noopener noreferrer"
                         >
-                            GitHub (@BeastBoyShubhz)
+                            GitHub (@CyberShubhs)
                         </a>
                         .
                     </p>

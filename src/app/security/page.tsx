@@ -1,20 +1,14 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 
 const URL = 'https://scamchecker.app/security';
 
-export const metadata: Metadata = {
-    title: 'Security at Scam Checker | Privacy-First Design',
-    description:
-        'How Scam Checker is built privacy-first: client-side analysis, salted IP hashes, defence-in-depth redaction, security headers, and a coordinated disclosure process.',
-    alternates: { canonical: URL },
-    openGraph: {
-        title: 'Security at Scam Checker',
-        description:
-            'Privacy-first design, redaction, security headers, coordinated disclosure.',
-        url: URL,
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Security at Scam Checker | Privacy-First Design",
+    description: "How Scam Checker is built privacy-first: client-side analysis, salted IP hashes, defence-in-depth redaction, security headers and coordinated disclosure.",
+    canonical: URL,
+});
 
 export default function SecurityPage() {
     return (

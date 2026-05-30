@@ -1,5 +1,6 @@
 
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import { ScamChecker } from '@/components/ScamChecker';
 import { TrustSection } from '@/components/TrustSection';
 import { PageFAQ } from '@/components/PageFAQ';
@@ -7,28 +8,11 @@ import { SMS_FAQS } from '@/lib/faqs';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
     title: "Check if a Text Message Is a Scam | Scam Checker",
     description: "Received a suspicious SMS or WhatsApp message? Use our free tool to instantly check if a text message is a scam. Protect yourself from smishing.",
-    alternates: {
-        canonical: 'https://scamchecker.app/check-scam-text',
-    },
-    // Per-page OG/Twitter so the social card matches the dedicated SMS
-    // checker intent rather than the generic site title.
-    openGraph: {
-        title: 'Check if a Text Message Is a Scam — Free SMS Scam Checker',
-        description:
-            'Paste a suspicious SMS or WhatsApp message and instantly see smishing red flags: fake delivery texts, bank impersonation, OTP harvesting and lookalike links.',
-        url: 'https://scamchecker.app/check-scam-text',
-        type: 'website',
-    },
-    twitter: {
-        card: 'summary_large_image',
-        title: 'Check if a Text Message Is a Scam — Free SMS Scam Checker',
-        description:
-            'Spot fake delivery texts, smishing, OTP-harvesting SMS and bank impersonation in seconds. Free and private.',
-    },
-};
+    canonical: "https://scamchecker.app/check-scam-text",
+});
 
 export default function CheckScamTextPage() {
     return (

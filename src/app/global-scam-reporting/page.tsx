@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Globe, Shield, Phone, Mail } from 'lucide-react';
@@ -6,13 +7,11 @@ import { TrustSection } from '@/components/TrustSection';
 import { ReportingCard, PlatformCard } from '@/components/ReportingCards';
 import { GuideCtaLink } from '@/components/TrackedLinks';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
     title: "Where to Report Scams Globally (2025 Guide) | Scam Checker",
     description: "Official scam reporting contacts for Australia, USA, UK, Canada, and India. Report fraud to government agencies and stop scammers.",
-    alternates: {
-        canonical: 'https://scamchecker.app/global-scam-reporting',
-    },
-};
+    canonical: "https://scamchecker.app/global-scam-reporting",
+});
 
 export default function GlobalReportingPage() {
     return (
@@ -160,7 +159,7 @@ export default function GlobalReportingPage() {
                             <PlatformCard
                                 icon={<Phone className="w-8 h-8 text-green-600" />}
                                 title="WhatsApp"
-                                link="https://faq.whatsapp.com/1142481766359885/"
+                                link="https://faq.whatsapp.com/1142481766359885/?cms_platform=web"
                                 text="Report a Contact"
                             />
                             <PlatformCard

@@ -132,13 +132,13 @@ export function Footer() {
                         </a>
                         {' '}·{' '}
                         <a
-                            href="https://github.com/BeastBoyShubhz"
+                            href="https://github.com/CyberShubhs"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-white hover:underline"
-                            aria-label="Scam Checker source code on GitHub (@BeastBoyShubhz)"
+                            aria-label="Scam Checker source code on GitHub (@CyberShubhs)"
                         >
-                            GitHub (@BeastBoyShubhz)
+                            GitHub (@CyberShubhs)
                         </a>
                     </p>
                     <p>© {new Date().getFullYear()} Scam Checker. All rights reserved.</p>

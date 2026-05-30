@@ -1,24 +1,14 @@
 import { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { guides } from '@/lib/guides';
 
-export const metadata: Metadata = {
-    title:
-        'Scam Identification Guides: Step-by-Step Protection from Fraud and Phishing',
-    description:
-        'A library of plain-English guides on identifying scams — fake websites, phishing emails, SMS fraud, marketplace cons and bank impersonation — written for non-technical readers.',
-    alternates: {
-        canonical: 'https://scamchecker.app/scam-guides',
-    },
-    openGraph: {
-        title:
-            'Scam Identification Guides: Step-by-Step Protection from Fraud and Phishing',
-        description:
-            'Plain-English scam guides covering every common online fraud type, with real examples and protection steps.',
-        url: 'https://scamchecker.app/scam-guides',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Scam Identification Guides: Protect Yourself from Fraud",
+    description: "Plain-English guides to identifying scams — fake websites, phishing emails, SMS fraud, marketplace cons and bank impersonation — for non-technical readers.",
+    canonical: "https://scamchecker.app/scam-guides",
+});
 
 export default function ScamGuidesHub() {
     const recovery = guides.find(

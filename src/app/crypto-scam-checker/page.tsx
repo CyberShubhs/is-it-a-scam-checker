@@ -1,21 +1,15 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { ScamChecker } from '@/components/ScamChecker';
 import { TrustSection } from '@/components/TrustSection';
 
-export const metadata: Metadata = {
-    title: 'Free Crypto Scam Checker: Spot Wallet Drainers, Fake Exchanges & Investment Groups',
-    description: 'Paste a crypto site URL, exchange link, Telegram invite, or wallet address message. Free crypto scam checker — flags wallet drainers, fake exchanges and investment fraud.',
-    alternates: {
-        canonical: 'https://scamchecker.app/crypto-scam-checker',
-    },
-    openGraph: {
-        title: 'Free Crypto Scam Checker: Spot Wallet Drainers, Fake Exchanges & Investment Groups',
-        description: 'Paste a crypto site URL, exchange link, Telegram invite, or wallet address message. Free crypto scam checker — flags wallet drainers, fake exchanges and investment fraud.',
-        url: 'https://scamchecker.app/crypto-scam-checker',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Free Crypto Scam Checker: Wallet Drainers & Fake Exchanges",
+    description: "Paste a crypto URL, exchange link, Telegram invite or wallet message. Free crypto scam checker — flags wallet drainers, fake exchanges and fraud.",
+    canonical: "https://scamchecker.app/crypto-scam-checker",
+});
 
 const TOOL_JSON_LD = {
     '@context': 'https://schema.org',

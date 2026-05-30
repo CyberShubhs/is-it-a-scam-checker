@@ -1,20 +1,14 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 
 const URL = 'https://scamchecker.app/privacy';
 
-export const metadata: Metadata = {
-    title: 'Privacy Policy: How We Protect Your Data | Scam Checker',
-    description:
-        'Privacy-first scam checker. Pasted content stays in your browser; community reports are masked and hashed; analytics requires consent. Engineering practice, not legal warranty.',
-    alternates: { canonical: URL },
-    openGraph: {
-        title: 'Privacy Policy — Scam Checker',
-        description:
-            'Privacy-first by design. What we collect and what we deliberately do not collect.',
-        url: URL,
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Privacy Policy: How We Protect Your Data | Scam Checker",
+    description: "Privacy-first scam checker: pasted content stays in your browser, community reports are masked and hashed, and analytics only runs with your consent.",
+    canonical: URL,
+});
 
 export default function PrivacyPage() {
     return (
@@ -66,7 +60,7 @@ export default function PrivacyPage() {
                     or URL) — truncated to 500 characters, sensitive
                     patterns stripped by{' '}
                     <a
-                        href="https://github.com/BeastBoyShubhz/is-it-a-scam-checker/blob/main/src/lib/redact.ts"
+                        href="https://github.com/CyberShubhs/is-it-a-scam-checker/blob/main/src/lib/redact.ts"
                         rel="noopener noreferrer"
                         target="_blank"
                     >
@@ -115,7 +109,7 @@ export default function PrivacyPage() {
                 <li>
                     The allowed GA4 event parameters are listed in{' '}
                     <a
-                        href="https://github.com/BeastBoyShubhz/is-it-a-scam-checker/blob/main/src/lib/analytics.ts"
+                        href="https://github.com/CyberShubhs/is-it-a-scam-checker/blob/main/src/lib/analytics.ts"
                         rel="noopener noreferrer"
                         target="_blank"
                     >

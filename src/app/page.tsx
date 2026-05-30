@@ -1,7 +1,9 @@
 import { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import { LatestScams } from '@/components/LatestScams';
 import { ScamChecker } from '@/components/ScamChecker';
 import { FAQ } from '@/components/FAQ';
+import { GENERAL_FAQS } from '@/lib/faqs';
 import { TrustSection } from '@/components/TrustSection';
 import { getAllPosts } from '@/lib/posts';
 import Link from 'next/link';
@@ -12,18 +14,11 @@ import { MessageSquare, Mail, Globe, ArrowRight, BookOpen, ShieldCheck, AlertTri
 // and "is this a scam" intent buckets. GSC shows homepage CTR of 2.78% at
 // avg position 16 — this version leads with the tool's plain-English value
 // proposition to lift CTR while we work on rank.
-export const metadata: Metadata = {
-    title: 'Scam Checker: Check Links, Emails, Messages & Websites for Fraud',
-    description: 'Free scam checker. Paste a suspicious link, email, SMS, WhatsApp message or website to get a plain-English fraud risk result in seconds — no sign-up, nothing stored.',
-    alternates: {
-        canonical: 'https://scamchecker.app',
-    },
-    openGraph: {
-        title: 'Scam Checker: Check Links, Emails, Messages & Websites for Fraud',
-        description: 'Paste any suspicious link, email, SMS, WhatsApp message or website. Get a plain-English scam risk result with red flags and next steps in seconds.',
-        url: 'https://scamchecker.app',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Scam Checker: Check Links, Emails & Messages for Fraud",
+    description: "Free scam checker. Paste a suspicious link, email, SMS or website for a plain-English fraud risk result in seconds — no sign-up, nothing stored.",
+    canonical: "https://scamchecker.app",
+});
 
 const popularGuides = [
     { slug: 'is-this-website-legit', title: 'How to Tell If a Website Is Legitimate', description: 'Before entering payment details, check these signs' },
@@ -599,41 +594,21 @@ export default function Home() {
                                 }
                             },
                             {
+                                // FAQPage is built from the SAME GENERAL_FAQS
+                                // array the visible <FAQ /> accordion renders,
+                                // so structured data always matches what users
+                                // see (a Google/Ahrefs requirement). Previously
+                                // this was a hand-maintained 4-question list
+                                // that had drifted from the 7 visible questions.
                                 "@type": "FAQPage",
-                                "mainEntity": [
-                                    {
-                                        "@type": "Question",
-                                        "name": "How can I tell if a message is a scam?",
-                                        "acceptedAnswer": {
-                                            "@type": "Answer",
-                                            "text": "Look for urgency language, requests for unusual payment methods, unknown senders, generic greetings, and suspicious links. Paste the message into our checker for automated analysis."
-                                        }
+                                "mainEntity": GENERAL_FAQS.map((f) => ({
+                                    "@type": "Question",
+                                    name: f.question,
+                                    acceptedAnswer: {
+                                        "@type": "Answer",
+                                        text: f.answer,
                                     },
-                                    {
-                                        "@type": "Question",
-                                        "name": "Is this website scam checker free to use?",
-                                        "acceptedAnswer": {
-                                            "@type": "Answer",
-                                            "text": "Yes, Scam Checker is completely free, requires no sign-up, and does not store your content. Analysis happens in your browser."
-                                        }
-                                    },
-                                    {
-                                        "@type": "Question",
-                                        "name": "Can clicking a suspicious link steal my information?",
-                                        "acceptedAnswer": {
-                                            "@type": "Answer",
-                                            "text": "Yes. Malicious links can lead to phishing sites designed to capture passwords and financial details, or trigger malware downloads. Always verify links before clicking."
-                                        }
-                                    },
-                                    {
-                                        "@type": "Question",
-                                        "name": "What should I do if I already clicked a scam link?",
-                                        "acceptedAnswer": {
-                                            "@type": "Answer",
-                                            "text": "Change any passwords you entered, contact your bank if you shared financial details, run antivirus software, and monitor your accounts for unusual activity."
-                                        }
-                                    }
-                                ]
+                                })),
                             }
                         ]
                     })

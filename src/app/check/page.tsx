@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import { ScamChecker } from '@/components/ScamChecker';
 import { TrustSection } from '@/components/TrustSection';
 import { LatestScams } from '@/components/LatestScams';
@@ -8,18 +9,11 @@ import Link from 'next/link';
 // SEO note: /check is our highest-CTR page (2.66% at avg position 5.79 in
 // GSC). The retitle targets the cluster "scam checker / check scam link /
 // check scam message / is this a scam" without keyword stuffing.
-export const metadata: Metadata = {
-    title: 'Free Scam Checker: Check Links, Emails, Texts & Websites',
-    description: 'Paste a suspicious link, email, SMS or message and get a plain-English scam risk result with red flags and next steps. Free, private, no sign-up.',
-    alternates: {
-        canonical: 'https://scamchecker.app/check',
-    },
-    openGraph: {
-        title: 'Free Scam Checker: Check Links, Emails, Texts & Websites',
-        description: 'Paste a suspicious link, email, SMS or message and get a plain-English scam risk result with red flags and next steps. Free, private, no sign-up.',
-        url: 'https://scamchecker.app/check',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Free Scam Checker: Check Links, Emails, Texts & Websites",
+    description: "Paste a suspicious link, email, SMS or message and get a plain-English scam risk result with red flags and next steps. Free, private, no sign-up.",
+    canonical: "https://scamchecker.app/check",
+});
 
 export default function CheckPage() {
     return (

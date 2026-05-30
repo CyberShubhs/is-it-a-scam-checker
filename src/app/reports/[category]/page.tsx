@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { Report } from '@prisma/client';
@@ -26,8 +27,7 @@ type CategoryConfig = {
 const CATEGORIES: Record<string, CategoryConfig> = {
     websites: {
         title: 'Reported Scam Websites',
-        metaTitle:
-            'Reported Scam Websites: Community-Flagged Fake and Phishing URLs',
+        metaTitle: 'Reported Scam Websites: Fake & Phishing URLs',
         metaDescription:
             'Browse websites flagged as scams by the Scam Checker community. See suspicious domains, fake online stores, and phishing URLs reported in real time.',
         h1: 'Reported scam websites and phishing URLs',
@@ -47,8 +47,7 @@ const CATEGORIES: Record<string, CategoryConfig> = {
     },
     'phone-numbers': {
         title: 'Reported Scam Phone Numbers',
-        metaTitle:
-            'Reported Scam Phone Numbers: Community-Flagged Fraud Calls and SMS',
+        metaTitle: 'Reported Scam Phone Numbers: Fraud Calls & SMS',
         metaDescription:
             'See phone numbers reported for scam calls, fake SMS, and impersonation fraud. Check whether a number that contacted you has already been flagged.',
         h1: 'Reported scam phone numbers and SMS senders',
@@ -68,8 +67,7 @@ const CATEGORIES: Record<string, CategoryConfig> = {
     },
     emails: {
         title: 'Reported Scam Email Addresses',
-        metaTitle:
-            'Reported Scam Email Addresses: Phishing and Impersonation Senders',
+        metaTitle: 'Reported Scam Email Addresses: Phishing Senders',
         metaDescription:
             'Browse email addresses reported for phishing, fake invoices, and business email compromise. Verify whether a sender has already been flagged as fraudulent.',
         h1: 'Reported scam email addresses and phishing senders',
@@ -162,18 +160,11 @@ export async function generateMetadata({
     const { category } = await params;
     const cfg = CATEGORIES[category];
     if (!cfg) return { title: 'Not Found' };
-    return {
+    return pageMetadata({
         title: cfg.metaTitle,
         description: cfg.metaDescription,
-        alternates: {
-            canonical: `https://scamchecker.app/reports/${category}`,
-        },
-        openGraph: {
-            title: cfg.metaTitle,
-            description: cfg.metaDescription,
-            url: `https://scamchecker.app/reports/${category}`,
-        },
-    };
+        canonical: `https://scamchecker.app/reports/${category}`,
+    });
 }
 
 // Delegates to the shared redactor so /reports, /reports/[category], and the

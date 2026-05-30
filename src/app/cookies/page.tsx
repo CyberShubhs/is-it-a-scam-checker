@@ -1,20 +1,14 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 
 const URL = 'https://scamchecker.app/cookies';
 
-export const metadata: Metadata = {
-    title: 'Cookie Policy | Scam Checker',
-    description:
-        'How Scam Checker uses cookies. Necessary cookies only by default. Analytics cookies require explicit consent — Reject is as easy as Accept.',
-    alternates: { canonical: URL },
-    openGraph: {
-        title: 'Cookie Policy — Scam Checker',
-        description:
-            'Necessary cookies only by default. Analytics cookies require consent.',
-        url: URL,
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Cookie Policy | Scam Checker",
+    description: "How Scam Checker uses cookies. Necessary cookies only by default. Analytics cookies require explicit consent — Reject is as easy as Accept.",
+    canonical: URL,
+});
 
 export default function CookiesPage() {
     return (
@@ -60,7 +54,7 @@ export default function CookiesPage() {
                 phone numbers, emails, OTPs, files, or report notes to GA. The
                 allowed event parameters are listed in{' '}
                 <a
-                    href="https://github.com/BeastBoyShubhz/is-it-a-scam-checker/blob/main/src/lib/analytics.ts"
+                    href="https://github.com/CyberShubhs/is-it-a-scam-checker/blob/main/src/lib/analytics.ts"
                     rel="noopener noreferrer"
                     target="_blank"
                 >
@@ -127,7 +121,7 @@ export default function CookiesPage() {
                 </a>
                 ,{' '}
                 <a
-                    href="https://support.microsoft.com/en-us/microsoft-edge/delete-cookies-in-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09"
+                    href="https://support.microsoft.com/en-US/edge/manage-cookies-in-microsoft-edge-view-allow-block-delete-and-use"
                     target="_blank"
                     rel="noopener noreferrer"
                 >

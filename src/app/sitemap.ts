@@ -50,6 +50,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     const staticRoutes = [
         '',
         '/about',
+        // Author/E-E-A-T profile — indexable and linked sitewide from the
+        // footer + every blog byline, so it must appear in the sitemap.
+        '/author/shubham-singla',
         '/how-it-works',
         '/contact',
         '/privacy',

@@ -6,7 +6,7 @@
     {
       "id": "ftc_scam_alerts",
       "title": "FTC Consumer Alerts",
-      "url": "https://consumer.ftc.gov/scam-alerts",
+      "url": "https://consumer.ftc.gov/scams",
       "domain": "consumer.ftc.gov",
       "categories": ["general-scam-advice", "reporting-scams"],
       "region": "us",
@@ -69,7 +69,7 @@
     {
       "id": "ftc_crypto_scams",
       "title": "FTC: What to Know About Cryptocurrency and Scams",
-      "url": "https://consumer.ftc.gov/articles/what-know-about-cryptocurrency-and-scams",
+      "url": "https://consumer.ftc.gov/articles/what-know-about-cryptocurrency-scams",
       "domain": "consumer.ftc.gov",
       "categories": ["cryptocurrency-scams"],
       "region": "us",
@@ -79,7 +79,7 @@
     {
       "id": "ftc_phishing",
       "title": "FTC: How to Recognize and Avoid Phishing Scams",
-      "url": "https://consumer.ftc.gov/articles/how-recognize-and-avoid-phishing-scams",
+      "url": "https://consumer.ftc.gov/articles/how-recognize-avoid-phishing-scams",
       "domain": "consumer.ftc.gov",
       "categories": ["phishing", "email-phishing"],
       "region": "us",
@@ -333,7 +333,7 @@
     {
       "id": "ncsc_phishing_actions",
       "title": "NCSC: Suspicious Email Actions",
-      "url": "https://www.ncsc.gov.uk/guidance/suspicious-email-actions",
+      "url": "https://www.ncsc.gov.uk/collection/phishing-scams",
       "domain": "ncsc.gov.uk",
       "categories": ["phishing", "email-phishing"],
       "region": "uk",

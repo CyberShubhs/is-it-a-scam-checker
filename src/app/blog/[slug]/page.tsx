@@ -8,6 +8,7 @@ import {
 } from '@/lib/posts';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,26 +31,21 @@ export async function generateMetadata({
     if (!post) return { title: 'Not Found' };
 
     const url = `https://scamchecker.app/blog/${slug}`;
-    return {
-        title: `${post.frontmatter.title} | Scam Checker Blog`,
-        description: post.frontmatter.summary,
-        alternates: { canonical: url },
-        openGraph: {
-            title: post.frontmatter.title,
-            description: post.frontmatter.summary,
-            type: 'article',
-            publishedTime: post.frontmatter.date,
-            modifiedTime: post.frontmatter.updated || post.frontmatter.lastReviewed,
-            authors: [post.frontmatter.author || 'The Scam Checker Team'],
-            tags: post.frontmatter.tags,
-            url,
-        },
-        twitter: {
-            card: 'summary_large_image',
-            title: post.frontmatter.title,
-            description: post.frontmatter.summary,
-        },
-    };
+    const fm = post.frontmatter;
+    return pageMetadata({
+        // Bare title (no " | Scam Checker Blog" suffix) keeps the SERP title
+        // under 60 chars; `seoTitle` shortens the few headlines that are long
+        // on their own. og:title keeps the full descriptive headline.
+        title: fm.seoTitle || fm.title,
+        description: fm.summary,
+        canonical: url,
+        type: 'article',
+        ogTitle: fm.title,
+        publishedTime: fm.date,
+        modifiedTime: fm.updated || fm.lastReviewed,
+        authors: [fm.author || 'The Scam Checker Team'],
+        tags: fm.tags,
+    });
 }
 
 export default async function BlogPostPage({

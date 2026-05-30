@@ -1,18 +1,12 @@
 import { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import { Search, ShieldAlert, CheckCircle, Zap } from 'lucide-react';
 
-export const metadata: Metadata = {
-    title: 'How Scam Checker Works: Pattern Detection Explained | Australia',
-    description: 'Understand how our scam detection algorithm analyses messages, emails and links for fraud patterns commonly used in Australia.',
-    alternates: {
-        canonical: 'https://scamchecker.app/how-it-works',
-    },
-    openGraph: {
-        title: 'How Scam Checker Works: Pattern Detection Explained',
-        description: 'Understand how our scam detection algorithm analyses messages, emails and links for fraud patterns.',
-        url: 'https://scamchecker.app/how-it-works',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "How Scam Checker Works: Pattern Detection Explained",
+    description: "Understand how our scam detection algorithm analyses messages, emails and links for fraud patterns commonly used in Australia.",
+    canonical: "https://scamchecker.app/how-it-works",
+});
 
 export default function HowItWorksPage() {
     return (

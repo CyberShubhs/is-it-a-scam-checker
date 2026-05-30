@@ -1,21 +1,15 @@
 import { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 
-export const metadata: Metadata = {
-    title: 'Contact the Scam Checker Team | Feedback & Support',
-    description: 'Get in touch with the Scam Checker team. Report issues, suggest improvements, or ask questions about our scam detection tool.',
-    alternates: {
-        canonical: 'https://scamchecker.app/contact',
-    },
-    openGraph: {
-        title: 'Contact the Scam Checker Team',
-        description: 'Get in touch with the Scam Checker team for feedback, bug reports, or questions.',
-        url: 'https://scamchecker.app/contact',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Contact the Scam Checker Team | Feedback & Support",
+    description: "Get in touch with the Scam Checker team. Report issues, suggest improvements, or ask questions about our scam detection tool.",
+    canonical: "https://scamchecker.app/contact",
+});
 
 export default function ContactPage() {
     return (

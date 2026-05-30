@@ -2,6 +2,7 @@
 import { getGuideBySlug, guides, getRelatedGuides } from '@/lib/guides';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, BookOpen } from 'lucide-react';
@@ -21,20 +22,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const guide = getGuideBySlug(slug);
     if (!guide) return { title: 'Not Found' };
 
-    return {
-        title: `${guide.title} | Scam Checker`,
+    return pageMetadata({
+        // Bare title (no " | Scam Checker" suffix) keeps the SERP title under
+        // 60 chars; `seoTitle` shortens the few long ones. og:title keeps the
+        // full descriptive headline (also the visible H1).
+        title: guide.seoTitle || guide.title,
         description: guide.metaDescription || guide.excerpt,
-        alternates: {
-            canonical: `https://scamchecker.app/guides/${guide.slug}`,
-        },
-        openGraph: {
-            title: guide.title,
-            description: guide.metaDescription || guide.excerpt,
-            type: 'article',
-            publishedTime: guide.date,
-            url: `https://scamchecker.app/guides/${guide.slug}`,
-        }
-    };
+        canonical: `https://scamchecker.app/guides/${guide.slug}`,
+        type: 'article',
+        ogTitle: guide.title,
+        publishedTime: guide.date,
+    });
 }
 
 export default async function GuidePage({ params }: { params: Promise<{ slug: string }> }) {

@@ -2,6 +2,11 @@
 export interface Guide {
   slug: string;
   title: string;
+  /**
+   * Optional short title used ONLY for the <title> tag and og:title when the
+   * descriptive `title` (also the visible H1) would exceed ~60 characters.
+   */
+  seoTitle?: string;
   excerpt: string;
   metaDescription: string;
   content: string;
@@ -13,6 +18,7 @@ export const guides: Guide[] = [
   {
     slug: 'job-scams',
     title: 'Job Scam Checker: How to Spot a Fake Job Offer Before You Reply',
+    seoTitle: 'Job Scam Checker: Spot a Fake Job Offer',
     excerpt: 'Verify a job offer, recruiter, and employer — red flags for fake jobs, task scams, equipment purchase frauds, and check-cashing setups.',
     metaDescription: 'How to check if a job offer is a scam. Verify the recruiter, employer, and offer details. Spot task scams, fake checks, and equipment-purchase fraud.',
     date: '2026-05-22',
@@ -418,6 +424,7 @@ export const guides: Guide[] = [
   {
     slug: 'whatsapp-scams-examples',
     title: 'WhatsApp Scams: Real Messages, Job Offers, Investment Groups & OTP Tricks',
+    seoTitle: 'WhatsApp Scams: Messages, Job Offers & OTP Tricks',
     excerpt: 'Real examples of WhatsApp scam messages — fake job offers, investment groups, OTP requests, romance and family-impersonation chats — plus what to do next.',
     metaDescription: 'Real WhatsApp scam messages: fake job offers, investment groups, OTP requests, family-impersonation and romance scam chats. See red flags and what to do next.',
     date: '2026-05-18',
@@ -618,6 +625,7 @@ export const guides: Guide[] = [
   {
     slug: 'payid-scams-australia',
     title: 'Payment Platform Scams: Overpayment Fraud on PayID, Zelle and Similar Services',
+    seoTitle: 'Payment Platform Scams: PayID & Zelle Overpayment Fraud',
     excerpt: 'How scammers exploit instant payment platforms with fake overpayments and upgrade tricks.',
     metaDescription: 'Learn how payment platform scams work. Understand overpayment tricks, fake business account upgrades, and how to protect yourself when selling online.',
     date: '2026-01-26',
@@ -712,8 +720,9 @@ export const guides: Guide[] = [
   {
     slug: 'ato-scam-text-email',
     title: 'Tax Authority Impersonation Scams: Fake Refunds and Debt Threats',
+    seoTitle: 'Tax Authority Scams: Fake Refunds & Debt Threats',
     excerpt: 'Tax refund scams, fake debt notices, and government portal impersonation tactics.',
-    metaDescription: 'Recognise tax authority impersonation scams worldwide. Learn the warning signs of fake tax refund emails, debt threat calls, and how to verify legitimate contact.',
+    metaDescription: 'Recognise tax authority impersonation scams: fake refund emails, debt-threat calls, and how to verify legitimate contact from a tax office.',
     date: '2026-01-26',
     relatedSlugs: ['scam-text-message-examples', 'email-phishing-examples', 'bank-impersonation-scams'],
     content: `
@@ -808,6 +817,7 @@ export const guides: Guide[] = [
   {
     slug: 'bank-impersonation-scams',
     title: 'Bank Impersonation Scams: How Fraudsters Pose as Financial Institutions',
+    seoTitle: 'Bank Impersonation Scams: Fake Bank Calls & Texts',
     excerpt: 'Fake bank calls, texts, and spoofed caller IDs explained.',
     metaDescription: 'Protect yourself from bank impersonation scams. Learn how scammers spoof bank caller IDs and trick you into moving your money.',
     date: '2026-01-26',
@@ -896,6 +906,7 @@ export const guides: Guide[] = [
   {
     slug: 'facebook-marketplace-scams',
     title: 'Marketplace Scams: Fraud on Facebook, eBay and Classified Sites',
+    seoTitle: 'Marketplace Scams: Facebook, eBay & Classifieds',
     excerpt: 'Fake payment emails, courier pickup scams, and payment platform pending tricks.',
     metaDescription: 'Avoid online marketplace scams. Learn about fake payment confirmations, courier pickup scams, and how to sell safely online.',
     date: '2026-01-26',
@@ -1089,6 +1100,7 @@ export const guides: Guide[] = [
   {
     slug: 'what-to-do-if-youve-been-scammed',
     title: "I Think I've Been Scammed — Now What? Immediate Recovery Steps",
+    seoTitle: 'I\'ve Been Scammed — Now What? Recovery Steps',
     excerpt: 'Step-by-step recovery guide if you clicked a link, sent money, or shared personal details.',
     metaDescription: 'Panic-free guide on what to do if you have been scammed. Steps to recover money, secure accounts, and report fraud immediately.',
     date: '2026-01-27',

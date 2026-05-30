@@ -4,24 +4,18 @@ import { getAllPosts } from '@/lib/posts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import { ShieldCheck, ArrowRight, BookOpen, AlertTriangle, Users, Newspaper } from 'lucide-react';
 import { GuideCtaLink } from '@/components/TrackedLinks';
 
 // SEO note: /guides had 0 clicks at avg position 11. The retitle sharpens
 // intent ("how to identify scams" + plain-English keyword) and the meta
 // emphasises the practical, real-example angle to lift CTR.
-export const metadata: Metadata = {
-    title: 'How to Identify Scams: Free Guides for Phishing, SMS & Online Fraud',
-    description: 'Plain-English guides that walk you through real scam examples — phishing emails, SMS smishing, fake websites, marketplace and crypto fraud — with red flags and what to do next.',
-    alternates: {
-        canonical: 'https://scamchecker.app/guides',
-    },
-    openGraph: {
-        title: 'How to Identify Scams: Free Guides for Phishing, SMS & Online Fraud',
-        description: 'Plain-English guides on identifying scams, with real examples and actionable protection advice.',
-        url: 'https://scamchecker.app/guides',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "How to Identify Scams: Free Guides for Online Fraud",
+    description: "Plain-English guides to real scam examples — phishing emails, SMS smishing, fake websites, marketplace and crypto fraud — with red flags and next steps.",
+    canonical: "https://scamchecker.app/guides",
+});
 
 // Recommended starting guides
 const startHereGuides = [

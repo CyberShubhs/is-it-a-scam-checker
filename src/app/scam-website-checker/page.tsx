@@ -1,21 +1,15 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { ScamChecker } from '@/components/ScamChecker';
 import { TrustSection } from '@/components/TrustSection';
 
-export const metadata: Metadata = {
-    title: 'Free Scam Website Checker: Verify If a Site Is Safe Before You Buy',
-    description: 'Paste any website URL and get a plain-English risk result. Free scam website checker for fake online stores, lookalike domains and shopping site fraud — no sign-up.',
-    alternates: {
-        canonical: 'https://scamchecker.app/scam-website-checker',
-    },
-    openGraph: {
-        title: 'Free Scam Website Checker: Verify If a Site Is Safe Before You Buy',
-        description: 'Paste any website URL and get a plain-English risk result. Free scam website checker for fake online stores, lookalike domains and shopping site fraud.',
-        url: 'https://scamchecker.app/scam-website-checker',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Free Scam Website Checker: Is This Site Safe?",
+    description: "Paste any website URL for a plain-English risk result. Free scam website checker for fake stores, lookalike domains and shopping fraud — no sign-up.",
+    canonical: "https://scamchecker.app/scam-website-checker",
+});
 
 const TOOL_JSON_LD = {
     '@context': 'https://schema.org',

@@ -1,23 +1,13 @@
 import { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
-export const metadata: Metadata = {
-    title:
-        'Scam Types Explained: Phishing, Impersonation, Investment, Romance, and More',
-    description:
-        'A categorised tour of the most common online scams — phishing, impersonation, investment fraud, romance scams, marketplace fraud, tech support scams and more. Each type explained with red flags and links to deeper guides.',
-    alternates: {
-        canonical: 'https://scamchecker.app/scam-types',
-    },
-    openGraph: {
-        title:
-            'Scam Types Explained: Phishing, Impersonation, Investment, Romance, and More',
-        description:
-            'Understand every major scam category, what it looks like, and how to protect yourself.',
-        url: 'https://scamchecker.app/scam-types',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Scam Types Explained: Phishing, Investment & Romance",
+    description: "A categorised tour of common online scams — phishing, impersonation, investment, romance, marketplace and tech-support fraud — each with red flags.",
+    canonical: "https://scamchecker.app/scam-types",
+});
 
 type ScamType = {
     id: string;

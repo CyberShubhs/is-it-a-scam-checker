@@ -1,21 +1,15 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { ScamChecker } from '@/components/ScamChecker';
 import { TrustSection } from '@/components/TrustSection';
 
-export const metadata: Metadata = {
-    title: 'Free Scam Phone Number Checker: Check Suspicious Calls & SMS',
-    description: 'Paste a phone number, voicemail transcript, or scam call script to check for scam patterns. Free scam phone number checker — also handles SMS and voicemail text.',
-    alternates: {
-        canonical: 'https://scamchecker.app/scam-phone-number-checker',
-    },
-    openGraph: {
-        title: 'Free Scam Phone Number Checker: Check Suspicious Calls & SMS',
-        description: 'Paste a phone number, voicemail transcript, or scam call script to check for scam patterns. Free scam phone number checker — also handles SMS and voicemail text.',
-        url: 'https://scamchecker.app/scam-phone-number-checker',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Free Scam Phone Number Checker: Check Suspicious Calls & SMS",
+    description: "Paste a phone number, voicemail transcript or scam call script to check for scam patterns. Free scam phone number checker — also handles SMS text.",
+    canonical: "https://scamchecker.app/scam-phone-number-checker",
+});
 
 const TOOL_JSON_LD = {
     '@context': 'https://schema.org',

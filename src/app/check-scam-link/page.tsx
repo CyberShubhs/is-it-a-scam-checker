@@ -1,5 +1,6 @@
 
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import { ScamChecker } from '@/components/ScamChecker';
 import { TrustSection } from '@/components/TrustSection';
 import { PageFAQ } from '@/components/PageFAQ';
@@ -7,27 +8,11 @@ import { LINK_FAQS } from '@/lib/faqs';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
     title: "Check if a Link or URL Is a Scam | Scam Checker",
     description: "Suspicious link? Check if a website URL is safe or a scam. Detect malicious sites and shortened links instantly.",
-    alternates: {
-        canonical: 'https://scamchecker.app/check-scam-link',
-    },
-    // Page-specific OG/Twitter — keeps the link-checker card distinct.
-    openGraph: {
-        title: 'Is This Link Safe? Free URL & Link Scam Checker',
-        description:
-            'Paste a suspicious URL and we will flag lookalike domains, shortener tricks and known phishing patterns before you click.',
-        url: 'https://scamchecker.app/check-scam-link',
-        type: 'website',
-    },
-    twitter: {
-        card: 'summary_large_image',
-        title: 'Is This Link Safe? Free URL & Link Scam Checker',
-        description:
-            'Lookalike domains, URL shorteners, phishing links — we spot the patterns before you click.',
-    },
-};
+    canonical: "https://scamchecker.app/check-scam-link",
+});
 
 export default function CheckScamLinkPage() {
     return (

@@ -78,7 +78,7 @@ export default function RootLayout({
                                         'Free, privacy-first scam checker. Paste a message, email, link, image, or PDF to detect fraud — analysis runs in the browser, nothing is stored.',
                                     sameAs: [
                                         'https://shubhamsingla.tech',
-                                        'https://github.com/BeastBoyShubhz',
+                                        'https://github.com/CyberShubhs',
                                     ],
                                     founder: {
                                         '@type': 'Person',
@@ -87,7 +87,7 @@ export default function RootLayout({
                                         url: 'https://scamchecker.app/author/shubham-singla',
                                         sameAs: [
                                             'https://shubhamsingla.tech',
-                                            'https://github.com/BeastBoyShubhz',
+                                            'https://github.com/CyberShubhs',
                                         ],
                                     },
                                 },

@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,22 +12,11 @@ import {
     BookOpen,
 } from 'lucide-react';
 
-export const metadata: Metadata = {
-    title:
-        'Free Scam Checker Tools: Verify Suspicious Messages, Emails and Links',
-    description:
-        'Every free scam-checking tool on Scam Checker in one place — text message checker, email phishing detector, URL safety analyser, and the damage-control checklist.',
-    alternates: {
-        canonical: 'https://scamchecker.app/scam-tools',
-    },
-    openGraph: {
-        title:
-            'Free Scam Checker Tools: Verify Suspicious Messages, Emails and Links',
-        description:
-            'Free tools to check if a message, email, link or website is a scam — plus a recovery checklist if you have already been targeted.',
-        url: 'https://scamchecker.app/scam-tools',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Free Scam Checker Tools: Messages, Emails & Links",
+    description: "Every free scam-checking tool in one place — text message checker, email phishing detector, URL safety analyser and the damage-control checklist.",
+    canonical: "https://scamchecker.app/scam-tools",
+});
 
 export default function ScamToolsHub() {
     return (

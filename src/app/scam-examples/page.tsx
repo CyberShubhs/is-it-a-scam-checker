@@ -1,24 +1,14 @@
 import { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { getAllPosts } from '@/lib/posts';
 
-export const metadata: Metadata = {
-    title:
-        'Real Scam Message Examples: SMS, Email, WhatsApp and Crypto Scams',
-    description:
-        'A growing library of real-world scam examples — texts, emails, WhatsApp messages, fake delivery notices, ATO refund scams, romance scams, and crypto fraud — annotated with the red flags that give them away.',
-    alternates: {
-        canonical: 'https://scamchecker.app/scam-examples',
-    },
-    openGraph: {
-        title:
-            'Real Scam Message Examples: SMS, Email, WhatsApp and Crypto Scams',
-        description:
-            'See real scam messages with the red flags annotated, so you can recognise the same tactics next time.',
-        url: 'https://scamchecker.app/scam-examples',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Real Scam Examples: SMS, Email, WhatsApp & Crypto",
+    description: "A growing library of real scam examples — texts, emails, WhatsApp messages, fake delivery notices, refund scams and crypto fraud — annotated with red flags.",
+    canonical: "https://scamchecker.app/scam-examples",
+});
 
 export default function ScamExamplesHub() {
     const blogExamples = getAllPosts().slice(0, 8);

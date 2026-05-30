@@ -315,6 +315,8 @@ const REQUIRED_SITEMAP_ROUTES = [
     '/scam-website-checker-uk',
     '/blog/job-scams',
     '/guides/job-scams',
+    // E-E-A-T author profile: indexable, linked sitewide, must be in sitemap.
+    '/author/shubham-singla',
 ];
 
 for (const route of REQUIRED_SITEMAP_ROUTES) {
@@ -482,7 +484,12 @@ if (fs.existsSync(blogTemplatePath)) {
             `[blog-jsonld] ${relPath(blogTemplatePath)} must render JSON-LD via buildBlogPostingJsonLd so the BlogPosting shape stays uniform.`,
         );
     }
-    if (!tpl.includes('alternates') || !tpl.includes('canonical')) {
+    // Canonical is set either explicitly (alternates.canonical) or via the
+    // shared pageMetadata() helper, which emits alternates.canonical for the
+    // `canonical:` argument it is passed.
+    const hasExplicitCanonical = tpl.includes('alternates') && tpl.includes('canonical');
+    const hasHelperCanonical = tpl.includes('pageMetadata(') && tpl.includes('canonical');
+    if (!hasExplicitCanonical && !hasHelperCanonical) {
         failures.push(
             `[blog-canonical] ${relPath(blogTemplatePath)} must export a canonical URL in generateMetadata.`,
         );
@@ -662,6 +669,109 @@ for (const { path: routePath, file } of REQUIRED_POLICY_PAGES) {
         failures.push(
             `[policy-canonical] src/app/${file} must declare canonical ${canonical}.`,
         );
+    }
+}
+
+// --------------------------------------------------------------------------
+// 12. Open Graph / Twitter completeness is guaranteed structurally: every
+//     route must build its metadata through the shared pageMetadata() helper
+//     (src/lib/seo.ts), which always emits a complete openGraph + twitter
+//     block. Next.js shallow-merges the top-level `openGraph` key, so any
+//     route that hand-rolls its own `openGraph:` object silently drops the
+//     image / site_name / dimensions the layout set — exactly what tanked the
+//     Ahrefs "Open Graph tags incomplete" score. Forbid raw openGraph/twitter
+//     metadata keys in route files; only the root layout may define the base.
+// --------------------------------------------------------------------------
+
+const ROOT_LAYOUT = path.join(APP, 'layout.tsx');
+for (const file of walkFiles(APP, ['.tsx'])) {
+    if (file === ROOT_LAYOUT) continue;
+    if (file.endsWith('.test.tsx')) continue;
+    const body = readFile(file);
+    // Only care about files that export route metadata.
+    if (!/export\s+(const\s+metadata|async\s+function\s+generateMetadata|function\s+generateMetadata)/.test(body)) {
+        continue;
+    }
+    if (/\bopenGraph\s*:/.test(body)) {
+        failures.push(
+            `[raw-opengraph] ${relPath(file)} defines a raw \`openGraph:\` block. Build metadata via pageMetadata() from src/lib/seo.ts so og:image / og:site_name / dimensions are never dropped.`,
+        );
+    }
+    if (/\btwitter\s*:\s*\{/.test(body)) {
+        failures.push(
+            `[raw-twitter] ${relPath(file)} defines a raw \`twitter:\` block. Use pageMetadata() so the Twitter card stays complete.`,
+        );
+    }
+}
+
+// --------------------------------------------------------------------------
+// 13. Title / description length on static pages. Every static route now
+//     declares its <title>/description as pageMetadata({ title, description }).
+//     Titles must stay <= 60 chars and descriptions <= 160 so Ahrefs does not
+//     re-flag "Title too long" / "Meta description too long". (Rendered output
+//     across ALL routes — including blog/guides/reports — is enforced by
+//     scripts/check-rendered-seo.mjs after a build.)
+// --------------------------------------------------------------------------
+
+const TITLE_MAX = 60;
+const DESC_MAX = 160;
+
+function readStringLiteralAfter(src, keyRe) {
+    const m = keyRe.exec(src);
+    if (!m) return null;
+    let i = m.index + m[0].length;
+    const q = src[i];
+    if (q !== "'" && q !== '"' && q !== '`') return null;
+    i++;
+    let out = '';
+    while (i < src.length) {
+        const c = src[i];
+        if (c === '\\') { out += src[i + 1]; i += 2; continue; }
+        if (c === q) return out;
+        out += c; i++;
+    }
+    return null;
+}
+
+for (const file of walkFiles(APP, ['.tsx'])) {
+    const body = readFile(file);
+    const callIdx = body.indexOf('pageMetadata({');
+    if (callIdx === -1) continue;
+    const slice = body.slice(callIdx);
+    const title = readStringLiteralAfter(slice, /title:\s*/);
+    const desc = readStringLiteralAfter(slice, /description:\s*/);
+    if (title && !title.includes('${') && title.length > TITLE_MAX) {
+        failures.push(`[title-too-long] ${relPath(file)} pageMetadata title is ${title.length} chars (max ${TITLE_MAX}): "${title}"`);
+    }
+    if (desc && !desc.includes('${') && desc.length > DESC_MAX) {
+        failures.push(`[description-too-long] ${relPath(file)} pageMetadata description is ${desc.length} chars (max ${DESC_MAX})`);
+    }
+}
+
+// --------------------------------------------------------------------------
+// 14. The home-page FAQPage JSON-LD must match the visible FAQ accordion.
+//     Both are sourced from GENERAL_FAQS now; this guards against the visible
+//     <FAQ /> question list drifting away from the schema (a Google/Ahrefs
+//     "structured data must match visible content" requirement).
+// --------------------------------------------------------------------------
+
+const faqsLibPath = path.join(ROOT, 'src', 'lib', 'faqs.ts');
+const faqComponentPath = path.join(ROOT, 'src', 'components', 'FAQ.tsx');
+if (fs.existsSync(faqsLibPath) && fs.existsSync(faqComponentPath)) {
+    const libSrc = readFile(faqsLibPath);
+    const genStart = libSrc.indexOf('GENERAL_FAQS');
+    const genBlock = genStart !== -1 ? libSrc.slice(genStart, libSrc.indexOf('];', genStart)) : '';
+    const generalQuestions = new Set(
+        [...genBlock.matchAll(/question:\s*\n?\s*'((?:[^'\\]|\\.)*)'/g)].map((m) => m[1].replace(/\\'/g, "'")),
+    );
+    const compSrc = readFile(faqComponentPath);
+    const visibleQuestions = [...compSrc.matchAll(/question:\s*'((?:[^'\\]|\\.)*)'/g)].map((m) => m[1].replace(/\\'/g, "'"));
+    for (const q of visibleQuestions) {
+        if (!generalQuestions.has(q)) {
+            failures.push(
+                `[faq-drift] src/components/FAQ.tsx shows question "${q}" that is not in GENERAL_FAQS — the home FAQPage JSON-LD (built from GENERAL_FAQS) would not match visible content.`,
+            );
+        }
     }
 }
 

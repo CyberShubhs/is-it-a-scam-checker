@@ -1,25 +1,15 @@
 import { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getAllPosts } from '@/lib/posts';
 
-export const metadata: Metadata = {
-    title:
-        'Latest Scams: Active Fraud Campaigns and New Scam Alerts',
-    description:
-        'A live feed of the latest scam alerts — new phishing campaigns, surging SMS fraud, fresh impersonation tactics, and emerging crypto and investment scams.',
-    alternates: {
-        canonical: 'https://scamchecker.app/latest-scams',
-    },
-    openGraph: {
-        title:
-            'Latest Scams: Active Fraud Campaigns and New Scam Alerts',
-        description:
-            'See which scams are active right now, how they work, and how to avoid them.',
-        url: 'https://scamchecker.app/latest-scams',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Latest Scams: Active Fraud Campaigns and New Scam Alerts",
+    description: "A live feed of the latest scam alerts — new phishing campaigns, surging SMS fraud, fresh impersonation tactics, and emerging crypto and investment scams.",
+    canonical: "https://scamchecker.app/latest-scams",
+});
 
 export default function LatestScamsHub() {
     const posts = getAllPosts();

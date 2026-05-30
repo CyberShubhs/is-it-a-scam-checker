@@ -1,21 +1,15 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { ScamChecker } from '@/components/ScamChecker';
 import { TrustSection } from '@/components/TrustSection';
 
-export const metadata: Metadata = {
-    title: 'Scam Checker Australia: Check Scam Texts, Calls, Emails & Websites',
-    description: 'Free scam checker for Australians. Paste a Scamwatch-style SMS, ATO/myGov email, AusPost text, or website to check for scam patterns — plus where to report in Australia.',
-    alternates: {
-        canonical: 'https://scamchecker.app/scam-checker-australia',
-    },
-    openGraph: {
-        title: 'Scam Checker Australia: Check Scam Texts, Calls, Emails & Websites',
-        description: 'Free scam checker for Australians. Paste a Scamwatch-style SMS, ATO/myGov email, AusPost text, or website to check for scam patterns — plus where to report in Australia.',
-        url: 'https://scamchecker.app/scam-checker-australia',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Scam Checker Australia: Texts, Calls, Emails & Websites",
+    description: "Free scam checker for Australians. Paste an SMS, ATO/myGov email, AusPost text or website to check for scam patterns — plus where to report.",
+    canonical: "https://scamchecker.app/scam-checker-australia",
+});
 
 const TOOL_JSON_LD = {
     '@context': 'https://schema.org',

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,26 +11,11 @@ import { getAllPosts } from '@/lib/posts';
 // and AI assistants that surface authored content.
 const AUTHOR_URL = 'https://scamchecker.app/author/shubham-singla';
 
-export const metadata: Metadata = {
-    title: 'Shubham Singla – Cybersecurity Author & Founder | Scam Checker',
-    description:
-        'Shubham Singla is a cybersecurity professional and the founder of Scam Checker. Security-first, privacy-focused scam detection and fraud awareness writing.',
-    alternates: { canonical: AUTHOR_URL },
-    openGraph: {
-        type: 'profile',
-        url: AUTHOR_URL,
-        title: 'Shubham Singla – Cybersecurity Author at Scam Checker',
-        description:
-            'Cybersecurity professional. Builds free, privacy-first scam-detection tools and writes about fraud awareness for ordinary people.',
-        siteName: 'Scam Checker',
-    },
-    twitter: {
-        card: 'summary',
-        title: 'Shubham Singla – Cybersecurity Author at Scam Checker',
-        description:
-            'Founder of Scam Checker. Writes about scams, phishing, fraud, and privacy from a security-first perspective.',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Shubham Singla – Cybersecurity Author | Scam Checker",
+    description: "Shubham Singla is a cybersecurity professional and the founder of Scam Checker. Security-first, privacy-focused scam detection and fraud awareness writing.",
+    canonical: AUTHOR_URL,
+});
 
 export default function AuthorPage() {
     // Show a few of the most recent posts so the author page demonstrates
@@ -71,7 +57,7 @@ export default function AuthorPage() {
                                 'Cybersecurity professional. Founder of Scam Checker — a free, privacy-first scam-detection tool. Writes about scams, phishing, and online fraud for everyday people.',
                             sameAs: [
                                 'https://shubhamsingla.tech',
-                                'https://github.com/BeastBoyShubhz',
+                                'https://github.com/CyberShubhs',
                             ],
                             worksFor: {
                                 '@type': 'Organization',
@@ -183,12 +169,12 @@ export default function AuthorPage() {
                         </CardHeader>
                         <CardContent>
                             <a
-                                href="https://github.com/BeastBoyShubhz"
+                                href="https://github.com/CyberShubhs"
                                 target="_blank"
                                 rel="noopener noreferrer me"
                                 className="text-blue-700 hover:underline text-sm"
                             >
-                                github.com/BeastBoyShubhz
+                                github.com/CyberShubhs
                             </a>
                         </CardContent>
                     </Card>

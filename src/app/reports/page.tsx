@@ -1,5 +1,6 @@
 import React from 'react';
 import { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import { prisma } from '@/lib/db';
 import { Report } from '@prisma/client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,18 +14,11 @@ import { maskReportValue, redactSensitive } from '@/lib/redact';
 // SEO note: /reports is the second-highest CTR page in GSC (2.9% at avg
 // position 5.91). Title/meta tuned for "scam reports", "reported scam
 // websites", and "scam report database" intent.
-export const metadata: Metadata = {
-    title: 'Live Scam Reports: Search Reported Websites, Emails & Phone Numbers',
-    description: 'Browse recent scam reports submitted by users — suspicious websites, emails, phone numbers and messages. Search the community scam report database.',
-    alternates: {
-        canonical: 'https://scamchecker.app/reports',
-    },
-    openGraph: {
-        title: 'Live Scam Reports: Search Reported Websites, Emails & Phone Numbers',
-        description: 'Browse recent scam reports submitted by users — suspicious websites, emails, phone numbers and messages.',
-        url: 'https://scamchecker.app/reports',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Live Scam Reports: Websites, Emails & Phone Numbers",
+    description: "Browse recent scam reports submitted by users — suspicious websites, emails, phone numbers and messages. Search the community scam report database.",
+    canonical: "https://scamchecker.app/reports",
+});
 
 export const dynamic = 'force-dynamic';
 

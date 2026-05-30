@@ -1,20 +1,14 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 
 const URL = 'https://scamchecker.app/terms';
 
-export const metadata: Metadata = {
-    title: 'Terms of Use | Scam Checker',
-    description:
-        'Plain-English terms for using Scam Checker. The tool is informational guidance, not a guarantee — and the community report form has specific acceptable-use rules.',
-    alternates: { canonical: URL },
-    openGraph: {
-        title: 'Terms of Use — Scam Checker',
-        description:
-            'Informational tool, not legal/financial advice. Community report rules.',
-        url: URL,
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Terms of Use | Scam Checker",
+    description: "Plain-English terms for using Scam Checker. The tool is informational guidance, not a guarantee, and the community report form has acceptable-use rules.",
+    canonical: URL,
+});
 
 export default function TermsPage() {
     return (

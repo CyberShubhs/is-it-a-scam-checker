@@ -1,20 +1,14 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 
 const URL = 'https://scamchecker.app/disclaimer';
 
-export const metadata: Metadata = {
-    title: 'Disclaimer | Scam Checker',
-    description:
-        'The checker is informational guidance, not certainty. We cannot recover funds, guarantee accuracy, or replace professional advice. Always verify high-stakes claims through official channels.',
-    alternates: { canonical: URL },
-    openGraph: {
-        title: 'Disclaimer — Scam Checker',
-        description:
-            'Informational tool. False positives and false negatives are possible.',
-        url: URL,
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Disclaimer | Scam Checker",
+    description: "Scam Checker is informational guidance, not certainty — it cannot recover funds, guarantee accuracy, or replace professional advice. Verify officially.",
+    canonical: URL,
+});
 
 export default function DisclaimerPage() {
     return (

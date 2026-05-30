@@ -1,23 +1,13 @@
 import { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
-export const metadata: Metadata = {
-    title:
-        'Report a Scam: Where and How to Report Fraud, Phishing and Online Scams',
-    description:
-        'How to report a scam — to Scam Checker, your bank, and the official authorities in your country. Includes step-by-step instructions for the most common scam types.',
-    alternates: {
-        canonical: 'https://scamchecker.app/report-a-scam',
-    },
-    openGraph: {
-        title:
-            'Report a Scam: Where and How to Report Fraud, Phishing and Online Scams',
-        description:
-            'Reporting a scam helps protect others and improves official tracking of active fraud campaigns. Here is exactly where to send each type of report.',
-        url: 'https://scamchecker.app/report-a-scam',
-    },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Report a Scam: How to Report Fraud & Phishing",
+    description: "How to report a scam — to Scam Checker, your bank, and the official authorities in your country, with steps for the most common scam types.",
+    canonical: "https://scamchecker.app/report-a-scam",
+});
 
 export default function ReportAScamHub() {
     return (
