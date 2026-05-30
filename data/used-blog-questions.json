@@ -45,6 +45,11 @@
       "id": "fq-023",
       "slug": "2026-05-30-fake-check-bounce-time-what-you-need-to-know-6b1945",
       "date": "2026-05-30"
+    },
+    {
+      "id": "fq-026",
+      "slug": "2026-05-30-can-you-get-your-money-back-after-falling-for-a-jo-f2f4a8",
+      "date": "2026-05-30"
     }
   ],
   "skipped": [
@@ -152,6 +157,20 @@
       "date": "2026-05-29",
       "matchedExistingSlug": "2026-05-14-fake-recruitment-agency-scam-your-dream-job-is-a-l-59a272",
       "matchedExistingTitle": "fake recruitment agency scam: your dream job is a lie"
+    },
+    {
+      "id": "fq-024",
+      "reason": "duplicate-topic",
+      "date": "2026-05-30",
+      "matchedExistingSlug": "2026-05-22-remote-job-offers-too-good-to-be-true",
+      "matchedExistingTitle": "remote job offers that seem too good to be true — are they scams?"
+    },
+    {
+      "id": "fq-025",
+      "reason": "duplicate-topic",
+      "date": "2026-05-30",
+      "matchedExistingSlug": "2026-05-22-is-my-job-offer-a-scam-red-flags",
+      "matchedExistingTitle": "is my job offer a scam? red flags to watch for"
     }
   ]
 }
