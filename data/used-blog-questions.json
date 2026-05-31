@@ -55,6 +55,11 @@
       "id": "fq-029",
       "slug": "2026-05-31-understanding-a-legitimate-job-interview-process-c6eee0",
       "date": "2026-05-31"
+    },
+    {
+      "id": "fq-039",
+      "slug": "2026-05-31-most-common-job-scam-in-2026-the-evolving-task-pay-662152",
+      "date": "2026-05-31"
     }
   ],
   "skipped": [
@@ -186,6 +191,62 @@
     },
     {
       "id": "fq-028",
+      "reason": "duplicate-topic",
+      "date": "2026-05-31",
+      "matchedExistingSlug": "2026-05-22-how-to-verify-a-company-is-real-before-accepting-a-job",
+      "matchedExistingTitle": "how to verify a company is real before accepting a job"
+    },
+    {
+      "id": "fq-030",
+      "reason": "duplicate-topic",
+      "date": "2026-05-31",
+      "matchedExistingSlug": "2026-05-22-is-my-job-offer-a-scam-red-flags",
+      "matchedExistingTitle": "is my job offer a scam? red flags to watch for"
+    },
+    {
+      "id": "fq-031",
+      "reason": "duplicate-topic",
+      "date": "2026-05-31",
+      "matchedExistingSlug": "2026-05-28-what-information-do-scammers-need-for-identity-the-75523a",
+      "matchedExistingTitle": "what information do scammers need for identity theft in job scams?"
+    },
+    {
+      "id": "fq-032",
+      "reason": "duplicate-topic",
+      "date": "2026-05-31",
+      "matchedExistingSlug": "2026-05-22-how-to-verify-a-company-is-real-before-accepting-a-job",
+      "matchedExistingTitle": "how to verify a company is real before accepting a job"
+    },
+    {
+      "id": "fq-033",
+      "reason": "duplicate-topic",
+      "date": "2026-05-31",
+      "matchedExistingSlug": "2026-05-28-what-information-do-scammers-need-for-identity-the-75523a",
+      "matchedExistingTitle": "what information do scammers need for identity theft in job scams?"
+    },
+    {
+      "id": "fq-034",
+      "reason": "duplicate-topic",
+      "date": "2026-05-31",
+      "matchedExistingSlug": "2026-05-22-is-my-job-offer-a-scam-red-flags",
+      "matchedExistingTitle": "is my job offer a scam? red flags to watch for"
+    },
+    {
+      "id": "fq-035",
+      "reason": "duplicate-topic",
+      "date": "2026-05-31",
+      "matchedExistingSlug": "2026-05-14-fake-recruitment-agency-scam-your-dream-job-is-a-l-59a272",
+      "matchedExistingTitle": "fake recruitment agency scam: your dream job is a lie"
+    },
+    {
+      "id": "fq-037",
+      "reason": "duplicate-topic",
+      "date": "2026-05-31",
+      "matchedExistingSlug": "2026-05-14-fake-recruitment-agency-scam-your-dream-job-is-a-l-59a272",
+      "matchedExistingTitle": "fake recruitment agency scam: your dream job is a lie"
+    },
+    {
+      "id": "fq-038",
       "reason": "duplicate-topic",
       "date": "2026-05-31",
       "matchedExistingSlug": "2026-05-22-how-to-verify-a-company-is-real-before-accepting-a-job",
