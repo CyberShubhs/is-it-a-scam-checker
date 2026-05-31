@@ -50,6 +50,11 @@
       "id": "fq-026",
       "slug": "2026-05-30-can-you-get-your-money-back-after-falling-for-a-jo-f2f4a8",
       "date": "2026-05-30"
+    },
+    {
+      "id": "fq-029",
+      "slug": "2026-05-31-understanding-a-legitimate-job-interview-process-c6eee0",
+      "date": "2026-05-31"
     }
   ],
   "skipped": [
@@ -171,6 +176,20 @@
       "date": "2026-05-30",
       "matchedExistingSlug": "2026-05-22-is-my-job-offer-a-scam-red-flags",
       "matchedExistingTitle": "is my job offer a scam? red flags to watch for"
+    },
+    {
+      "id": "fq-027",
+      "reason": "duplicate-topic",
+      "date": "2026-05-31",
+      "matchedExistingSlug": "2026-05-22-how-to-verify-a-company-is-real-before-accepting-a-job",
+      "matchedExistingTitle": "how to verify a company is real before accepting a job"
+    },
+    {
+      "id": "fq-028",
+      "reason": "duplicate-topic",
+      "date": "2026-05-31",
+      "matchedExistingSlug": "2026-05-22-how-to-verify-a-company-is-real-before-accepting-a-job",
+      "matchedExistingTitle": "how to verify a company is real before accepting a job"
     }
   ]
 }
