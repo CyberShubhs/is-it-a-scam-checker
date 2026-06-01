@@ -2,7 +2,50 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { normalizeScamValue } from '@/lib/normalization';
 import { redactSensitive, maskReportValue } from '@/lib/redact';
+import { hostnameOf, registrableDomainOf, normalisePhone, checkIp } from '@/lib/entities';
 import crypto from 'crypto';
+
+/**
+ * Derive the precise entity-matching columns for a report so the scanner's
+ * matcher (src/lib/reportMatching.ts) can find it by the exact hostname / IP /
+ * email-domain / phone a future user checks — not just the coarse
+ * `value_normalised`. All fields are optional; we only set what applies to the
+ * report's type. This is what makes new reports searchable per-entity.
+ */
+function deriveEntityColumns(typeLower: string, value: string) {
+    const cols: {
+        entity_type?: string;
+        hostname?: string;
+        registrable_domain?: string;
+        ip_address?: string;
+        email_domain?: string;
+        phone_normalised?: string;
+    } = {};
+
+    if (typeLower === 'url' || typeLower === 'website' || typeLower === 'domain') {
+        cols.entity_type = 'domain';
+        const host = hostnameOf(value);
+        const domain = registrableDomainOf(value);
+        if (host) {
+            cols.hostname = host;
+            // A phishing URL hosted on a bare IP is also matchable by IP.
+            if (checkIp(host).ok) cols.ip_address = host;
+        }
+        if (domain) cols.registrable_domain = domain;
+    } else if (typeLower === 'ip') {
+        cols.entity_type = 'ip';
+        if (checkIp(value.trim()).ok) cols.ip_address = value.trim();
+    } else if (typeLower === 'email') {
+        cols.entity_type = 'email';
+        const domain = value.toLowerCase().split('@')[1];
+        if (domain) cols.email_domain = domain.replace(/[^a-z0-9.-]/g, '');
+    } else if (typeLower === 'phone' || typeLower === 'sms' || typeLower === 'whatsapp') {
+        cols.entity_type = 'phone';
+        cols.phone_normalised = normalisePhone(value);
+    }
+
+    return cols;
+}
 
 /**
  * Hashes the request IP with a per-deployment salt. We persist this for
@@ -21,7 +64,7 @@ function hashIp(ip: string) {
  *  community reports. */
 const MAX_VALUE_LEN = 500;
 const MAX_NOTES_LEN = 1000;
-const ALLOWED_TYPES = new Set(['url', 'phone', 'email', 'sms', 'message', 'whatsapp', 'domain', 'website']);
+const ALLOWED_TYPES = new Set(['url', 'phone', 'email', 'sms', 'message', 'whatsapp', 'domain', 'website', 'ip']);
 
 export async function POST(req: Request) {
     try {
@@ -93,6 +136,9 @@ export async function POST(req: Request) {
                 );
             }
 
+            // Precise entity columns so the report is searchable per-entity.
+            const entityColumns = deriveEntityColumns(typeLower, value);
+
             const report = await prisma.report.create({
                 data: {
                     type: typeLower,
@@ -102,6 +148,7 @@ export async function POST(req: Request) {
                     country: normalisedCountry,
                     ip_hash,
                     user_agent_hash,
+                    ...entityColumns,
                 },
             });
 

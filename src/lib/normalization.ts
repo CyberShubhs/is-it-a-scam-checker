@@ -20,6 +20,11 @@ export function normalizeScamValue(type: string, value: string): string {
         return parts.length > 1 ? parts[1] : v;
     }
 
+    if (type === 'ip') {
+        // IPs are matched verbatim (lower-cased for IPv6 hex consistency).
+        return v;
+    }
+
     if (type === 'phone' || type === 'sms' || type === 'text') {
         // Remove non-digits
         // If it's a text body, we can't really normalize it to a single value easily unless we hash the content.

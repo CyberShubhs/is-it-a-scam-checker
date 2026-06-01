@@ -348,6 +348,16 @@ export default function GuidesIndexPage() {
                             </Link>
                         </li>
                         <li>
+                            <Link href="/scam-report-lookup" className="text-blue-700 hover:underline">
+                                Look up a number, website or email in the report database
+                            </Link>
+                        </li>
+                        <li>
+                            <Link href="/check-scam-ip" className="text-blue-700 hover:underline">
+                                Check a suspicious IP address reputation
+                            </Link>
+                        </li>
+                        <li>
                             <Link
                                 href="/global-scam-reporting"
                                 className="text-blue-700 hover:underline"

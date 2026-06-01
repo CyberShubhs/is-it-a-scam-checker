@@ -34,7 +34,10 @@ export default function CheckPage() {
                     <ScamChecker />
 
                     <p className="text-sm text-slate-500 mt-6 max-w-lg mx-auto leading-relaxed">
-                        <strong>Privacy guarantee:</strong> Your content is analysed locally and never transmitted to our servers.
+                        <strong>Privacy:</strong> Your message and any uploaded files are analysed in your
+                        browser and are never stored. To check community reports and IP reputation, only the
+                        specific links, phone numbers, emails or IP addresses found are sent to our server —
+                        never the full message or the file itself.
                         <br />
                         This tool provides guidance. Always verify requests through official channels when in doubt.
                     </p>
@@ -142,12 +145,45 @@ export default function CheckPage() {
                             <span className="text-slate-600 text-sm">
                                 Search the{' '}
                                 <Link
+                                    href="/scam-report-lookup"
+                                    className="text-primary hover:underline"
+                                >
+                                    scam report lookup
+                                </Link>{' '}
+                                or browse the full{' '}
+                                <Link
                                     href="/reports"
                                     className="text-primary hover:underline"
                                 >
                                     community scam report database
                                 </Link>{' '}
                                 for the phone number, URL, or email address.
+                            </span>
+                        </li>
+                        <li className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                            <strong className="text-slate-900 block mb-1">
+                                "Is this IP address or server suspicious?"
+                            </strong>
+                            <span className="text-slate-600 text-sm">
+                                Look up an IP from an email header or log with the{' '}
+                                <Link
+                                    href="/check-scam-ip"
+                                    className="text-primary hover:underline"
+                                >
+                                    suspicious IP address checker
+                                </Link>{' '}
+                                — it flags addresses linked to phishing and fraud.
+                            </span>
+                        </li>
+                        <li className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                            <strong className="text-slate-900 block mb-1">
+                                "Is this PDF, document, or QR code safe?"
+                            </strong>
+                            <span className="text-slate-600 text-sm">
+                                Use the <strong>Image</strong> or <strong>File (PDF/Doc)</strong> tab in the
+                                scanner above to scan a screenshot or document. It checks embedded links, QR
+                                codes, payment details and metadata — your file is scanned in your browser and
+                                never uploaded.
                             </span>
                         </li>
                         <li className="rounded-lg border border-slate-200 bg-slate-50 p-4">

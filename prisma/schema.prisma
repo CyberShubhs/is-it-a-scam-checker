@@ -18,6 +18,50 @@ model Report {
   user_agent_hash  String
   created_at       DateTime @default(now())
 
+  // ── Entity-matching columns (added 2026-06) ────────────────────────────
+  // These are nullable + back-fillable so the migration is purely additive
+  // and NEVER destroys the 200+ existing community reports. They let the
+  // scan-intel matcher find reports by the *specific* entity a user is
+  // checking (a hostname, a registrable domain, an IP, an email/email-domain,
+  // a normalised phone) instead of only the coarse `value_normalised`.
+  //
+  // Legacy rows have these as NULL; the matcher falls back to
+  // `value_normalised` for those, so old reports still surface.
+  entity_type        String? // url | domain | ip | email | phone (canonical)
+  hostname           String? // full host for a URL, e.g. login.fake-bank.co
+  registrable_domain String? // eTLD+1 for a URL/domain, e.g. fake-bank.co
+  ip_address         String? // exact IP (v4/v6) when reporting an IP
+  email_domain       String? // domain part of a reported email
+  phone_normalised   String? // digits-only (E.164-ish) phone
+
   @@index([type, value_normalised])
   @@index([created_at])
+  // Indexes that back the new entity-matching queries. Each is a cheap
+  // equality lookup the matcher runs once per detected entity.
+  @@index([hostname])
+  @@index([registrable_domain])
+  @@index([ip_address])
+  @@index([email_domain])
+  @@index([phone_normalised])
+}
+
+// Caches external threat-intelligence lookups (currently AbuseIPDB IP
+// reputation) so we never re-hit a paid/rate-limited third-party API for the
+// same value inside the cache window. Rows are keyed by (source, type, value)
+// and expire after `expires_at`. The AbuseIPDB helper reads/writes this table
+// with a 24-hour TTL — see src/lib/threat-intel/abuseipdb.ts.
+model ThreatIntelCache {
+  id         String   @id @default(cuid())
+  type       String   // "IP" for now; future-proofed for DOMAIN/URL/etc.
+  value      String   // the looked-up value, e.g. the IP address
+  source     String   // "AbuseIPDB"
+  payload_json String // raw provider response we surface to the UI (JSON)
+  risk_score Int      @default(0) // distilled 0-100 risk for quick reads
+  created_at DateTime @default(now())
+  expires_at DateTime // cache entries past this are treated as stale
+
+  // One live cache row per (source, type, value). The helper upserts on this
+  // key, and prunes/ignores rows where expires_at < now().
+  @@unique([source, type, value])
+  @@index([expires_at])
 }

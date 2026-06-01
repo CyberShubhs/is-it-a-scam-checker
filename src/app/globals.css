@@ -105,3 +105,33 @@
     @apply border-border;
   }
 }
+/* ── Document-scanner animation ──────────────────────────────────────────
+   Drives the "serious security scanner" UX: a scan-line that sweeps over the
+   file preview and an indeterminate progress bar. Both respect
+   prefers-reduced-motion for accessibility. */
+@keyframes scam-scanline {
+  0%   { top: 0%;   opacity: 0.25; }
+  50%  { opacity: 1; }
+  100% { top: 100%; opacity: 0.25; }
+}
+@keyframes scam-progress-indeterminate {
+  0%   { left: -40%; }
+  100% { left: 100%; }
+}
+.scam-scanline {
+  animation: scam-scanline 1.6s ease-in-out infinite;
+}
+.scam-progress-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  background: hsl(var(--primary));
+  border-radius: 9999px;
+  animation: scam-progress-indeterminate 1.4s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scam-scanline { animation: none; top: 50%; }
+  .scam-progress-bar::after { animation: none; left: 0; width: 100%; opacity: 0.5; }
+}

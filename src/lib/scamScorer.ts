@@ -1,8 +1,13 @@
-
 import { analyzeUrlRisk, UrlRiskResult } from './urlRisk';
 import { extractUrls } from './textExtractUrls';
+import { extractEntities, ExtractedEntities } from './entities';
+import { analyzeDocument, DocumentMetadata } from './documentScan';
+import type { IpReputationResult } from './threat-intel/types';
 
 export type RiskLevel = 'Low' | 'Medium' | 'High';
+
+/** Which section of "Why this result" a signal belongs to. */
+export type SignalGroupId = 'content' | 'link' | 'document' | 'ip' | 'community';
 
 export interface ScanSignal {
     id: string;
@@ -10,14 +15,76 @@ export interface ScanSignal {
     points: number;
     explanation: string;
     matchedText?: string;
+    /** Grouping for the "Why this result" UI. Defaults to 'content'. */
+    group?: SignalGroupId;
+}
+
+/** A grouped bundle of signals for the "Why this result" panel. */
+export interface SignalGroup {
+    id: SignalGroupId;
+    title: string;
+    signals: ScanSignal[];
+}
+
+/** A community-report match surfaced under the scan result. */
+export interface RelatedReportMatch {
+    /** domain | hostname | ip | email | phone | url */
+    entityType: string;
+    /** Display value (already masked / registrable where appropriate). */
+    value: string;
+    /** Total matching reports of any age. */
+    count: number;
+    /** Matching reports in the last 30 days (drives scoring). */
+    count30d: number;
+    lastReportedAt?: string | null;
+    /** A few recent, already-masked examples. */
+    examples: { value: string; type: string; timeAgo: string }[];
+    /** Points this match contributes to the overall score. */
+    riskContribution: number;
+}
+
+/**
+ * Optional context for a scan. Backwards compatible: existing callers pass
+ * only `content`. File scans pass document metadata so the scorer can fold in
+ * document signals, embedded links and QR destinations.
+ */
+export interface ScamScanContext {
+    source?: 'text' | 'url' | 'email' | 'image' | 'file';
+    fileName?: string;
+    fileType?: 'pdf' | 'docx' | 'txt' | 'image';
+    /** Links from PDF annotations that may not be in the visible text. */
+    embeddedLinks?: string[];
+    /** URLs decoded from QR codes in the file. */
+    qrUrls?: string[];
+    metadata?: DocumentMetadata;
+    ocrConfidence?: number | null;
 }
 
 export interface ScamAnalysisResult {
     score: number;
     riskLevel: RiskLevel;
+    /** Flat list of every signal (content + link + document + ip + community). */
     signals: ScanSignal[];
     summary: string;
     detectedUrls?: { url: string; risk: UrlRiskResult }[];
+    // ── Enrichment added 2026-06 (all additive) ──────────────────────────
+    /** Signals grouped for the "Why this result" panel. */
+    signalGroups?: SignalGroup[];
+    /** Community reports matching the checked entities. */
+    relatedReports?: RelatedReportMatch[];
+    /** AbuseIPDB reputation for any public IPs found. */
+    ipReputation?: IpReputationResult[];
+    /** Risk-specific "what to do next" advice lines. */
+    whatToDoNext?: string[];
+    /** Privacy-safe summary for the "copy" button (never the raw input). */
+    safeSummary?: string;
+    /** Plain-English list of what was scanned (file scans). */
+    scannedItems?: string[];
+    /** Entities found (urls/ips/emails/phones). */
+    entities?: ExtractedEntities;
+    /** Document metadata, when a file was scanned. */
+    documentMeta?: DocumentMetadata;
+    ocrConfidence?: number | null;
 }
 
 const SIGNALS = [
@@ -86,12 +153,32 @@ const SIGNALS = [
     }
 ];
 
-export async function calculateRiskScore(content: string): Promise<ScamAnalysisResult> {
+/**
+ * Translate a 30-day community-report count into the points it adds, per the
+ * product spec. Repeated reports are strong evidence, so the curve is steep.
+ *   1-2 → +15,  3-5 → +30,  6+ → +50,  (10+ also forces a minimum level later)
+ */
+export function communityReportContribution(count30d: number): number {
+    if (count30d >= 6) return 50;
+    if (count30d >= 3) return 30;
+    if (count30d >= 1) return 15;
+    return 0;
+}
+
+/**
+ * Core scam analysis. Backwards compatible — `context` is optional and only
+ * used for file/document scans. Always async because it consults the
+ * server-side reputation + IP-intel endpoint (which is gracefully skipped when
+ * unavailable, e.g. in unit tests or offline).
+ */
+export async function calculateRiskScore(
+    content: string,
+    context: ScamScanContext = {},
+): Promise<ScamAnalysisResult> {
     let score = 0;
     const caughtSignals: ScanSignal[] = [];
-    const normalizedContent = content.toLowerCase();
 
-    // 1. Evaluate Text Signals
+    // ── 1. Message / content text signals ────────────────────────────────
     for (const sig of SIGNALS) {
         const match = content.match(sig.pattern);
         if (match) {
@@ -101,12 +188,13 @@ export async function calculateRiskScore(content: string): Promise<ScamAnalysisR
                 label: sig.label,
                 points: sig.points,
                 explanation: sig.explanation,
-                matchedText: match[0]
+                matchedText: match[0],
+                group: 'content',
             });
         }
     }
 
-    // 2. URL Analysis
+    // ── 2. Link / domain analysis ────────────────────────────────────────
     const detectedUrlsRaw = extractUrls(content);
     const detectedUrls: { url: string; risk: UrlRiskResult }[] = [];
 
@@ -121,100 +209,299 @@ export async function calculateRiskScore(content: string): Promise<ScamAnalysisR
                 label: 'High Risk URL Detected',
                 points: 50,
                 explanation: `Referenced URL '${url}' signals: ${analysis.flags.join(', ')}`,
-                matchedText: url
+                matchedText: url,
+                group: 'link',
             });
         } else if (analysis.riskLevel === 'Medium') {
             score += 20;
-        } else if (analysis.scoreMultiplier < 0) {
-            // Official domain detected - reduce score?
-            // Only if the message doesn't have other high risk signals (e.g. "verified bank" but asking for CVV is still bad)
-            // But usually if it's the official domain, it's low risk.
-            // score += analysis.scoreMultiplier; // This might be too aggressive if we simply subtract.
-            // Let's rely on the URL logic's multiplier
         }
         score += analysis.scoreMultiplier;
     }
 
-    // 2.5 Check Reputation (Server-side DB)
-    try {
-        const itemsToCheck = detectedUrlsRaw.map(u => ({ type: 'url', value: u }));
-        // Also check if the content itself looks like a phone number?
-        // Simple regex for phone:
-        const phoneMatch = content.match(/^(\+?61|0)4\d{8}$/); // Aussie mobile
-        if (phoneMatch) {
-            itemsToCheck.push({ type: 'phone', value: phoneMatch[0] });
-            itemsToCheck.push({ type: 'sms', value: phoneMatch[0] });
+    // ── 3. File / document signals (file scans only) ─────────────────────
+    // Document parsing (OCR/PDF text) happens client-side before this call;
+    // here we only analyse the already-extracted content into document
+    // signals + entities. The raw text is never surfaced from this function.
+    let documentEntities: ExtractedEntities | null = null;
+    let documentMeta: DocumentMetadata | undefined;
+    let scannedItems: string[] | undefined;
+    if (context.source === 'file' || context.source === 'image') {
+        const doc = analyzeDocument({
+            fileName: context.fileName ?? '',
+            fileType: context.fileType ?? (context.source === 'image' ? 'image' : 'pdf'),
+            text: content,
+            embeddedLinks: context.embeddedLinks,
+            qrUrls: context.qrUrls,
+            metadata: context.metadata,
+            ocrConfidence: context.ocrConfidence,
+        });
+        for (const sig of doc.signals) {
+            score += sig.points;
+            caughtSignals.push(sig);
         }
+        // Embedded links / QR destinations get the same URL-risk treatment as
+        // links in the body, so a malicious QR/annotation affects the score.
+        for (const u of doc.entities.urls) {
+            if (detectedUrlsRaw.includes(u.raw)) continue;
+            const analysis = analyzeUrlRisk(u.raw);
+            detectedUrls.push({ url: u.raw, risk: analysis });
+            if (analysis.riskLevel === 'High') {
+                score += 50;
+                caughtSignals.push({
+                    id: 'doc_malicious_url',
+                    label: 'High Risk link inside document',
+                    points: 50,
+                    explanation: `Link '${u.raw}' in the document signals: ${analysis.flags.join(', ')}`,
+                    matchedText: u.raw,
+                    group: 'document',
+                });
+            } else if (analysis.riskLevel === 'Medium') {
+                score += 20;
+            }
+            score += analysis.scoreMultiplier;
+        }
+        documentEntities = doc.entities;
+        documentMeta = doc.metadata;
+        scannedItems = doc.scannedItems;
+    }
 
-        if (itemsToCheck.length > 0) {
-            // Use absolute URL if possible? In client, relative is fine.
-            // In server environment (tests), this might fail, which is expected (we mock or ignore).
+    // ── 4. Community reports + external IP reputation ─────────────────────
+    // We send only the *extracted entities* (domains, IPs, emails, phones) to
+    // the server — never the raw pasted content or the file. The server matches
+    // community reports and runs AbuseIPDB for any public IP. Failures here are
+    // swallowed so scoring still completes (e.g. offline / unit tests).
+    const entities = mergeEntities(extractEntities(content), documentEntities);
+    let relatedReports: RelatedReportMatch[] = [];
+    let ipReputation: IpReputationResult[] = [];
+    try {
+        const items = buildIntelItems(entities, detectedUrlsRaw);
+        if (items.length > 0) {
             const res = await fetch('/api/check-reputation', {
                 method: 'POST',
-                body: JSON.stringify({ items: itemsToCheck }),
-                headers: { 'Content-Type': 'application/json' }
+                body: JSON.stringify({ items }),
+                headers: { 'Content-Type': 'application/json' },
             });
-
             if (res.ok) {
                 const data = await res.json();
-                const matches: { value: string; count: number }[] = data.results || [];
-
-                for (const match of matches) {
-                    if (match.count > 0) {
-                        score += 40;
-                        caughtSignals.push({
-                            id: 'reported_scam',
-                            label: 'Community Reported Scam',
-                            points: 40,
-                            explanation: `This has been reported ${match.count} times in the last 30 days.`
-                        });
-
-                        if (match.count > 5) {
-                            score += 20; // High confidence boost
-                        }
-                    }
-                }
+                relatedReports = Array.isArray(data.matches) ? data.matches : [];
+                ipReputation = Array.isArray(data.ipReputation) ? data.ipReputation : [];
             }
         }
-    } catch (e) {
-        // Ignore fetch errors (e.g. offline, build time, tests)
+    } catch {
+        // Offline / build-time / test — continue with local scoring only.
     }
 
+    // Fold community-report matches into the score + signals.
+    let maxCount30d = 0;
+    for (const match of relatedReports) {
+        maxCount30d = Math.max(maxCount30d, match.count30d);
+        const points = match.riskContribution || communityReportContribution(match.count30d);
+        if (points > 0) {
+            score += points;
+            caughtSignals.push({
+                id: 'reported_scam',
+                label: 'Community-reported scam',
+                points,
+                explanation: `${match.value} has been reported ${match.count30d} time${match.count30d === 1 ? '' : 's'} in the last 30 days by the community.`,
+                matchedText: match.value,
+                group: 'community',
+            });
+        }
+    }
 
-    // 3. Hard Overrides & Combinations
-    const hasPayment = caughtSignals.some(s => s.id === 'suspicious_payment' || s.id === 'card_details' || s.id === 'cvv_request');
-    const hasPrize = caughtSignals.some(s => s.id === 'prize_bait');
-    const hasUrgency = caughtSignals.some(s => s.id === 'urgency');
-    const hasVerification = caughtSignals.some(s => s.id === 'verification_bait');
+    // Fold IP reputation into the score + signals.
+    let ipForcesHigh = false;
+    for (const rep of ipReputation) {
+        if (rep.riskContribution > 0) {
+            score += rep.riskContribution;
+            caughtSignals.push({
+                id: 'ip_reputation',
+                label: 'Suspicious IP reputation',
+                points: rep.riskContribution,
+                explanation: rep.message,
+                matchedText: rep.ip,
+                group: 'ip',
+            });
+        }
+        if ((rep.abuseConfidenceScore ?? 0) >= 80) ipForcesHigh = true;
+    }
 
-    // CVV Request is almost always a scam
-    if (caughtSignals.some(s => s.id === 'cvv_request')) {
+    // ── 5. Hard overrides & combinations ─────────────────────────────────
+    const hasUrgency = caughtSignals.some((s) => s.id === 'urgency');
+    const hasVerification = caughtSignals.some((s) => s.id === 'verification_bait');
+
+    // CVV Request is almost always a scam.
+    if (caughtSignals.some((s) => s.id === 'cvv_request')) {
         score = Math.max(score, 85);
     }
-
-    // "Urgent" + "Verify"
+    // "Urgent" + "Verify".
     if (hasUrgency && hasVerification) {
         score += 20;
     }
 
-    // 4. Cap Score
+    // ── 6. Cap score ─────────────────────────────────────────────────────
     score = Math.max(0, Math.min(100, score));
 
-    // 5. Determine Level
+    // ── 7. Determine level (with community/IP minimum-level overrides) ───
     let riskLevel: RiskLevel = 'Low';
     if (score >= 60) riskLevel = 'High';
     else if (score >= 30) riskLevel = 'Medium';
 
-    // 6. Generate Summary
+    // Repeated community reports / high-confidence IPs raise the floor.
+    if (maxCount30d >= 10 || ipForcesHigh) riskLevel = 'High';
+    else if (maxCount30d >= 6 && riskLevel === 'Low') riskLevel = 'Medium';
+
+    // ── 8. Build outputs ─────────────────────────────────────────────────
     const summary = generateSummary(riskLevel, caughtSignals, detectedUrls);
+    const signalGroups = buildSignalGroups(caughtSignals);
+    const whatToDoNext = buildWhatToDoNext(riskLevel, caughtSignals, relatedReports);
+    const safeSummary = buildSafeSummary(riskLevel, score, signalGroups, relatedReports, ipReputation);
 
     return {
         score,
         riskLevel,
         signals: caughtSignals,
         summary,
-        detectedUrls
+        detectedUrls,
+        signalGroups,
+        relatedReports,
+        ipReputation,
+        whatToDoNext,
+        safeSummary,
+        scannedItems,
+        entities,
+        documentMeta,
+        ocrConfidence: context.ocrConfidence ?? null,
     };
+}
+
+/** Merge two entity bundles (from message text and from a document). */
+function mergeEntities(a: ExtractedEntities, b: ExtractedEntities | null): ExtractedEntities {
+    if (!b) return a;
+    const byKey = <T>(items: T[], key: (t: T) => string) => {
+        const seen = new Set<string>();
+        const out: T[] = [];
+        for (const i of items) {
+            const k = key(i);
+            if (seen.has(k)) continue;
+            seen.add(k);
+            out.push(i);
+        }
+        return out;
+    };
+    return {
+        urls: byKey([...a.urls, ...b.urls], (u) => u.raw.toLowerCase()),
+        ips: byKey([...a.ips, ...b.ips], (i) => i.ip.toLowerCase()),
+        emails: byKey([...a.emails, ...b.emails], (e) => e.email),
+        phones: byKey([...a.phones, ...b.phones], (p) => p.normalised),
+    };
+}
+
+/** Build the typed item list sent to /api/check-reputation. */
+function buildIntelItems(
+    entities: ExtractedEntities,
+    detectedUrlsRaw: string[],
+): { type: string; value: string }[] {
+    const items: { type: string; value: string }[] = [];
+    for (const url of detectedUrlsRaw) items.push({ type: 'url', value: url });
+    for (const u of entities.urls) items.push({ type: 'url', value: u.raw });
+    for (const ip of entities.ips) items.push({ type: 'ip', value: ip.ip });
+    for (const e of entities.emails) items.push({ type: 'email', value: e.email });
+    for (const p of entities.phones) items.push({ type: 'phone', value: p.normalised });
+    // De-dupe by type+value.
+    const seen = new Set<string>();
+    return items.filter((i) => {
+        const k = `${i.type}:${i.value.toLowerCase()}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+    });
+}
+
+const GROUP_TITLES: Record<SignalGroupId, string> = {
+    content: 'Message / content signals',
+    link: 'Link / domain signals',
+    document: 'File / document signals',
+    ip: 'IP reputation signals',
+    community: 'Community report signals',
+};
+
+const GROUP_ORDER: SignalGroupId[] = ['content', 'link', 'document', 'ip', 'community'];
+
+/** Group the flat signal list into the ordered "Why this result" sections. */
+function buildSignalGroups(signals: ScanSignal[]): SignalGroup[] {
+    const groups: SignalGroup[] = [];
+    for (const id of GROUP_ORDER) {
+        const groupSignals = signals.filter((s) => (s.group ?? 'content') === id);
+        if (groupSignals.length > 0) {
+            groups.push({ id, title: GROUP_TITLES[id], signals: groupSignals });
+        }
+    }
+    return groups;
+}
+
+/** Risk-specific, actionable next steps. */
+function buildWhatToDoNext(
+    level: RiskLevel,
+    signals: ScanSignal[],
+    related: RelatedReportMatch[],
+): string[] {
+    const steps: string[] = [];
+    if (level === 'Low') {
+        steps.push('Stay cautious and verify through official channels before acting.');
+        steps.push('Never share passwords, PINs or one-time codes — no legitimate service asks for them.');
+    } else if (level === 'Medium') {
+        steps.push('Do not click any links or send any information until you have verified this independently.');
+        steps.push('Contact the company directly using a number or website you already trust — not the details in this message.');
+    } else {
+        steps.push('Do not pay, do not reply, and do not click any links.');
+        steps.push('Block the sender and report it to your provider and local scam authority.');
+        if (signals.some((s) => ['suspicious_payment', 'card_details', 'cvv_request', 'doc_bank_details', 'doc_crypto_wallet'].includes(s.id))) {
+            steps.push('If you already shared payment or card details, contact your bank immediately to freeze the card or transfer.');
+        }
+        if (signals.some((s) => ['login_creds', 'otp_request', 'doc_credentials'].includes(s.id))) {
+            steps.push('If you entered a password or code, change that password now and turn on two-factor authentication.');
+        }
+    }
+    if (related.length > 0) {
+        steps.push('This matches existing community reports — you can add your own report to help warn others.');
+    }
+    return steps;
+}
+
+/**
+ * Privacy-safe summary for the "Copy result" button. Deliberately omits the
+ * raw user input — it describes the verdict, signal categories and report
+ * counts only, so a user can paste it to a friend or the bank without leaking
+ * their own pasted message/card/codes.
+ */
+function buildSafeSummary(
+    level: RiskLevel,
+    score: number,
+    groups: SignalGroup[],
+    related: RelatedReportMatch[],
+    ipReputation: IpReputationResult[],
+): string {
+    const lines: string[] = [];
+    lines.push(`Scam check result: ${level} risk (score ${score}/100).`);
+    if (groups.length > 0) {
+        const groupSummary = groups
+            .map((g) => `${g.title.toLowerCase()} (${g.signals.length})`)
+            .join(', ');
+        lines.push(`Signals detected: ${groupSummary}.`);
+    } else {
+        lines.push('No strong scam signals were detected, but this is not a guarantee of safety.');
+    }
+    if (related.length > 0) {
+        const total = related.reduce((sum, r) => sum + r.count, 0);
+        lines.push(`Community reports: ${total} matching report${total === 1 ? '' : 's'} found.`);
+    }
+    const flaggedIp = ipReputation.find((r) => (r.abuseConfidenceScore ?? 0) >= 20);
+    if (flaggedIp) {
+        lines.push(`IP reputation: AbuseIPDB score ${flaggedIp.abuseConfidenceScore}/100.`);
+    }
+    lines.push('Checked with Scam Checker — scamchecker.app/check');
+    return lines.join('\n');
 }
 
 function generateSummary(level: RiskLevel, signals: ScanSignal[], urls: { url: string; risk: UrlRiskResult }[]): string {
@@ -234,8 +521,6 @@ function generateSummary(level: RiskLevel, signals: ScanSignal[], urls: { url: s
     if (urls.some(u => u.risk.riskLevel === 'High')) {
         const riskyUrl = urls.find(u => u.risk.riskLevel === 'High');
         if (riskyUrl) {
-            // E.g. "This link looks like it's pretending to be a bank because the brand name appears in the subdomain..."
-            // We can use the flags from the URL analysis
             if (riskyUrl.risk.flags.length > 0) {
                 return `High Risk: ${riskyUrl.risk.flags[0]}.`;
             }

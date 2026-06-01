@@ -125,6 +125,9 @@ export default function HaveIBeenScammedPage() {
                     <p>
                         Whether you <strong>gave your details to a scammer</strong>, replied to a <strong>scam message</strong>, or are just wondering &quot;<strong>was this a scam?</strong>&quot;, the steps you take in the first hour can save your money and identity.
                     </p>
+                    <p>
+                        Not sure yet? You can <Link href="/scam-report-lookup">look up the sender in our scam report database</Link>, <Link href="/check">analyse the full message with the scam checker</Link>, or <Link href="/check-scam-ip">check a suspicious IP address</Link> before deciding what to do.
+                    </p>
                 </div>
             </div>
 

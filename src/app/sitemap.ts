@@ -79,6 +79,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
         '/crypto-scam-checker',
         '/scam-checker-australia',
         '/scam-website-checker-uk',
+        // IP reputation + community report lookup tools (added 2026-06).
+        '/check-scam-ip',
+        '/scam-report-lookup',
     ].map((route) => ({
         url: `${baseUrl}${route}`,
         lastModified: new Date(),

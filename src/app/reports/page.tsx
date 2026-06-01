@@ -80,6 +80,23 @@ export default async function ReportsPage() {
                                 </Link>
                                 .
                             </p>
+                            <p className="text-sm text-slate-500 mt-2">
+                                Want to check one specific item? Use the{' '}
+                                <Link
+                                    href="/scam-report-lookup"
+                                    className="text-primary hover:underline"
+                                >
+                                    scam report lookup
+                                </Link>{' '}
+                                to search a number, site or email, or the{' '}
+                                <Link
+                                    href="/check-scam-ip"
+                                    className="text-primary hover:underline"
+                                >
+                                    suspicious IP address checker
+                                </Link>{' '}
+                                for an IP&apos;s abuse reputation.
+                            </p>
                         </div>
                         <Button asChild variant="default" className="bg-red-600 hover:bg-red-700">
                             <Link href="/check">Report a suspicious message or link</Link>

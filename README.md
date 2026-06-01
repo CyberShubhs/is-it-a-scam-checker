@@ -5,20 +5,67 @@ This project is a modern, privacy-first tool designed to help users identify pot
 ## 🚀 Features
 
 - **Multi-Channel Detection**: Check Website URLs, Emails, SMS/Texts.
-- **[NEW] Image Scanning (OCR)**: Upload screenshots of suspicious messages. Text is extracted locally using Tesseract.js.
-- **[NEW] Document Scanning**: Upload PDFs or Word documents to check for fake invoices or contract scams.
-- **Advanced Scoring**: Weighted scoring system that identifies specific signals like "Urgency", "Payment Requests", and "Bank Impersonation".
-- **Privacy First**: All processing happens **in your browser**. No files or text are uploaded to our servers.
-- **Responsive Design**: Built for mobile and desktop using Tailwind CSS v4.
-- **SEO Optimized**: Includes programmatic guides and structured data.
+- **Document & Image Scanner**: Upload a screenshot, PDF, DOCX or TXT and watch it
+  get *scanned* (staged scanner animation) for risk signals — embedded links, QR
+  codes, payment/bank details, crypto wallets, gift-card asks, credential
+  harvesting, urgency language and document metadata. Raw extracted text is never
+  shown by default; it lives in an opt-in "Technical details" panel.
+- **QR Code Detection**: Decodes QR codes in images and the first pages of PDFs and
+  runs the destination URL through the URL risk engine ("quishing" detection).
+- **IP Reputation (AbuseIPDB)**: Any public IP found in a message — or entered on
+  the [`/check-scam-ip`](https://scamchecker.app/check-scam-ip) page — is checked
+  server-side against AbuseIPDB and surfaced as an "External IP reputation" signal.
+- **Community Report Enrichment**: Every result shows a "Related community reports"
+  card — matching reports for the exact URL/domain/IP/email/phone, with counts,
+  recency and masked examples — and a [`/scam-report-lookup`](https://scamchecker.app/scam-report-lookup)
+  search page.
+- **Advanced Scoring**: Weighted, grouped signals ("Why this result"), risk-specific
+  "What to do next" advice, and a privacy-safe copyable summary.
+- **Privacy First**: All file/OCR/PDF parsing happens **in your browser**. Files are
+  never uploaded or stored. Only extracted entities (domains/IPs/emails/phones) are
+  sent to the server for report matching + IP reputation.
+- **Hardened APIs**: Rate limiting, item caps, strict IP validation, and graceful
+  degradation on every server route.
+- **SEO Optimized**: Programmatic guides, structured data, and crawlable tool pages.
 
 ## 🛠️ Tech Stack
 
 - **Framework**: Next.js 16 (App Router)
 - **Styling**: Tailwind CSS v4
 - **Language**: TypeScript
-- **Text Extraction**: Tesseract.js (OCR), PDF.js, Mammoth.js
+- **Database**: PostgreSQL via Prisma (community reports + threat-intel cache)
+- **Text Extraction**: Tesseract.js (OCR), PDF.js, Mammoth.js, jsQR (QR codes)
+- **Threat Intel**: AbuseIPDB API v2 (server-side, cached)
 - **Testing**: Vitest
+
+## 🔑 Environment Variables
+
+| Variable | Required? | Exposure | Purpose |
+| --- | --- | --- | --- |
+| `DATABASE_URL` | Yes (for reports) | Server only | Postgres connection for community reports + threat-intel cache |
+| `ABUSEIPDB_API_KEY` | Optional | **Server only** | Enables AbuseIPDB IP-reputation checks |
+| `IP_SALT` | Recommended | Server only | Salt for hashing IPs used in rate limiting |
+| `GEMINI_API_KEY` | Optional | Server only (CI) | Auto-blog generation |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Optional | Client | Google Analytics 4 |
+
+### Setting `ABUSEIPDB_API_KEY`
+
+The IP-reputation feature is **off by default** and degrades gracefully ("External
+IP reputation check is not enabled") until a key is set. To enable it:
+
+1. Create a free key at <https://www.abuseipdb.com/account/api>.
+2. **Locally** — add it to `.env` or `.env.local`:
+   ```bash
+   ABUSEIPDB_API_KEY=your_key_here
+   ```
+3. **On Vercel** — Project → **Settings** → **Environment Variables** → **Add New**:
+   - Name: `ABUSEIPDB_API_KEY` (exactly — no `NEXT_PUBLIC_` prefix)
+   - Value: your key
+   - Environments: Production (and Preview if desired)
+   - Redeploy so the change takes effect.
+
+> ⚠️ Never expose this key to the client. It must stay server-side (no
+> `NEXT_PUBLIC_` prefix). All AbuseIPDB calls run inside server route handlers.
 
 ## 🏃‍♂️ Getting Started
 
@@ -54,7 +101,10 @@ This project is optimized for deployment on Vercel.
 
 1.  Push your code to GitHub.
 2.  Import the project in Vercel.
-3.  Deploy! (No environment variables required for core features).
+3.  Add environment variables (see [Environment Variables](#-environment-variables)):
+    `DATABASE_URL` for community reports, and `ABUSEIPDB_API_KEY` to enable IP
+    reputation checks. The core browser-side scanner works without any keys.
+4.  Deploy.
 
 ## 🛡️ Privacy Note
 
