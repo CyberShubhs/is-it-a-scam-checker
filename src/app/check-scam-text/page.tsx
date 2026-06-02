@@ -7,6 +7,8 @@ import { PageFAQ } from '@/components/PageFAQ';
 import { SMS_FAQS } from '@/lib/faqs';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import { JsonLd } from '@/components/JsonLd';
+import { toolApplicationSchema, breadcrumbSchema } from '@/lib/schema';
 
 export const metadata: Metadata = pageMetadata({
     title: "Check if a Text Message Is a Scam | Scam Checker",
@@ -17,6 +19,21 @@ export const metadata: Metadata = pageMetadata({
 export default function CheckScamTextPage() {
     return (
         <div className="flex flex-col min-h-screen">
+            {/* Tool + breadcrumb schema (matches the visible breadcrumb above). */}
+            <JsonLd
+                data={toolApplicationSchema({
+                    name: 'Text Message Scam Checker',
+                    path: '/check-scam-text',
+                    description:
+                        'Paste a suspicious SMS or WhatsApp message to check it for smishing and scam signals before you click or reply.',
+                })}
+            />
+            <JsonLd
+                data={breadcrumbSchema([
+                    { name: 'Home', path: '/' },
+                    { name: 'Check Text Message', path: '/check-scam-text' },
+                ])}
+            />
             <section className="bg-slate-50 py-12 md:py-20">
                 <div className="container mx-auto px-4 text-center">
                     <div className="flex justify-center items-center gap-2 mb-6 text-sm text-slate-500">

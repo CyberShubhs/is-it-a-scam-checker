@@ -775,6 +775,23 @@ if (fs.existsSync(faqsLibPath) && fs.existsSync(faqComponentPath)) {
     }
 }
 
+// --------------------------------------------------------------------------
+// 15. The ROOT layout must NOT declare `alternates.canonical`. A canonical on
+//     the root layout is inherited by every child route that doesn't override
+//     it, silently pointing those pages at the homepage (canonical leakage).
+//     Each page sets its own self-referencing canonical via pageMetadata().
+// --------------------------------------------------------------------------
+const rootLayoutPath = path.join(APP, 'layout.tsx');
+if (fs.existsSync(rootLayoutPath)) {
+    const layoutSrc = readFile(rootLayoutPath);
+    // Match an `alternates: { ... canonical ... }` block in the root layout.
+    if (/alternates\s*:\s*\{[^}]*canonical/s.test(layoutSrc)) {
+        failures.push(
+            '[root-canonical-leak] src/app/layout.tsx sets alternates.canonical. Remove it — child routes inherit it and leak the homepage canonical. Set per-page canonicals via pageMetadata() instead.',
+        );
+    }
+}
+
 console.log(`\nChecked ${sitemapPaths.size} sitemap routes.`);
 console.log(`Scanned ${SCAN_DIRS.length} directories for prompt-leak fragments.`);
 

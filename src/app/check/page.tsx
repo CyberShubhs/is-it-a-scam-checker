@@ -4,20 +4,32 @@ import { ScamChecker } from '@/components/ScamChecker';
 import { TrustSection } from '@/components/TrustSection';
 import { LatestScams } from '@/components/LatestScams';
 import { FAQ } from '@/components/FAQ';
+import { JsonLd } from '@/components/JsonLd';
+import { toolApplicationSchema } from '@/lib/schema';
 import Link from 'next/link';
 
 // SEO note: /check is our highest-CTR page (2.66% at avg position 5.79 in
 // GSC). The retitle targets the cluster "scam checker / check scam link /
 // check scam message / is this a scam" without keyword stuffing.
 export const metadata: Metadata = pageMetadata({
-    title: "Free Scam Checker: Check Links, Emails, Texts & Websites",
-    description: "Paste a suspicious link, email, SMS or message and get a plain-English scam risk result with red flags and next steps. Free, private, no sign-up.",
+    title: "Free Scam Checker for Texts, Emails, Links and Websites",
+    description: "Paste a suspicious message, email, link or website and get a clear scam-risk result with red flags and next steps.",
     canonical: "https://scamchecker.app/check",
 });
 
 export default function CheckPage() {
     return (
         <div className="flex flex-col min-h-screen">
+            {/* WebApplication schema — /check is the primary interactive,
+                free, browser-based scam checker (previously had no JSON-LD). */}
+            <JsonLd
+                data={toolApplicationSchema({
+                    name: 'Scam Checker',
+                    path: '/check',
+                    description:
+                        'Free scam checker for suspicious texts, emails, links and websites. Paste content and get a clear risk result with red flags and next steps.',
+                })}
+            />
             <section className="bg-slate-50 py-12 md:py-20">
                 <div className="container mx-auto px-4 text-center">
                     {/* H1 mirrors the new SEO title. One H1 per page. */}

@@ -28,6 +28,7 @@ function buildPassingBody(): string {
     const links = `
 
 Use the [free scam checker](/check) and read the [job scam checker guide](/guides/job-scams) if relevant.
+You can also [browse community reports](/reports) for similar cases.
 Source: https://www.scamwatch.gov.au/something-real and https://reportfraud.ftc.gov/other-real.
 According to the FBI's IC3 report (ic3.gov) and the FTC's imposter-scam release (ftc.gov), the trend continues.
 `;

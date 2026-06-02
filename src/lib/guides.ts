@@ -18,9 +18,11 @@ export const guides: Guide[] = [
   {
     slug: 'job-scams',
     title: 'Job Scam Checker: How to Spot a Fake Job Offer Before You Reply',
-    seoTitle: 'Job Scam Checker: Spot a Fake Job Offer',
+    // SEO sprint 2026-06: title/meta tuned to "job scam checker" long-tail.
+    // `title` above stays the natural visible H1.
+    seoTitle: 'Job Scam Checker Guide: Spot Fake Job Offers Fast',
     excerpt: 'Verify a job offer, recruiter, and employer — red flags for fake jobs, task scams, equipment purchase frauds, and check-cashing setups.',
-    metaDescription: 'How to check if a job offer is a scam. Verify the recruiter, employer, and offer details. Spot task scams, fake checks, and equipment-purchase fraud.',
+    metaDescription: 'Learn how to verify recruiters, job offers and fake cheque or task scams before replying or sending any details.',
     date: '2026-05-22',
     relatedSlugs: ['is-this-website-legit', 'email-phishing-examples', 'facebook-marketplace-scams'],
     content: `
@@ -139,7 +141,8 @@ export const guides: Guide[] = [
     slug: 'is-this-website-legit',
     title: 'Is This Website Legit? How to Check Before You Buy',
     excerpt: 'Quick checks before entering card details on unfamiliar websites.',
-    metaDescription: 'Learn how to check if a website is legitimate before entering payment details. Spot fake online stores and avoid getting scammed.',
+    // SEO sprint 2026-06: title already matches the target query; meta tightened.
+    metaDescription: 'A practical guide to checking online shops and unfamiliar websites before you enter card details or create an account.',
     date: '2026-01-26',
     relatedSlugs: ['how-to-spot-a-fake-link', 'facebook-marketplace-scams', 'email-phishing-examples'],
     content: `
@@ -1190,5 +1193,29 @@ export function getRelatedGuides(currentSlug: string): Guide[] {
   return current.relatedSlugs
     .map(slug => getGuideBySlug(slug))
     .filter((g): g is Guide => g !== undefined);
+}
+
+/**
+ * The MOST relevant checker tool for a given guide — used for the guide's
+ * primary call-to-action so each guide routes readers to the right checker
+ * (money-cluster tightening) instead of a generic /check link. Falls back to
+ * the general scam checker for any guide not explicitly mapped.
+ */
+export function guidePrimaryTool(slug: string): { href: string; label: string } {
+  const MAP: Record<string, { href: string; label: string }> = {
+    'is-this-website-legit': { href: '/scam-website-checker', label: 'Check if a website is a scam' },
+    'how-to-spot-a-fake-link': { href: '/check-scam-link', label: 'Check a suspicious link' },
+    'scam-text-message-examples': { href: '/check-scam-text', label: 'Check a text message' },
+    'whatsapp-scams-examples': { href: '/check-scam-text', label: 'Check a suspicious message' },
+    'email-phishing-examples': { href: '/check-scam-email', label: 'Check a suspicious email' },
+    'ato-scam-text-email': { href: '/check-scam-text', label: 'Check a tax-scam message' },
+    'bank-impersonation-scams': { href: '/scam-phone-number-checker', label: 'Check a suspicious call or SMS' },
+    'parcel-delivery-scams-australia': { href: '/check-scam-text', label: 'Check a delivery text' },
+    'what-to-do-if-youve-been-scammed': { href: '/have-i-been-scammed', label: 'Open the damage-control checklist' },
+    'job-scams': { href: '/check', label: 'Check a suspicious job message' },
+    'payid-scams-australia': { href: '/check', label: 'Check a suspicious payment message' },
+    'facebook-marketplace-scams': { href: '/check', label: 'Check a marketplace message' },
+  };
+  return MAP[slug] ?? { href: '/check', label: 'Check for a scam' };
 }
 

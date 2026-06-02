@@ -1,5 +1,5 @@
 
-import { getGuideBySlug, guides, getRelatedGuides } from '@/lib/guides';
+import { getGuideBySlug, guides, getRelatedGuides, guidePrimaryTool } from '@/lib/guides';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { pageMetadata } from '@/lib/seo';
@@ -150,13 +150,20 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
                     </div>
                 )}
 
-                {/* Bottom CTA */}
+                {/* Bottom CTA — routes to the checker most relevant to THIS
+                    guide's topic (money-cluster tightening), plus a link to the
+                    community report database. */}
                 <div className="bg-gradient-to-r from-primary/10 to-emerald-50 p-8 rounded-xl text-center border border-primary/20">
-                    <h3 className="text-xl font-bold mb-3 text-slate-900">Suspicious about a message you received?</h3>
+                    <h3 className="text-xl font-bold mb-3 text-slate-900">Suspicious about something you received?</h3>
                     <p className="mb-6 text-slate-600">Don&apos;t guess. Check it instantly with our free tool.</p>
                     <Button asChild size="lg">
-                        <Link href="/check">Check for Scam</Link>
+                        <Link href={guidePrimaryTool(guide.slug).href}>{guidePrimaryTool(guide.slug).label}</Link>
                     </Button>
+                    <p className="mt-4 text-sm text-slate-500">
+                        Or search the{' '}
+                        <Link href="/reports" className="text-primary hover:underline">community scam reports</Link>{' '}
+                        and the <Link href="/scam-report-lookup" className="text-primary hover:underline">report lookup</Link>.
+                    </p>
                 </div>
             </article>
         </div>

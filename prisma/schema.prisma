@@ -65,6 +65,24 @@ model ReportVote {
   @@index([value_normalised, vote_type])
 }
 
+// Contact-form submissions. Stored server-side so a real enquiry is actually
+// received (there is no transactional email provider wired). Only a hashed IP
+// is kept for abuse control — never the raw IP. The optional CONTACT_WEBHOOK_URL
+// env var lets the owner forward new messages to Slack/email without code
+// changes (see src/app/api/contact/route.ts).
+model ContactMessage {
+  id              String   @id @default(cuid())
+  category        String // support | report-scam | press | editorial | security | data-removal | other
+  name            String
+  email           String
+  message         String
+  ip_hash         String
+  user_agent_hash String
+  created_at      DateTime @default(now())
+
+  @@index([created_at])
+}
+
 // Caches external threat-intelligence lookups (currently AbuseIPDB IP
 // reputation) so we never re-hit a paid/rate-limited third-party API for the
 // same value inside the cache window. Rows are keyed by (source, type, value)

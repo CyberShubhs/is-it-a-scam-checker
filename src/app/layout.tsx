@@ -39,9 +39,13 @@ export const metadata: Metadata = {
         images: ["https://scamchecker.app/og-default.png"],
     },
     metadataBase: new URL('https://scamchecker.app'),
-    alternates: {
-        canonical: 'https://scamchecker.app',
-    },
+    // NOTE: no `alternates.canonical` here on purpose. A canonical set on the
+    // ROOT layout is inherited by any child route that doesn't override it,
+    // which would silently point every such page at the homepage
+    // (canonical leakage). Every indexable page instead sets its OWN
+    // self-referencing canonical via `pageMetadata()` (the home page does so in
+    // src/app/page.tsx). `metadataBase` stays so relative OG/canonical URLs
+    // still resolve correctly.
 };
 
 export default function RootLayout({

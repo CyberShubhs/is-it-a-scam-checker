@@ -9,6 +9,7 @@ import { IpReputation } from './IpReputation';
 import { ReportModal } from './ReportModal';
 import type { RelatedReportMatch } from '@/lib/scamScorer';
 import type { IpReputationResult } from '@/lib/threat-intel/types';
+import { trackReportSearchPerformed, type CheckType } from '@/lib/analytics';
 import { Search } from 'lucide-react';
 
 /** Guess the entity type from what the user typed. */
@@ -46,8 +47,17 @@ export function ReportLookup() {
                 body: JSON.stringify({ items: [{ type, value: value.trim() }] }),
             });
             const data = await res.json();
-            setMatches(Array.isArray(data.matches) ? data.matches : []);
+            const found = Array.isArray(data.matches) ? data.matches : [];
+            setMatches(found);
             setIpReputation(Array.isArray(data.ipReputation) ? data.ipReputation : []);
+            // Privacy-safe: report only the entity type + whether anything was
+            // found — never the searched value itself.
+            const checkType: CheckType = type === 'url' ? 'url' : type === 'email' ? 'email' : 'unknown';
+            trackReportSearchPerformed({
+                check_type: checkType,
+                result_bucket: found.length > 0 ? 'dangerous' : 'safe',
+                page_path: typeof window !== 'undefined' ? window.location.pathname : undefined,
+            });
         } catch {
             setMatches([]);
         } finally {

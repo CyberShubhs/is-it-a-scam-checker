@@ -1,56 +1,95 @@
 import { Metadata } from 'next';
+import Link from 'next/link';
 import { pageMetadata } from '@/lib/seo';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
+import { ContactForm } from '@/components/ContactForm';
+import { ShieldAlert, FileText, Newspaper, Lock, Trash2, LifeBuoy } from 'lucide-react';
 
 export const metadata: Metadata = pageMetadata({
-    title: "Contact the Scam Checker Team | Feedback & Support",
-    description: "Get in touch with the Scam Checker team. Report issues, suggest improvements, or ask questions about our scam detection tool.",
-    canonical: "https://scamchecker.app/contact",
+    title: 'Contact the Scam Checker Team: Support & Editorial',
+    description: 'Contact the Scam Checker team for support, scam reports, press, corrections, security disclosure or data removal. Real working contact options.',
+    canonical: 'https://scamchecker.app/contact',
 });
+
+// Specialised routes that handle specific enquiry types better than the form.
+const ROUTES = [
+    {
+        icon: ShieldAlert,
+        title: 'Report a scam',
+        body: 'Add a scam to the community database (phone, website, email or IP).',
+        href: '/check',
+        cta: 'Open the scam checker',
+    },
+    {
+        icon: Lock,
+        title: 'Security / responsible disclosure',
+        body: 'Found a vulnerability? Follow our coordinated disclosure process.',
+        href: '/responsible-disclosure',
+        cta: 'Responsible disclosure',
+    },
+    {
+        icon: Trash2,
+        title: 'Data removal / privacy',
+        body: 'Request removal of a report or ask a privacy question.',
+        href: '/data-removal',
+        cta: 'Data removal',
+    },
+    {
+        icon: Newspaper,
+        title: 'Reporting bodies',
+        body: 'Need to report fraud officially? Find your country’s authority.',
+        href: '/global-scam-reporting',
+        cta: 'Global scam reporting',
+    },
+];
 
 export default function ContactPage() {
     return (
-        <div className="container mx-auto px-4 py-12 max-w-2xl">
+        <div className="container mx-auto px-4 py-12 max-w-3xl">
             <h1 className="text-4xl font-bold mb-4 text-slate-900 text-center">Contact the Scam Checker Team</h1>
-            <p className="text-xl text-slate-600 text-center mb-8">
-                Have feedback, found a bug, or want to suggest an improvement? We&apos;d love to hear from you.
+            <p className="text-lg text-slate-600 text-center mb-10 max-w-2xl mx-auto">
+                Questions, feedback, corrections, or a scam to report? Send us a message and we&apos;ll reply
+                by email. Pick the category that fits so it reaches the right place.
             </p>
 
             <section className="mb-12">
-                <h2 className="text-2xl font-semibold mb-6 text-slate-900">Send us a Message</h2>
                 <Card>
                     <CardContent className="pt-6">
-                        <form className="space-y-4">
-                            <div className="space-y-2">
-                                <label htmlFor="name" className="text-sm font-medium">Name</label>
-                                <Input id="name" placeholder="Your name" />
-                            </div>
-                            <div className="space-y-2">
-                                <label htmlFor="email" className="text-sm font-medium">Email</label>
-                                <Input id="email" type="email" placeholder="your@email.com" />
-                            </div>
-                            <div className="space-y-2">
-                                <label htmlFor="message" className="text-sm font-medium">Message</label>
-                                <Textarea id="message" placeholder="How can we help?" className="min-h-[120px]" />
-                            </div>
-                            <Button className="w-full">Send Message</Button>
-                            <p className="text-xs text-muted-foreground text-center pt-2">
-                                (This form is a demo in this version)
-                            </p>
-                        </form>
+                        <div className="flex items-center gap-2 mb-5">
+                            <LifeBuoy className="w-5 h-5 text-primary" />
+                            <h2 className="text-xl font-semibold text-slate-900">Send us a message</h2>
+                        </div>
+                        <ContactForm />
                     </CardContent>
                 </Card>
             </section>
 
-            <section className="text-center">
-                <h2 className="text-xl font-semibold mb-4 text-slate-900">Other Ways to Connect</h2>
-                <p className="text-slate-600">
-                    You can also reach me directly via <a href="https://shubhamsingla.tech" className="text-primary hover:underline">my website</a>.
+            <section>
+                <h2 className="text-xl font-semibold mb-2 text-slate-900 text-center">Faster routes for specific needs</h2>
+                <p className="text-slate-600 text-center text-sm mb-6">
+                    Some enquiries are handled best through a dedicated page:
                 </p>
+                <div className="grid sm:grid-cols-2 gap-4">
+                    {ROUTES.map((r) => (
+                        <div key={r.href} className="border border-slate-200 rounded-xl p-5 bg-white">
+                            <div className="flex items-center gap-2 mb-2">
+                                <r.icon className="w-5 h-5 text-primary flex-shrink-0" />
+                                <h3 className="font-semibold text-slate-900">{r.title}</h3>
+                            </div>
+                            <p className="text-sm text-slate-600 mb-3">{r.body}</p>
+                            <Link href={r.href} className="text-primary text-sm font-medium hover:underline inline-flex items-center gap-1">
+                                {r.cta} <FileText className="w-3.5 h-3.5" />
+                            </Link>
+                        </div>
+                    ))}
+                </div>
             </section>
+
+            <p className="text-center text-sm text-slate-500 mt-10">
+                Prefer to read first? Visit the <Link href="/guides" className="text-primary hover:underline">scam guides</Link>,
+                browse <Link href="/reports" className="text-primary hover:underline">community reports</Link>, or learn
+                <Link href="/how-it-works" className="text-primary hover:underline"> how the checker works</Link>.
+            </p>
         </div>
     );
 }

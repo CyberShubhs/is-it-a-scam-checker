@@ -1,10 +1,13 @@
 import { MetadataRoute } from 'next'
 import { guides } from '@/lib/guides'
 import { getAllPosts, BLOG_CATEGORIES } from '@/lib/posts'
+import { lastModifiedFor } from '@/lib/seoRoutes'
 
 export default function sitemap(): MetadataRoute.Sitemap {
     const baseUrl = 'https://scamchecker.app'
 
+    // Guides + blog posts carry their own stable content dates (frontmatter),
+    // so they keep deriving lastModified from data — NOT from deploy time.
     const guideUrls = guides.map((guide) => ({
         url: `${baseUrl}/guides/${guide.slug}`,
         lastModified: new Date(guide.date),
@@ -14,11 +17,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     const blogUrls = getAllPosts().map((post) => ({
         url: `${baseUrl}/blog/${post.slug}`,
-        lastModified: new Date(post.frontmatter.date),
+        // Prefer the post's own updated/date so re-deploying doesn't bump it.
+        lastModified: new Date(post.frontmatter.updated || post.frontmatter.date),
         changeFrequency: 'weekly' as const,
         priority: 0.7,
     }))
 
+    // Static / hub / report-category / blog-category routes now pull a STABLE
+    // lastModified from the central registry (src/lib/seoRoutes.ts) instead of
+    // `new Date()`, which previously marked every page modified on each deploy.
     const reportCategoryRoutes = [
         '/reports/websites',
         '/reports/phone-numbers',
@@ -28,7 +35,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         '/reports/trending',
     ].map((route) => ({
         url: `${baseUrl}${route}`,
-        lastModified: new Date(),
+        lastModified: lastModifiedFor(route),
         changeFrequency: 'daily' as const,
         priority: 0.7,
     }))
@@ -42,7 +49,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         '/report-a-scam',
     ].map((route) => ({
         url: `${baseUrl}${route}`,
-        lastModified: new Date(),
+        lastModified: lastModifiedFor(route),
         changeFrequency: 'weekly' as const,
         priority: 0.8,
     }))
@@ -84,14 +91,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
         '/scam-report-lookup',
     ].map((route) => ({
         url: `${baseUrl}${route}`,
-        lastModified: new Date(),
+        lastModified: lastModifiedFor(route),
         changeFrequency: 'weekly' as const,
         priority: route === '' ? 1 : 0.6,
     }))
 
     const blogCategoryRoutes = BLOG_CATEGORIES.map((category) => ({
         url: `${baseUrl}/blog/${category.slug}`,
-        lastModified: new Date(),
+        lastModified: lastModifiedFor(`/blog/${category.slug}`),
         changeFrequency: 'weekly' as const,
         priority: 0.7,
     }))

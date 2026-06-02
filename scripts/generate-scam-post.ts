@@ -15,11 +15,11 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import * as crypto from 'crypto';
 import {
     validateGeneratedPostQuality,
     type GeneratedPost,
 } from '../src/lib/post-quality';
+import { buildCleanBlogSlug } from '../src/lib/blogSlug';
 import {
     loadQuestionBank,
     listRemainingQuestions,
@@ -708,13 +708,7 @@ function parseAIResponse(raw: string): GeneratedPost {
 }
 
 // ── Post generation ────────────────────────────────────────────────────────
-
-function slugify(text: string): string {
-    return text
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
-}
+// (Slug construction now lives in src/lib/blogSlug.ts → buildCleanBlogSlug.)
 
 /**
  * Topic clusters mapped to live keyword demand (SEO/KWResults.csv) and the
@@ -1378,11 +1372,16 @@ ${body}
     }
 
     // ── Write to disk + record ledger ─────────────────────────────────────
+    // Clean, readable slug: `${date}-${title-slug}` with a numeric suffix only
+    // on collision — NO opaque random hash (URL policy: see docs/url-policy.md).
+    // The date prefix stays because these are time-sensitive scam alerts.
     const date = today;
-    const hash = crypto.randomBytes(3).toString('hex');
-    const titleSlug = slugify(post.title);
-    const shortSlug = titleSlug.substring(0, 50).replace(/-$/, '');
-    const filename = `${date}-${shortSlug}-${hash}.mdx`;
+    const existingSlugs = fs
+        .readdirSync(blogDir)
+        .filter((f) => f.endsWith('.mdx'))
+        .map((f) => f.replace(/\.mdx$/, ''));
+    const fileSlug = buildCleanBlogSlug(date, post.title, existingSlugs);
+    const filename = `${fileSlug}.mdx`;
     const filepath = path.join(blogDir, filename);
 
     fs.writeFileSync(filepath, content, 'utf-8');
@@ -1392,7 +1391,6 @@ ${body}
     console.log(`   Sources: ${post.sources.length} referenced`);
     console.log(`   AI patterns found & stripped: ${remaining.length}`);
 
-    const fileSlug = filename.replace(/\.mdx$/, '');
     if (questionId) {
         recordUsedQuestion(questionId, fileSlug, date);
         console.log(

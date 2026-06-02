@@ -4,10 +4,12 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { ScamChecker } from '@/components/ScamChecker';
 import { TrustSection } from '@/components/TrustSection';
+import { JsonLd } from '@/components/JsonLd';
+import { breadcrumbSchema } from '@/lib/schema';
 
 export const metadata: Metadata = pageMetadata({
-    title: "Free Scam Website Checker: Is This Site Safe?",
-    description: "Paste any website URL for a plain-English risk result. Free scam website checker for fake stores, lookalike domains and shopping fraud — no sign-up.",
+    title: "Website Scam Checker: Is This Site Legit Before You Buy?",
+    description: "Check whether a website looks legitimate or risky before entering payment details. Fast, private website scam checks.",
     canonical: "https://scamchecker.app/scam-website-checker",
 });
 
@@ -32,6 +34,13 @@ export default function ScamWebsiteCheckerPage() {
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(TOOL_JSON_LD) }}
+            />
+            {/* Breadcrumb schema — matches the visible Home › … trail below. */}
+            <JsonLd
+                data={breadcrumbSchema([
+                    { name: 'Home', path: '/' },
+                    { name: 'Scam Website Checker', path: '/scam-website-checker' },
+                ])}
             />
             <section className="bg-slate-50 py-12 md:py-20">
                 <div className="container mx-auto px-4 text-center">

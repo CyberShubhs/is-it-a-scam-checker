@@ -68,6 +68,25 @@ export const REQUIRED_HEADINGS = [
  * Internal Scam Checker routes the generator can link to. A post must contain
  * at least two of these and at least one cluster-specific link.
  */
+/**
+ * Primary checker (tool) routes. A compliant post must link to at least one of
+ * these — that's the "clear scam-check CTA" the quality gate enforces. The
+ * recovery checklist counts because it's the right CTA for "already affected"
+ * readers.
+ */
+export const PRIMARY_CHECKER_ROUTES = [
+    '/check',
+    '/check-scam-text',
+    '/check-scam-email',
+    '/check-scam-link',
+    '/check-scam-ip',
+    '/scam-website-checker',
+    '/scam-phone-number-checker',
+    '/crypto-scam-checker',
+    '/scam-report-lookup',
+    '/have-i-been-scammed',
+] as const;
+
 export const KNOWN_INTERNAL_ROUTES = [
     '/check',
     '/check-scam-text',
@@ -172,10 +191,11 @@ export interface ValidationOptions {
  *   - body word count >= 800
  *   - at least 2 valid http(s) source URLs (no placeholders)
  *   - all REQUIRED_HEADINGS present
- *   - at least 2 internal Scam Checker links
+ *   - at least 3 internal Scam Checker links
+ *   - at least 1 link to a primary checker page (a clear scam-check CTA)
  *   - at least 1 cluster-specific internal link if a cluster is given
- *   - title length 45..70 chars
- *   - summary length 130..165 chars
+ *   - title length 45..60 chars   (matches the rendered <title> ≤60 gate)
+ *   - summary length 130..160 chars (matches the meta-description ≤160 gate)
  *   - no obvious placeholder source URLs
  *   - no single URL or internal route repeated more than 5 times (visual spam)
  */
@@ -311,9 +331,20 @@ export function validateGeneratedPostQuality(
         internalRouteHits.add(route);
         internalRouteCounts.set(route, (internalRouteCounts.get(route) ?? 0) + 1);
     }
-    if (internalRouteHits.size < 2) {
+    if (internalRouteHits.size < 3) {
         reasons.push(
-            `Only ${internalRouteHits.size} distinct internal Scam Checker link(s); needs at least 2.`,
+            `Only ${internalRouteHits.size} distinct internal Scam Checker link(s); needs at least 3.`,
+        );
+    }
+
+    // Clear scam-check CTA — the post must point readers at a checker tool, not
+    // just other articles. (A recovery checklist counts as a CTA too.)
+    const hasCheckerCta = [...internalRouteHits].some((hit) =>
+        PRIMARY_CHECKER_ROUTES.some((route) => hit === route || hit.startsWith(route + '/')),
+    );
+    if (!hasCheckerCta) {
+        reasons.push(
+            `No scam-check CTA: link to at least one checker page (e.g. ${PRIMARY_CHECKER_ROUTES.slice(0, 3).join(', ')}).`,
         );
     }
 
@@ -331,16 +362,18 @@ export function validateGeneratedPostQuality(
         }
     }
 
-    // Title length
+    // Title length — capped at 60 so the rendered <title> never trips the
+    // ">60 chars" rendered-SEO gate (which previously let 63-char titles ship).
     const titleLen = (post.title || '').length;
-    if (titleLen < 45 || titleLen > 70) {
-        reasons.push(`Title length ${titleLen} chars; must be 45-70.`);
+    if (titleLen < 45 || titleLen > 60) {
+        reasons.push(`Title length ${titleLen} chars; must be 45-60.`);
     }
 
-    // Summary length
+    // Summary length — capped at 160 to match the meta-description ≤160 gate
+    // (which previously let a 163-char description ship).
     const summaryLen = (post.summary || '').length;
-    if (summaryLen < 130 || summaryLen > 165) {
-        reasons.push(`Summary length ${summaryLen} chars; must be 130-165.`);
+    if (summaryLen < 130 || summaryLen > 160) {
+        reasons.push(`Summary length ${summaryLen} chars; must be 130-160.`);
     }
 
     // Repetitive linking — same internal route used > 5 times = visual spam.

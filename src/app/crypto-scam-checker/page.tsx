@@ -4,10 +4,12 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { ScamChecker } from '@/components/ScamChecker';
 import { TrustSection } from '@/components/TrustSection';
+import { JsonLd } from '@/components/JsonLd';
+import { breadcrumbSchema } from '@/lib/schema';
 
 export const metadata: Metadata = pageMetadata({
-    title: "Free Crypto Scam Checker: Wallet Drainers & Fake Exchanges",
-    description: "Paste a crypto URL, exchange link, Telegram invite or wallet message. Free crypto scam checker — flags wallet drainers, fake exchanges and fraud.",
+    title: "Crypto Scam Checker: Check Wallet Drainers & Fake Exchanges",
+    description: "Check suspicious crypto links, exchange URLs and wallet prompts for scam signals before you connect or deposit.",
     canonical: "https://scamchecker.app/crypto-scam-checker",
 });
 
@@ -32,6 +34,13 @@ export default function CryptoScamCheckerPage() {
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(TOOL_JSON_LD) }}
+            />
+            {/* Breadcrumb schema — matches the visible Home › … trail below. */}
+            <JsonLd
+                data={breadcrumbSchema([
+                    { name: 'Home', path: '/' },
+                    { name: 'Crypto Scam Checker', path: '/crypto-scam-checker' },
+                ])}
             />
             <section className="bg-slate-50 py-12 md:py-20">
                 <div className="container mx-auto px-4 text-center">

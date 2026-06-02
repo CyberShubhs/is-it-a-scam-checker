@@ -15,8 +15,10 @@ import { MessageSquare, Mail, Globe, ArrowRight, BookOpen, ShieldCheck, AlertTri
 // avg position 16 — this version leads with the tool's plain-English value
 // proposition to lift CTR while we work on rank.
 export const metadata: Metadata = pageMetadata({
-    title: "Scam Checker: Check Links, Emails & Messages for Fraud",
-    description: "Free scam checker. Paste a suspicious link, email, SMS or website for a plain-English fraud risk result in seconds — no sign-up, nothing stored.",
+    // SEO sprint 2026-06: title/meta aligned to the core "scam checker for
+    // texts/emails/links/websites" intent. Self-referencing canonical = home.
+    title: "Scam Checker: Check Texts, Emails, Links and Websites",
+    description: "Free private scam checker for suspicious texts, emails, links, websites, screenshots and PDFs. Instant results, no sign-up.",
     canonical: "https://scamchecker.app",
 });
 

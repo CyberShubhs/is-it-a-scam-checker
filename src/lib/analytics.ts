@@ -167,6 +167,15 @@ export function trackCheckSubmitted(params: CheckSubmittedParams): void {
     }
 }
 
+/**
+ * Fired the moment a user initiates a check (before analysis runs). Pairs with
+ * `check_completed` to measure abandonment. Uses the same safe params as
+ * `check_submitted` — only the checker type + page, never the content.
+ */
+export function trackCheckStarted(params: CheckSubmittedParams): void {
+    trackEvent('check_started', params);
+}
+
 export interface CheckCompletedParams {
     check_type: CheckType;
     risk_level: RiskLevel;
@@ -176,6 +185,55 @@ export interface CheckCompletedParams {
 
 export function trackCheckCompleted(params: CheckCompletedParams): void {
     trackEvent('check_completed', params);
+}
+
+export interface RiskBandShownParams {
+    check_type: CheckType;
+    risk_level: RiskLevel;
+    result_bucket: ResultBucket;
+    page_path?: string;
+}
+
+/** Fired when a Low/Medium/High risk band is rendered to the user. */
+export function trackRiskBandShown(params: RiskBandShownParams): void {
+    trackEvent('risk_band_shown', params);
+}
+
+export interface ReportSearchPerformedParams {
+    /** What kind of entity was searched (url/phone/email/...) — NOT the value. */
+    check_type?: CheckType;
+    /** 'dangerous' if matches found, 'safe' if none — never the query itself. */
+    result_bucket?: ResultBucket;
+    page_path?: string;
+}
+
+/** Fired when a user searches the community report database (no query sent). */
+export function trackReportSearchPerformed(params: ReportSearchPerformedParams = {}): void {
+    trackEvent('report_search_performed', params);
+}
+
+export interface ArticleToolCtaClickedParams {
+    page_path?: string;
+    cta_location: string;
+    destination_path: string;
+    destination_type?: string;
+}
+
+/** Fired when a blog/article CTA into a checker/guide/report tool is clicked. */
+export function trackArticleToolCtaClicked(params: ArticleToolCtaClickedParams): void {
+    trackEvent('article_tool_cta_clicked', params);
+}
+
+export interface ContactFormSubmittedParams {
+    page_path?: string;
+    cta_location?: string;
+    /** The enquiry category (support/press/…) — a safe enum, never the message. */
+    content_type?: string;
+}
+
+/** Fired when the contact form is successfully submitted (no message content). */
+export function trackContactFormSubmitted(params: ContactFormSubmittedParams = {}): void {
+    trackEvent('contact_form_submitted', params);
 }
 
 export interface ReportSubmittedParams {

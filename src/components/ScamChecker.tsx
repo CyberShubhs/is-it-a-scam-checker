@@ -14,7 +14,9 @@ import { checkIp } from '@/lib/entities';
 import { SCAN_STAGES } from '@/lib/scanStages';
 import {
     trackCheckSubmitted,
+    trackCheckStarted,
     trackCheckCompleted,
+    trackRiskBandShown,
     mapRiskLevel,
     mapResultBucket,
     type CheckType as AnalyticsCheckType,
@@ -93,13 +95,15 @@ export function ScamChecker({ defaultTab = 'url' }: ScamCheckerProps) {
         const checkType = toAnalyticsCheckType(activeTab);
         const pagePath = typeof window !== 'undefined' ? window.location.pathname : undefined;
 
-        trackCheckSubmitted({
+        const submitParams = {
             check_type: checkType,
             page_path: pagePath,
             has_url: activeTab === 'url',
             has_attachment: false,
             event_source: 'scam_checker_form',
-        });
+        };
+        trackCheckStarted(submitParams);
+        trackCheckSubmitted(submitParams);
 
         setLoading(true);
         // Brief delay for a "scanning" feel before the analysis.
@@ -110,12 +114,14 @@ export function ScamChecker({ defaultTab = 'url' }: ScamCheckerProps) {
             setResult(res);
             setFileText('');
             setLoading(false);
-            trackCheckCompleted({
+            const bandParams = {
                 check_type: checkType,
                 risk_level: mapRiskLevel(res.riskLevel),
                 result_bucket: mapResultBucket(res.riskLevel),
                 page_path: pagePath,
-            });
+            };
+            trackCheckCompleted(bandParams);
+            trackRiskBandShown(bandParams);
         }, 400);
     };
 
@@ -154,13 +160,15 @@ export function ScamChecker({ defaultTab = 'url' }: ScamCheckerProps) {
         const checkType = toAnalyticsCheckType(activeTab);
         const pagePath = typeof window !== 'undefined' ? window.location.pathname : undefined;
 
-        trackCheckSubmitted({
+        const fileSubmitParams = {
             check_type: checkType,
             page_path: pagePath,
             has_url: false,
             has_attachment: true,
             event_source: 'scam_checker_form',
-        });
+        };
+        trackCheckStarted(fileSubmitParams);
+        trackCheckSubmitted(fileSubmitParams);
 
         // Start the staged scanner animation. The stages advance on a timer
         // while the real (client-side) parsing runs; we hold at the penultimate
@@ -206,12 +214,14 @@ export function ScamChecker({ defaultTab = 'url' }: ScamCheckerProps) {
             finish();
             setFileText(scan.text);
             setResult(res);
-            trackCheckCompleted({
+            const fileBandParams = {
                 check_type: checkType,
                 risk_level: mapRiskLevel(res.riskLevel),
                 result_bucket: mapResultBucket(res.riskLevel),
                 page_path: pagePath,
-            });
+            };
+            trackCheckCompleted(fileBandParams);
+            trackRiskBandShown(fileBandParams);
         } catch (err) {
             console.error('File scan error:', err);
             finish();
