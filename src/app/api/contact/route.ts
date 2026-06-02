@@ -2,19 +2,24 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from '@/lib/db';
 import { rateLimit, clientRateKey } from '@/lib/scanRateLimit';
+import { sendContactNotification, sendContactConfirmation } from '@/lib/email/resend';
 
 /**
  * Contact-form endpoint.
  *
- * There is no transactional email provider wired, so a real enquiry is stored
- * server-side (ContactMessage) so nothing is lost — and, if CONTACT_WEBHOOK_URL
- * is set, forwarded (best-effort) to Slack/email/Make so the owner is notified.
+ * Flow: validate → store in the DB (the source of truth) → best-effort notify.
+ * Notifications are layered and ALL non-blocking — if any fail after the DB
+ * write succeeds, the user still sees success:
+ *   1. Optional webhook forward (CONTACT_WEBHOOK_URL) — Slack/Make/etc.
+ *   2. Resend admin notification email (RESEND_* env) — see src/lib/email/resend.ts.
+ *   3. Optional Resend confirmation to the user (CONTACT_SEND_CONFIRMATION_EMAIL).
  *
  * Hardening:
  *   - Honeypot field ("company") — bots fill it; we pretend success.
  *   - Rate limited per device-hash (5 / 10 min).
  *   - Strict validation + length caps.
  *   - Only a salted IP hash is stored, never the raw IP.
+ *   - Email provider failures never leak to the user (generic responses only).
  */
 function hashIp(ip: string) {
     return crypto
@@ -54,7 +59,8 @@ export async function POST(req: Request) {
         if (!body || typeof body !== 'object') {
             return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
         }
-        const { name, email, message, category, company } = body as Record<string, unknown>;
+        const { name, email, message, category, company, subject, pagePath } =
+            body as Record<string, unknown>;
 
         // Honeypot — a hidden field real users never see/fill. Pretend success.
         if (typeof company === 'string' && company.trim().length > 0) {
@@ -82,7 +88,9 @@ export async function POST(req: Request) {
         const user_agent = req.headers.get('user-agent') || 'unknown';
         const user_agent_hash = crypto.createHash('md5').update(user_agent).digest('hex');
 
-        await prisma.contactMessage.create({
+        // ── Source of truth: persist FIRST. If this throws we fail the request
+        //    (caught below). Everything after is best-effort notification. ──
+        const record = await prisma.contactMessage.create({
             data: {
                 category: cat,
                 name: name.trim().slice(0, MAX_NAME),
@@ -93,7 +101,30 @@ export async function POST(req: Request) {
             },
         });
 
-        // Best-effort notification forward (non-blocking failure).
+        // Optional subject / source page (the form may not send these).
+        const cleanSubject =
+            typeof subject === 'string' && subject.trim().length > 0
+                ? subject.trim().slice(0, 200)
+                : undefined;
+        const cleanPagePath =
+            typeof pagePath === 'string' && pagePath.startsWith('/') && pagePath.length <= 200
+                ? pagePath
+                : undefined;
+
+        const contactInput = {
+            id: record.id,
+            category: record.category,
+            name: record.name,
+            email: record.email,
+            message: record.message,
+            createdAt: record.created_at,
+            subject: cleanSubject,
+            pagePath: cleanPagePath,
+            ipHash: record.ip_hash,
+            userAgentHash: record.user_agent_hash,
+        };
+
+        // 1) Best-effort webhook forward (preserved). Non-blocking on failure.
         const webhook = process.env.CONTACT_WEBHOOK_URL;
         if (webhook) {
             try {
@@ -107,6 +138,28 @@ export async function POST(req: Request) {
             } catch {
                 // Forwarding is optional; the message is already persisted.
             }
+        }
+
+        // 2) Resend admin notification. The helper never throws and returns a
+        //    typed result; a failure here is logged (with the message ID + a
+        //    safe reason, never secrets) but does NOT fail the request.
+        try {
+            const notify = await sendContactNotification(contactInput);
+            if (!notify.ok && notify.reason !== 'not-configured') {
+                console.warn(`Contact ${record.id}: admin email not sent (${notify.reason}).`);
+            }
+        } catch {
+            console.warn(`Contact ${record.id}: admin email send errored.`);
+        }
+
+        // 3) Optional confirmation email to the user (gated by env). Best-effort.
+        try {
+            const confirm = await sendContactConfirmation(contactInput);
+            if (!confirm.ok && confirm.reason !== 'disabled' && confirm.reason !== 'not-configured') {
+                console.warn(`Contact ${record.id}: confirmation email not sent (${confirm.reason}).`);
+            }
+        } catch {
+            console.warn(`Contact ${record.id}: confirmation email send errored.`);
         }
 
         return NextResponse.json({ success: true });

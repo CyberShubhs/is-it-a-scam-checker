@@ -39,6 +39,8 @@ export function ContactForm() {
             message: String(data.get('message') || ''),
             category: String(data.get('category') || 'support'),
             company: String(data.get('company') || ''), // honeypot
+            // Source page for the admin email — not sensitive (it's /contact).
+            pagePath: typeof window !== 'undefined' ? window.location.pathname : undefined,
         };
 
         // Light client-side validation for instant feedback (server re-validates).

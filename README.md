@@ -55,8 +55,33 @@ This project is a modern, privacy-first tool designed to help users identify pot
 | `DATABASE_URL` | Yes (for reports) | Server only | Postgres connection for community reports + threat-intel cache |
 | `ABUSEIPDB_API_KEY` | Optional | **Server only** | Enables AbuseIPDB IP-reputation checks |
 | `IP_SALT` | Recommended | Server only | Salt for hashing IPs used in rate limiting |
+| `RESEND_API_KEY` | Optional | **Server only** | Resend API key — enables contact-form email notifications |
+| `RESEND_FROM_EMAIL` | With Resend | Server only | Verified sender, e.g. `Scam Checker <contact@mail.scamchecker.app>` |
+| `CONTACT_TO_EMAIL` | With Resend | Server only | Where admin contact notifications are delivered |
+| `CONTACT_CC_EMAIL` | Optional | Server only | CC for admin notifications |
+| `CONTACT_SEND_CONFIRMATION_EMAIL` | Optional | Server only | `true` to also email a confirmation to the submitter |
+| `CONTACT_WEBHOOK_URL` | Optional | Server only | Forward each enquiry to a webhook (Slack/Make/etc.) |
 | `GEMINI_API_KEY` | Optional | Server only (CI) | Auto-blog generation |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Optional | Client | Google Analytics 4 |
+
+### Contact form email (Resend)
+
+The contact form **always saves submissions to the database** (`ContactMessage`).
+Email notifications are an optional layer on top — if Resend isn't configured (or
+fails), the submission is still stored and the user still sees success.
+
+1. Verify a sending domain in Resend. `mail.scamchecker.app` is the verified domain.
+2. **On Vercel** — Project → **Settings** → **Environment Variables** → **Add New**:
+   - `RESEND_API_KEY` (no `NEXT_PUBLIC_` prefix — it is a secret)
+   - `RESEND_FROM_EMAIL` = `Scam Checker <contact@mail.scamchecker.app>`
+   - `CONTACT_TO_EMAIL` = the inbox that should receive enquiries
+   - (optional) `CONTACT_CC_EMAIL`, `CONTACT_SEND_CONFIRMATION_EMAIL=true`
+3. **Redeploy** after changing Vercel environment variables — they only take
+   effect on a new deployment.
+
+> ⚠️ Never expose `RESEND_API_KEY` (or any contact secret) to the client. They
+> are read only inside the `/api/contact` route via `src/lib/email/resend.ts`
+> (a server-only module) and never carry a `NEXT_PUBLIC_` prefix.
 
 ### Setting `ABUSEIPDB_API_KEY`
 
