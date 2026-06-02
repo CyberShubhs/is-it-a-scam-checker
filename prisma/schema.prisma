@@ -45,6 +45,26 @@ model Report {
   @@index([phone_normalised])
 }
 
+// Community votes on a reported scam, grouped by the normalised value (so all
+// reports of e.g. "example-scam.com" share one vote tally). Two vote types:
+//   HELPFUL  — "this report helped me / was useful"
+//   SEEN_TOO — "I received / saw this same scam"
+// A device (ip_hash + user_agent_hash) may cast each vote type once per value,
+// enforced by the unique index — this blocks trivial duplicate inflation
+// without storing any raw IP.
+model ReportVote {
+  id               String   @id @default(cuid())
+  value_normalised String // grouping key — matches Report.value_normalised
+  vote_type        String // HELPFUL | SEEN_TOO
+  ip_hash          String
+  user_agent_hash  String
+  created_at       DateTime @default(now())
+
+  // One vote of each type per device per value (dedupe guard).
+  @@unique([value_normalised, vote_type, ip_hash])
+  @@index([value_normalised, vote_type])
+}
+
 // Caches external threat-intelligence lookups (currently AbuseIPDB IP
 // reputation) so we never re-hit a paid/rate-limited third-party API for the
 // same value inside the cache window. Rows are keyed by (source, type, value)

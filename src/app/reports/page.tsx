@@ -1,15 +1,13 @@
 import React from 'react';
 import { Metadata } from 'next';
 import { pageMetadata } from '@/lib/seo';
-import { prisma } from '@/lib/db';
-import { Report } from '@prisma/client';
-import { Card, CardContent } from '@/components/ui/card';
+import { getGroupedReports, GroupedReport } from '@/lib/reportGroups';
+import { ReportsExplorer } from '@/components/ReportsExplorer';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { AlertOctagon, BookOpen, ShieldCheck, Users, TrendingUp, Globe, Phone, Mail, Coins, Clock, Flame, ArrowRight } from 'lucide-react';
+import { AlertOctagon, BookOpen, ShieldCheck, Users, TrendingUp, Globe, Phone, Mail, Coins, Clock, Flame } from 'lucide-react';
 import { PageFAQ } from '@/components/PageFAQ';
 import { REPORTS_FAQS } from '@/lib/faqs';
-import { maskReportValue, redactSensitive } from '@/lib/redact';
 
 // SEO note: /reports is the second-highest CTR page in GSC (2.9% at avg
 // position 5.91). Title/meta tuned for "scam reports", "reported scam
@@ -22,23 +20,15 @@ export const metadata: Metadata = pageMetadata({
 
 export const dynamic = 'force-dynamic';
 
-
-// Public-facing masking is now delegated to src/lib/redact.ts so the
-// API route and the page renderer never drift out of sync. URL values are
-// also rendered as the host only (path can carry tokens) — see
-// maskReportValue.
-const maskValue = (type: string, val: string) => maskReportValue(type, val);
-
 export default async function ReportsPage() {
-    let reports: Report[] = [];
+    // Reports are grouped by normalised value so repeated reports of the same
+    // scam collapse into one card ("Reported by N people") with vote tallies.
+    let groups: GroupedReport[] = [];
     let error = false;
 
     try {
-        reports = await prisma.report.findMany({
-            take: 50,
-            orderBy: { created_at: 'desc' },
-        });
-    } catch (e) {
+        groups = await getGroupedReports({ sort: 'latest', limit: 150 });
+    } catch {
         error = true;
     }
 
@@ -267,51 +257,23 @@ export default async function ReportsPage() {
                     </div>
                 </div>
 
-                {/* Recent Reports */}
-                <h2 className="text-xl font-bold text-slate-900 mb-4">Most Recent Fraud Reports from the Community</h2>
+                {/* Grouped reports with counts, helpful votes, search + filters */}
+                <h2 className="text-xl font-bold text-slate-900 mb-2">Most Reported Scams from the Community</h2>
+                <p className="text-sm text-slate-600 mb-5">
+                    Community reports help identify repeated scam patterns. A report does not prove guilt,
+                    but repeated reports are useful warning signals. Reports of the same website, number,
+                    email or IP are grouped together below.
+                </p>
                 {error ? (
                     <div className="p-12 text-center bg-white rounded-lg border border-dashed text-slate-500">
                         Report database is temporarily unavailable. Please check back later.
                     </div>
-                ) : reports.length === 0 ? (
+                ) : groups.length === 0 ? (
                     <div className="p-12 text-center bg-white rounded-lg border border-dashed text-slate-500">
                         No reports yet. Be the first to <Link href="/check" className="text-primary hover:underline">report a suspicious message or link</Link>!
                     </div>
                 ) : (
-                    <div className="space-y-4">
-                        {reports.map(r => (
-                            <Card key={r.id} className="bg-white hover:border-red-200 transition-colors shadow-sm">
-                                <CardContent className="p-5">
-                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className="px-2 py-0.5 rounded text-xs font-bold uppercase bg-slate-100 text-slate-600">
-                                                    {r.type}
-                                                </span>
-                                                <span className="text-xs text-slate-400">
-                                                    {new Date(r.created_at).toLocaleDateString()} at {new Date(r.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                </span>
-                                                <span className="text-xs text-slate-300">
-                                                    From {r.country}
-                                                </span>
-                                            </div>
-                                            <div className="font-mono text-sm md:text-base text-slate-800 break-all mb-2">
-                                                {maskValue(r.type, r.value_raw)}
-                                            </div>
-                                            {r.notes && (
-                                                <p className="text-sm text-slate-600 italic border-l-2 border-slate-200 pl-3">
-                                                    {/* Defence-in-depth: scrub on the read path
-                                                        so any legacy row with unscrubbed notes
-                                                        is still masked at render time. */}
-                                                    &quot;{redactSensitive(r.notes)}&quot;
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
+                    <ReportsExplorer groups={groups} />
                 )}
             </div>
 

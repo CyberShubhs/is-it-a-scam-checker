@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Users, AlertTriangle, Clock } from 'lucide-react';
+import { Users, AlertTriangle, Clock, ThumbsUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ReportVoteButtons } from './ReportVoteButtons';
 import type { RelatedReportMatch } from '@/lib/scamScorer';
 
 interface RelatedReportsProps {
@@ -67,14 +68,19 @@ export function RelatedReports({ matches, onReport }: RelatedReportsProps) {
                                     {m.entityType}
                                 </span>
                             </div>
-                            <div className="mt-1 flex items-center gap-3 text-xs text-slate-500">
+                            <div className="mt-1 flex items-center gap-3 text-xs text-slate-500 flex-wrap">
                                 <span className="font-semibold text-red-600">
-                                    Reported {m.count} time{m.count === 1 ? '' : 's'}
+                                    Reported by {m.count} {m.count === 1 ? 'person' : 'people'}
                                 </span>
                                 {m.count30d > 0 && <span>{m.count30d} in the last 30 days</span>}
                                 {m.lastReportedAt && (
                                     <span className="flex items-center gap-1">
                                         <Clock className="w-3 h-3" /> Last reported {timeAgo(m.lastReportedAt)}
+                                    </span>
+                                )}
+                                {m.helpfulCount > 0 && (
+                                    <span className="flex items-center gap-1 text-green-700">
+                                        <ThumbsUp className="w-3 h-3" /> {m.helpfulCount} found this helpful
                                     </span>
                                 )}
                             </div>
@@ -88,6 +94,14 @@ export function RelatedReports({ matches, onReport }: RelatedReportsProps) {
                                     ))}
                                 </ul>
                             )}
+                            {/* Helpful / "I saw this too" votes on this grouped report. */}
+                            <div className="mt-3">
+                                <ReportVoteButtons
+                                    groupKey={m.groupKey}
+                                    helpfulCount={m.helpfulCount}
+                                    seenCount={m.seenCount}
+                                />
+                            </div>
                         </div>
                     ))}
                 </div>

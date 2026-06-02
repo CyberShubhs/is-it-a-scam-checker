@@ -20,6 +20,10 @@ const eslintConfig = defineConfig([
     // linted.
     "SEO/**",
     "graphify-out/**",
+    // Generated, minified scanner runtime (pdf.js worker, Tesseract
+    // worker/core) copied from node_modules by scripts/prepare-scan-assets.mjs.
+    // Vendored third-party builds — never our source to lint.
+    "public/scan/**",
   ]),
   {
     // The codebase uses literal `'` / `"` in JSX text content intentionally.

@@ -63,3 +63,7 @@ SEO/claude/
 # Source-health cache produced by scripts/check-blog-sources.mjs. Local-
 # only optimisation — re-derived from network probes on the next run.
 data/source-health-cache.json
+
+# Generated client-side scanner assets (pdf.js worker, Tesseract worker/core/lang)
+# Regenerated from node_modules by scripts/prepare-scan-assets.mjs on install/build.
+/public/scan/

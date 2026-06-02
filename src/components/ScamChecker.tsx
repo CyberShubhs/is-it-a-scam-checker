@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { FileUploader } from './FileUploader';
 import { ScannerProgress } from './ScannerProgress';
 import { scanImageFile, scanDocumentFile } from '@/lib/extractors';
+import { checkIp } from '@/lib/entities';
 import { SCAN_STAGES } from '@/lib/scanStages';
 import {
     trackCheckSubmitted,
@@ -19,14 +20,15 @@ import {
     type CheckType as AnalyticsCheckType,
 } from '@/lib/analytics';
 
-import { Globe, Mail, MessageSquare, Image as ImageIcon, FileText, Clipboard, X } from 'lucide-react';
+import { Globe, Mail, MessageSquare, Image as ImageIcon, FileText, Clipboard, X, Network } from 'lucide-react';
 
-type TabType = 'url' | 'email' | 'text' | 'image' | 'file';
+type TabType = 'url' | 'email' | 'text' | 'ip' | 'image' | 'file';
 type FileKind = 'pdf' | 'docx' | 'txt' | 'image';
 
 function toAnalyticsCheckType(tab: TabType): AnalyticsCheckType {
     if (tab === 'text') return 'sms';
     if (tab === 'file') return 'pdf';
+    if (tab === 'ip') return 'url';
     return tab;
 }
 
@@ -67,9 +69,27 @@ export function ScamChecker({ defaultTab = 'url' }: ScamCheckerProps) {
         };
     }, []);
 
-    // ── Text / URL / email check ──────────────────────────────────────────
+    // ── Text / URL / email / IP check ─────────────────────────────────────
     const handleCheck = () => {
         if (!input.trim() || loading) return;
+
+        // For the IP tab, validate locally first so we can reject malformed and
+        // private/reserved addresses with a clear message (the server also
+        // refuses private IPs, but failing fast here is better UX).
+        if (activeTab === 'ip') {
+            const verdict = checkIp(input.trim());
+            if (!verdict.ok) {
+                setResult(null);
+                setExtractionError(
+                    verdict.reason === 'private'
+                        ? 'That is a private or reserved IP address, so it cannot be checked for an external reputation.'
+                        : 'Please enter a valid public IPv4 or IPv6 address.',
+                );
+                return;
+            }
+            setExtractionError(null);
+        }
+
         const checkType = toAnalyticsCheckType(activeTab);
         const pagePath = typeof window !== 'undefined' ? window.location.pathname : undefined;
 
@@ -82,9 +102,11 @@ export function ScamChecker({ defaultTab = 'url' }: ScamCheckerProps) {
         });
 
         setLoading(true);
-        // Brief delay for a "scanning" feel before the (synchronous) analysis.
+        // Brief delay for a "scanning" feel before the analysis.
         setTimeout(async () => {
-            const res = await calculateRiskScore(input, { source: activeTab === 'url' ? 'url' : activeTab === 'email' ? 'email' : 'text' });
+            const source =
+                activeTab === 'url' ? 'url' : activeTab === 'email' ? 'email' : 'text';
+            const res = await calculateRiskScore(input.trim(), { source });
             setResult(res);
             setFileText('');
             setLoading(false);
@@ -218,6 +240,9 @@ export function ScamChecker({ defaultTab = 'url' }: ScamCheckerProps) {
                             <Button variant={activeTab === 'text' ? 'default' : 'ghost'} size="sm" onClick={() => handleTabChange('text')} className="gap-2">
                                 <MessageSquare className="w-4 h-4" /> SMS / Text
                             </Button>
+                            <Button variant={activeTab === 'ip' ? 'default' : 'ghost'} size="sm" onClick={() => handleTabChange('ip')} className="gap-2">
+                                <Network className="w-4 h-4" /> IP Address
+                            </Button>
                             <Button variant={activeTab === 'image' ? 'default' : 'ghost'} size="sm" onClick={() => handleTabChange('image')} className="gap-2">
                                 <ImageIcon className="w-4 h-4" /> Image
                             </Button>
@@ -250,6 +275,34 @@ export function ScamChecker({ defaultTab = 'url' }: ScamCheckerProps) {
                                     onChange={(e) => setInput(e.target.value)}
                                     className="h-12 text-lg"
                                 />
+                            </div>
+                        )}
+
+                        {/* IP address input */}
+                        {activeTab === 'ip' && (
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <label className="text-sm font-medium">Enter an IP address (IPv4 or IPv6)</label>
+                                    {input && (
+                                        <Button variant="ghost" size="sm" onClick={() => setInput('')} className="h-7 text-xs gap-1 text-red-500 hover:text-red-600">
+                                            <X className="w-3 h-3" /> Clear
+                                        </Button>
+                                    )}
+                                </div>
+                                <Input
+                                    placeholder="e.g. 45.33.32.156"
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleCheck()}
+                                    className="h-12 text-lg"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    We check the IP against community reports and, when enabled, AbuseIPDB&apos;s
+                                    abuse reputation. Private and reserved addresses are not checked externally.
+                                </p>
+                                {extractionError && activeTab === 'ip' && (
+                                    <p className="text-sm text-red-500 font-medium bg-red-50 p-2 rounded">{extractionError}</p>
+                                )}
                             </div>
                         )}
 

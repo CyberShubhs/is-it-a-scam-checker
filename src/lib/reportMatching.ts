@@ -21,6 +21,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from './db';
 import { hostnameOf, registrableDomainOf, normalisePhone } from './entities';
 import { maskReportValue } from './redact';
+import { getVoteTallies } from './reportGroups';
 import { communityReportContribution, RelatedReportMatch } from './scamScorer';
 
 export interface IntelItem {
@@ -30,10 +31,10 @@ export interface IntelItem {
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
-/** Build the Prisma `OR` clause + display value for a single entity. */
+/** Build the Prisma `OR` clause + display value + grouping key for an entity. */
 function buildWhere(
     item: IntelItem,
-): { where: Prisma.ReportWhereInput; entityType: string; display: string } | null {
+): { where: Prisma.ReportWhereInput; entityType: string; display: string; groupKey: string } | null {
     const type = item.type.toLowerCase();
     const value = item.value.trim();
     if (!value) return null;
@@ -48,7 +49,8 @@ function buildWhere(
             or.push({ registrable_domain: domain });
             or.push({ value_normalised: domain }); // legacy URL rows
         }
-        return { where: { OR: or }, entityType: 'domain', display: domain || host || value };
+        const key = domain || host || value;
+        return { where: { OR: or }, entityType: 'domain', display: key, groupKey: key };
     }
 
     if (type === 'ip') {
@@ -56,6 +58,7 @@ function buildWhere(
             where: { OR: [{ ip_address: value }, { value_normalised: value }] },
             entityType: 'ip',
             display: value,
+            groupKey: value,
         };
     }
 
@@ -69,7 +72,7 @@ function buildWhere(
             or.push({ email_domain: domain });
             or.push({ value_normalised: domain }); // legacy email rows
         }
-        return { where: { OR: or }, entityType: 'email', display: domain ? `@${domain}` : email };
+        return { where: { OR: or }, entityType: 'email', display: domain ? `@${domain}` : email, groupKey: domain || email };
     }
 
     if (type === 'phone' || type === 'sms' || type === 'whatsapp') {
@@ -86,6 +89,7 @@ function buildWhere(
             },
             entityType: 'phone',
             display: maskReportValue('phone', value),
+            groupKey: digits,
         };
     }
 
@@ -131,6 +135,7 @@ export async function matchCommunityReports(items: IntelItem[]): Promise<Related
             out.push({
                 entityType: built.entityType,
                 value: built.display,
+                groupKey: built.groupKey,
                 count,
                 count30d,
                 lastReportedAt: examples[0]?.created_at?.toISOString() ?? null,
@@ -142,9 +147,21 @@ export async function matchCommunityReports(items: IntelItem[]): Promise<Related
                     timeAgo: e.created_at.toISOString(),
                 })),
                 riskContribution: communityReportContribution(count30d),
+                helpfulCount: 0,
+                seenCount: 0,
             });
         } catch {
             // Skip this entity on a DB error; continue with the rest.
+        }
+    }
+
+    // Attach helpful / seen-too vote tallies for all matched groups in one query.
+    const tallies = await getVoteTallies(out.map((m) => m.groupKey));
+    for (const m of out) {
+        const t = tallies.get(m.groupKey);
+        if (t) {
+            m.helpfulCount = t.helpful;
+            m.seenCount = t.seen;
         }
     }
 

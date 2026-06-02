@@ -32,6 +32,8 @@ export interface RelatedReportMatch {
     entityType: string;
     /** Display value (already masked / registrable where appropriate). */
     value: string;
+    /** Normalised grouping key (also the vote key). */
+    groupKey: string;
     /** Total matching reports of any age. */
     count: number;
     /** Matching reports in the last 30 days (drives scoring). */
@@ -41,6 +43,10 @@ export interface RelatedReportMatch {
     examples: { value: string; type: string; timeAgo: string }[];
     /** Points this match contributes to the overall score. */
     riskContribution: number;
+    /** "This was helpful" votes for this group. */
+    helpfulCount: number;
+    /** "I saw this too" votes for this group. */
+    seenCount: number;
 }
 
 /**
@@ -129,6 +135,15 @@ const SIGNALS = [
         points: 45,
         pattern: /\b(crypto|bitcoin|usdt|gift card|wire transfer|payid|western union)\b/i,
         explanation: "Scammers often ask for untraceable payment methods like Gift Cards or Crypto."
+    },
+    {
+        id: 'delivery_fee',
+        label: 'Delivery / parcel fee bait',
+        points: 35,
+        // A parcel/delivery word near a "pay / release / held / outstanding"
+        // word — the classic "pay a small fee to release your parcel" lure.
+        pattern: /\b(parcel|package|delivery|shipment|customs|post(?:al)?)\b[\s\S]{0,40}\b(fee|pay|paid|release|redeliver|redelivery|held|pending|outstanding|unpaid)\b/i,
+        explanation: "Fake 'pay a small fee to release your parcel' messages are one of the most common scams. Couriers do not collect fees this way."
     },
     {
         id: 'urgency',

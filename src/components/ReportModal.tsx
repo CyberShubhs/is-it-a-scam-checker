@@ -15,6 +15,7 @@ function mapReportType(value: string): ReportType {
             return value;
         case 'text':
             return 'message';
+        // 'ip' has no dedicated analytics bucket — report it as 'unknown'.
         default:
             return 'unknown';
     }
@@ -108,6 +109,7 @@ export function ReportModal({ isOpen, onClose, initialValue = '' }: ReportModalP
                                 <option value="url">Website / URL</option>
                                 <option value="phone">Phone Number</option>
                                 <option value="email">Email Address</option>
+                                <option value="ip">IP Address</option>
                                 <option value="text">Message Content</option>
                             </select>
                         </div>

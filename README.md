@@ -12,18 +12,28 @@ This project is a modern, privacy-first tool designed to help users identify pot
   shown by default; it lives in an opt-in "Technical details" panel.
 - **QR Code Detection**: Decodes QR codes in images and the first pages of PDFs and
   runs the destination URL through the URL risk engine ("quishing" detection).
-- **IP Reputation (AbuseIPDB)**: Any public IP found in a message — or entered on
-  the [`/check-scam-ip`](https://scamchecker.app/check-scam-ip) page — is checked
-  server-side against AbuseIPDB and surfaced as an "External IP reputation" signal.
-- **Community Report Enrichment**: Every result shows a "Related community reports"
-  card — matching reports for the exact URL/domain/IP/email/phone, with counts,
-  recency and masked examples — and a [`/scam-report-lookup`](https://scamchecker.app/scam-report-lookup)
-  search page.
+- **IP Reputation (AbuseIPDB)**: An **IP Address** tab in the scanner (and the
+  [`/check-scam-ip`](https://scamchecker.app/check-scam-ip) page) checks any public
+  IP server-side against AbuseIPDB and surfaces an "External IP reputation" signal.
+  IPs found inside scanned messages/files are checked automatically too.
+- **Community Report Enrichment + Voting**: Every result shows a "Related community
+  reports" card — matching reports for the exact URL/domain/IP/email/phone, with
+  counts ("Reported by N people"), recency, masked examples and **helpful / "I saw
+  this too" votes**. The [`/reports`](https://scamchecker.app/reports) page groups
+  duplicate reports and supports search, type filters and Latest / Top / Most
+  helpful sorting; [`/scam-report-lookup`](https://scamchecker.app/scam-report-lookup)
+  searches a single entity.
 - **Advanced Scoring**: Weighted, grouped signals ("Why this result"), risk-specific
   "What to do next" advice, and a privacy-safe copyable summary.
 - **Privacy First**: All file/OCR/PDF parsing happens **in your browser**. Files are
   never uploaded or stored. Only extracted entities (domains/IPs/emails/phones) are
   sent to the server for report matching + IP reputation.
+- **Self-hosted scanner runtime (CSP-safe)**: The pdf.js worker, Tesseract OCR
+  worker/core (WASM) and English language data are copied from `node_modules` into
+  `public/scan/` at install/build time (`scripts/prepare-scan-assets.mjs`) and served
+  same-origin. This is required because the site's strict Content-Security-Policy
+  (`default-src 'self'`) blocks third-party CDN workers — and cdnjs doesn't host the
+  pinned pdf.js version. The `public/scan/` folder is git-ignored and regenerated.
 - **Hardened APIs**: Rate limiting, item caps, strict IP validation, and graceful
   degradation on every server route.
 - **SEO Optimized**: Programmatic guides, structured data, and crawlable tool pages.

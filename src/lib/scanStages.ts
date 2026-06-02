@@ -21,12 +21,12 @@ export interface ScanStage {
  */
 export const SCAN_STAGES: readonly ScanStage[] = [
     { id: 'prepare', label: 'Preparing file securely' },
-    { id: 'visible-text', label: 'Scanning visible text' },
-    { id: 'links', label: 'Checking embedded links' },
-    { id: 'metadata', label: 'Checking document metadata' },
-    { id: 'reports', label: 'Checking known scam reports' },
-    { id: 'risk', label: 'Analysing risk signals' },
-    { id: 'advice', label: 'Building safety advice' },
+    { id: 'visible-text', label: 'Scanning visible content' },
+    { id: 'links', label: 'Checking links and QR codes' },
+    { id: 'metadata', label: 'Checking document signals' },
+    { id: 'reports', label: 'Checking community reports' },
+    { id: 'risk', label: 'Analysing risk' },
+    { id: 'advice', label: 'Preparing safety advice' },
 ] as const;
 
 /**

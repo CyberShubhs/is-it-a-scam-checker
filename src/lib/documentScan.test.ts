@@ -73,6 +73,48 @@ describe('analyzeDocument', () => {
     });
 });
 
+describe('acceptance scenarios (extracted-content scoring)', () => {
+    // These mirror the OCR/PDF/DOCX acceptance tests. The extraction itself is
+    // browser-only (Tesseract/pdf.js); here we assert the scoring on the text
+    // those engines produce.
+    it('gift-card + verification document scores High', async () => {
+        const res = await calculateRiskScore('Pay using gift cards to verify your account', {
+            source: 'file',
+            fileName: 'invoice.pdf',
+            fileType: 'pdf',
+        });
+        expect(res.riskLevel).toBe('High');
+    });
+
+    it('OTP request in a TXT/DOCX scores High', async () => {
+        const res = await calculateRiskScore('Send your OTP to confirm delivery', {
+            source: 'file',
+            fileName: 'note.txt',
+            fileType: 'txt',
+        });
+        expect(res.riskLevel).toBe('High');
+    });
+
+    it('"verify your account and pay a fee" screenshot scores High', async () => {
+        const res = await calculateRiskScore('Verify your account and pay a fee', {
+            source: 'image',
+            fileName: 'screenshot.png',
+            fileType: 'image',
+        });
+        expect(res.riskLevel).toBe('High');
+    });
+
+    it('parcel-held delivery-fee text is at least Medium and flags the lure', async () => {
+        const res = await calculateRiskScore('Your parcel is held. Pay $2 to release it.', {
+            source: 'image',
+            fileName: 'sms.png',
+            fileType: 'image',
+        });
+        expect(res.signals.some((s) => s.id === 'delivery_fee')).toBe(true);
+        expect(['Medium', 'High']).toContain(res.riskLevel);
+    });
+});
+
 describe('calculateRiskScore with a document context', () => {
     it('includes document signals and an embedded URL raises the score', async () => {
         const benign = await calculateRiskScore('Hello, here is the document you asked for.', {

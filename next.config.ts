@@ -9,13 +9,22 @@ const nextConfig: NextConfig = {
     // (which only loads after consent), images from self + Vercel-hosted OG
     // assets, fonts from self + the Inter subset Next ships, frame-ancestors
     // 'none' so the page can't be embedded for clickjacking.
+    // The client-side document scanner (pdf.js + Tesseract.js OCR) runs Web
+    // Workers and WebAssembly. All worker/core/lang assets are self-hosted under
+    // /scan/ (see scripts/prepare-scan-assets.mjs), so we only need to permit:
+    //   - 'wasm-unsafe-eval' so the Tesseract/pdf.js WASM can be compiled
+    //   - worker-src 'self' blob: so the (same-origin) workers can spawn
+    //   - blob: in script-src/connect-src as a defensive allowance for the
+    //     worker/data plumbing
+    // No third-party CDN origins are added — everything stays same-origin.
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com",
+      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://www.googletagmanager.com https://www.google-analytics.com",
+      "worker-src 'self' blob:",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://www.google-analytics.com https://vercel.live",
       "font-src 'self' data:",
-      "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://vitals.vercel-insights.com",
+      "connect-src 'self' blob: data: https://www.google-analytics.com https://*.google-analytics.com https://vitals.vercel-insights.com",
       "frame-ancestors 'none'",
       "form-action 'self'",
       "base-uri 'self'",

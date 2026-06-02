@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prepare-scan-assets": "node scripts/prepare-scan-assets.mjs",
+    "predev": "node scripts/prepare-scan-assets.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/prepare-scan-assets.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -19,12 +22,13 @@
     "audit:blog-sources": "node scripts/check-blog-sources.mjs --network --full --soft",
     "repair:blog-sources": "node scripts/repair-blog-sources.mjs",
     "generate-blog": "npx tsx scripts/generate-scam-post.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate && node scripts/prepare-scan-assets.mjs"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "@radix-ui/react-slot": "^1.2.4",
     "@tailwindcss/typography": "^0.5.19",
+    "@tesseract.js-data/eng": "^1.0.0",
     "@vercel/analytics": "^2.0.1",
     "clsx": "^2.1.1",
     "fast-levenshtein": "^3.0.0",

@@ -1,6 +1,16 @@
-import Tesseract from 'tesseract.js';
+import { createWorker, OEM } from 'tesseract.js';
 import * as mammoth from 'mammoth';
 import type { DocumentMetadata } from './documentScan';
+
+// Self-hosted scanner asset paths (served from public/scan/ — populated by
+// scripts/prepare-scan-assets.mjs on install/build). Serving these same-origin
+// is what makes the scanner work under the site's strict CSP ('self'); the
+// previous CDN URLs were blocked by CSP and the pinned pdfjs version 404'd on
+// cdnjs. No third-party CDN is contacted at runtime.
+const PDF_WORKER_SRC = '/scan/pdf.worker.min.mjs';
+const TESS_WORKER_PATH = '/scan/tesseract/worker.min.js';
+const TESS_CORE_PATH = '/scan/tesseract';
+const TESS_LANG_PATH = '/scan/tesseract/lang';
 
 /**
  * Client-side file scanning.
@@ -79,21 +89,103 @@ async function detectQrFromImage(file: File): Promise<string[]> {
 
 // ── Image scanning (OCR + QR) ───────────────────────────────────────────────
 
+const IMAGE_EXT_RE = /\.(png|jpe?g|webp|gif|bmp|tiff?)$/i;
+
+/** Loose MIME / extension check so we don't OCR a non-image blob. */
+function looksLikeImage(file: File): boolean {
+    if (file.type && file.type.startsWith('image/')) return true;
+    if (file.type && file.type !== 'application/octet-stream') return false;
+    return IMAGE_EXT_RE.test(file.name);
+}
+
+/**
+ * Preprocess an image to improve OCR accuracy: upscale small screenshots,
+ * convert to grayscale and stretch contrast. Returns a canvas Tesseract can
+ * read directly. Falls back to the original File if anything goes wrong — the
+ * original is always preserved for the preview, since this works on a copy.
+ */
+async function preprocessImageForOcr(file: File): Promise<HTMLCanvasElement | File> {
+    try {
+        const bitmap = await createImageBitmap(file);
+        const longSide = Math.max(bitmap.width, bitmap.height);
+        // OCR is most reliable around 1000-2000px on the long edge. Upscale
+        // small screenshots; leave large ones alone (capped to bound memory).
+        let scale = 1;
+        if (longSide < 1400) scale = Math.min(2.5, 1400 / longSide);
+        else if (longSide > 3000) scale = 3000 / longSide;
+        const w = Math.max(1, Math.round(bitmap.width * scale));
+        const h = Math.max(1, Math.round(bitmap.height * scale));
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) return file;
+        ctx.drawImage(bitmap, 0, 0, w, h);
+
+        const imageData = ctx.getImageData(0, 0, w, h);
+        const d = imageData.data;
+        // Grayscale (luma) + mild contrast stretch around mid-grey. This makes
+        // text edges crisper for the OCR engine without destroying faint text.
+        for (let i = 0; i < d.length; i += 4) {
+            const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+            const c = Math.min(255, Math.max(0, (gray - 128) * 1.35 + 128));
+            d[i] = d[i + 1] = d[i + 2] = c;
+        }
+        ctx.putImageData(imageData, 0, 0);
+        return canvas;
+    } catch {
+        return file; // preprocessing is an optimisation, not a requirement
+    }
+}
+
+/**
+ * Run Tesseract OCR with a one-shot worker pinned to our self-hosted assets.
+ * `workerBlobURL: false` loads the worker directly from the same-origin URL
+ * (CSP-friendly) rather than fetching it and wrapping it in a blob: URL. The
+ * worker is always terminated to free its memory.
+ */
+async function runOcr(image: File | HTMLCanvasElement): Promise<{ text: string; confidence: number | null }> {
+    const worker = await createWorker('eng', OEM.LSTM_ONLY, {
+        workerPath: TESS_WORKER_PATH,
+        corePath: TESS_CORE_PATH,
+        langPath: TESS_LANG_PATH,
+        workerBlobURL: false,
+        gzip: true,
+    });
+    try {
+        const { data } = await worker.recognize(image);
+        return {
+            text: (data.text || '').trim(),
+            confidence: typeof data.confidence === 'number' ? data.confidence : null,
+        };
+    } finally {
+        await worker.terminate();
+    }
+}
+
 export async function scanImageFile(file: File): Promise<FileScanData> {
     if (file.size > MAX_FILE_SIZE) {
         return { text: '', error: 'File size exceeds 5MB limit.', fileType: 'image' };
     }
+    if (!looksLikeImage(file)) {
+        return { text: '', error: 'That does not look like a supported image (PNG, JPG, WEBP).', fileType: 'image' };
+    }
 
-    // Run OCR and QR detection together — they're independent.
+    // OCR (with preprocessing) and QR detection are independent — a failure in
+    // one must not prevent the other. The friendly error is only returned when
+    // BOTH genuinely produce nothing.
     let text = '';
     let ocrConfidence: number | null = null;
     try {
-        const result = await Tesseract.recognize(file, 'eng');
-        text = clampText(result.data.text || '');
-        ocrConfidence = typeof result.data.confidence === 'number' ? result.data.confidence : null;
+        const preprocessed = await preprocessImageForOcr(file);
+        const ocr = await runOcr(preprocessed);
+        text = clampText(ocr.text);
+        ocrConfidence = ocr.confidence;
     } catch (err) {
-        console.error('OCR Error:', err);
-        // OCR can fail on odd images; we still return QR results if any.
+        console.error('OCR error:', err);
+        // OCR genuinely failed (e.g. corrupt image). Fall through to QR + the
+        // empty-result handling below — we never crash the scan.
     }
 
     const qrUrls = (await detectQrFromImage(file)).filter((u) => /^https?:\/\//i.test(u));
@@ -175,7 +267,9 @@ async function readDocxFile(file: File): Promise<ExtractedData> {
 async function readPdfRich(file: File): Promise<FileScanData> {
     // Dynamic import avoids SSR issues with DOMMatrix/Canvas at build time.
     const pdfjsLib = await import('pdfjs-dist');
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+    // Self-hosted worker (same-origin → CSP-compliant, and not subject to a CDN
+    // having the exact pinned version — cdnjs only ships up to 5.4.149).
+    pdfjsLib.GlobalWorkerOptions.workerSrc = PDF_WORKER_SRC;
 
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
