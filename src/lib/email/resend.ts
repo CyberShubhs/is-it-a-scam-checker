@@ -29,9 +29,9 @@ export interface ContactMessageInput {
     subject?: string;
     /** Optional page the enquiry came from (e.g. '/contact'). */
     pagePath?: string;
-    /** Already-hashed values, included only for the admin email if useful. */
-    ipHash?: string;
-    userAgentHash?: string;
+    // Request fingerprint (IP hash, user-agent) is intentionally NOT part of
+    // this type — it must never reach email content. It stays server-side in
+    // the DB for anti-spam/rate-limiting only.
 }
 
 export type SendResult = { ok: true; id?: string } | { ok: false; reason: string };
@@ -114,8 +114,8 @@ export function buildContactNotificationEmail(msg: ContactMessageInput): BuiltEm
         ['Created', created],
     ];
     if (msg.pagePath) rows.push(['Source page', msg.pagePath]);
-    if (msg.ipHash) rows.push(['IP hash', msg.ipHash]);
-    if (msg.userAgentHash) rows.push(['User-agent hash', msg.userAgentHash]);
+    // Note: request fingerprint (IP hash, user-agent) is deliberately NOT
+    // included in any email. It is kept server-side only for rate limiting.
 
     const text =
         rows.map(([k, v]) => `${k}: ${v}`).join('\n') +

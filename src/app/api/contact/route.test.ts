@@ -75,7 +75,13 @@ describe('POST /api/contact', () => {
         expect(create).toHaveBeenCalledTimes(1);
         // Notification is sent the persisted record (only available post-insert).
         expect(sendNotify).toHaveBeenCalledTimes(1);
-        expect(sendNotify.mock.calls[0][0].id).toBe('cm_1');
+        const sentInput = sendNotify.mock.calls[0][0];
+        expect(sentInput.id).toBe('cm_1');
+        // Request fingerprint must NOT be forwarded to the email layer.
+        expect(sentInput.ipHash).toBeUndefined();
+        expect(sentInput.userAgentHash).toBeUndefined();
+        expect(Object.keys(sentInput)).not.toContain('ip_hash');
+        expect(Object.keys(sentInput)).not.toContain('user_agent_hash');
     });
 
     it('still returns success when Resend returns ok:false after the DB write', async () => {

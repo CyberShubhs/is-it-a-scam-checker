@@ -111,6 +111,9 @@ export async function POST(req: Request) {
                 ? pagePath
                 : undefined;
 
+        // Only non-sensitive fields are passed to the email layer. The stored
+        // ip_hash / user_agent_hash stay in the DB for rate limiting and are
+        // deliberately NOT forwarded to any email.
         const contactInput = {
             id: record.id,
             category: record.category,
@@ -120,8 +123,6 @@ export async function POST(req: Request) {
             createdAt: record.created_at,
             subject: cleanSubject,
             pagePath: cleanPagePath,
-            ipHash: record.ip_hash,
-            userAgentHash: record.user_agent_hash,
         };
 
         // 1) Best-effort webhook forward (preserved). Non-blocking on failure.

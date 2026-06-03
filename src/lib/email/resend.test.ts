@@ -64,6 +64,23 @@ describe('buildContactNotificationEmail', () => {
         // Plain-text part keeps the raw message (no HTML injection risk there).
         expect(email.text).toContain('<script>steal()</script>');
     });
+
+    it('never includes IP hash or user-agent in the admin email', () => {
+        // Force fingerprint values onto the input to prove they are ignored
+        // even if a caller mistakenly supplies them.
+        const msg = {
+            ...makeMsg(),
+            ipHash: 'SECRET_IP_HASH_abc123',
+            userAgentHash: 'SECRET_UA_HASH_def456',
+        } as ContactMessageInput;
+        const email = buildContactNotificationEmail(msg);
+        for (const body of [email.text, email.html, email.subject]) {
+            expect(body).not.toContain('SECRET_IP_HASH_abc123');
+            expect(body).not.toContain('SECRET_UA_HASH_def456');
+            expect(body).not.toMatch(/IP hash/i);
+            expect(body).not.toMatch(/user[- ]?agent/i);
+        }
+    });
 });
 
 describe('sendContactNotification', () => {
