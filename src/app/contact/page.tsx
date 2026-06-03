@@ -55,10 +55,13 @@ export default function ContactPage() {
             <section className="mb-12">
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="flex items-center gap-2 mb-5">
+                        <div className="flex items-center gap-2 mb-2">
                             <LifeBuoy className="w-5 h-5 text-primary" />
                             <h2 className="text-xl font-semibold text-slate-900">Send us a message</h2>
                         </div>
+                        <p className="text-sm text-slate-600 mb-5">
+                            Use this form for support, press, corrections, privacy requests, or general enquiries.
+                        </p>
                         <ContactForm />
                     </CardContent>
                 </Card>

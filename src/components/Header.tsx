@@ -16,6 +16,7 @@ export function Header() {
         { href: '/reports', label: 'Community Reports' },
         { href: '/how-it-works', label: 'How it Works' },
         { href: '/about', label: 'About Us' },
+        { href: '/contact', label: 'Contact' },
     ];
 
     return (
