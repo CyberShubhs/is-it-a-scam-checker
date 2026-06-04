@@ -149,44 +149,76 @@ We take privacy seriously.
 
 ## 📝 AI-Powered Blog System
 
-The repo includes a fully automatic blog publishing system that generates original, SEO-optimised scam alert posts using **Google Gemini AI** and commits them directly to `main`.
+The repo includes a fully automatic blog publishing system that generates **one
+high-quality, long-form SEO article per week** using **Google Gemini AI** and
+commits it directly to `main`.
 
 ### How It Works
 
-1. A **GitHub Action** (`.github/workflows/auto-blog.yml`) runs twice daily (6AM + 6PM UTC) and on manual dispatch.
-2. It calls **Gemini AI** (with model fallback: 2.5 Flash → 2.0 Flash → 2.0 Flash Lite) to research current scam/cybersecurity threats and write an original blog post.
-3. The script strips AI-sounding language using a blocklist of 150+ known chatbot phrases.
-4. Duplicate topics are detected and skipped to keep content fresh.
-5. Posts are committed directly to `main` and **Vercel auto-deploys** — fully hands-off.
+1. A **GitHub Action** (`.github/workflows/auto-blog.yml`) runs **once a week** —
+   `cron: '0 22 * * 0'` (Sunday 22:00 UTC = **Monday morning Australia/Sydney**,
+   ~08:00 AEST / ~09:00 AEDT) — plus manual dispatch.
+2. It calls **Gemini** (primary) with model fallback
+   `gemini-2.5-pro → gemini-2.5-flash → gemini-2.0-flash`. **Groq** is used only
+   as a fallback if Gemini fails *and* `GROQ_API_KEY` is set. The log prints which
+   provider produced the post (name only, never keys).
+3. The script strips AI-sounding language and runs a strict deterministic quality
+   gate (see below). If the draft fails, it is **not published** and the exact
+   reasons are logged.
+4. Duplicate topics/angles are detected and skipped to keep content fresh.
+5. Passing posts are committed to `main` and **Vercel auto-deploys**.
 
-### Setup
+### Environment variables (GitHub Actions secrets/vars)
 
-1. Get a free Gemini API key at [aistudio.google.com](https://aistudio.google.com/apikey)
-2. Add it as a GitHub repository secret named `GEMINI_API_KEY`
-3. In repo Settings → Actions → General → set "Read and write permissions"
+| Name | Kind | Purpose |
+| --- | --- | --- |
+| `GEMINI_API_KEY` | secret | **Required.** Primary provider. Free key at [aistudio.google.com](https://aistudio.google.com/apikey). |
+| `GEMINI_MODEL` | var (optional) | Overrides the primary model. Defaults to `gemini-2.5-pro`. |
+| `GROQ_API_KEY` | secret (optional) | Fallback provider, used only if Gemini fails. |
 
-### Local Testing
+In repo Settings → Actions → General, set "Read and write permissions".
+
+### Manual run + dry run
+
+Use **Actions → Auto Blog Post → Run workflow**. Tick **`dry_run`** to generate
+and fully validate a draft **without writing or committing** anything (the
+generator honours the `DRY_RUN` env var and produces no file). Locally:
 
 ```bash
-# Generate a draft post locally (requires GEMINI_API_KEY env var)
+# Generate a post (writes a file on success)
 GEMINI_API_KEY=your-key npm run generate-blog
 
-# Run dev server and visit http://localhost:3000/blog
-npm run dev
-
-# Build to verify no errors
-npm run build
+# Dry run — generate + validate, write nothing
+GEMINI_API_KEY=your-key DRY_RUN=true npm run generate-blog
 ```
 
-### Post Structure
+### Quality gate (enforced before publishing)
 
-Every post uses MDX with required frontmatter (`title`, `date`, `summary`, `tags`, `sources`) and follows a journalistic structure: opening hook, how the scam works, who is targeted, red flags, action steps, reporting links, and a closing CTA.
+A draft is **rejected** (not published) if it is missing any of: **≥1,500 words**
+(target 1,800–2,800), **≥3 credible registry sources**, all required sections
+including a **Frequently Asked Questions** block with **≥5 questions**,
+**≥5 internal links**, a **checker-tool CTA**, a cluster-specific link,
+**≥3 numbered action steps**, a **non-generic intro** (AI filler openers are
+blocked), a **unique title ≤60 chars**, and a **meta description ≤160 chars**.
+No unsourced statistics (every number must map to a cited source). Failures are
+logged with exact reasons.
 
-### Safety Guardrails
+> This is the *weekly long-form bar* in `src/lib/post-quality.ts`. The
+> corpus baseline in `scripts/check-blog-quality.mjs` stays laxer (≥500 words)
+> so existing posts are not retroactively failed.
 
-- Posts include a mandatory disclaimer: *"This post is for informational purposes only and does not constitute legal or financial advice."*
-- A lint check rejects posts containing dangerous phrases outside of clearly labelled warning contexts.
-- AI-sounding phrases are automatically stripped from generated content.
+### Post structure
+
+Each post uses MDX frontmatter (`title`, `date`, `summary`, `tags`, `sources`,
+plus `primaryKeyword` / `secondaryKeywords`) and the User-QA structure: quick
+answer, who's targeted, red flags, a realistic example, how to check safely,
+what to do (before / if affected), where to report, FAQ, related Scam Checker
+tools, and sources.
+
+### Safety guardrails
+
+- Mandatory disclaimer on every post.
+- AI-sounding phrases are stripped from generated content.
 - Duplicate topics are detected and skipped.
 
 

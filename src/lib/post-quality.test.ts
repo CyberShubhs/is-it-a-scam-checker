@@ -12,6 +12,7 @@ const HEADINGS = [
     '## What to Do Before You Click, Reply, or Pay',
     "## What to Do If You've Already Been Affected",
     '## Where to Report',
+    '## Frequently Asked Questions',
     '## Related Scam Checker pages',
 ];
 
@@ -25,12 +26,25 @@ function buildPassingBody(): string {
         .join(' ');
     const sections = HEADINGS.map((h) => `${h}\n\n${filler}`).join('\n\n');
     // Source hostnames must appear in the body so source-relevance passes.
+    // Includes 5 distinct internal links, 3 numbered action steps, and 5 FAQ
+    // questions so the stricter weekly gate passes.
     const links = `
 
 Use the [free scam checker](/check) and read the [job scam checker guide](/guides/job-scams) if relevant.
-You can also [browse community reports](/reports) for similar cases.
+You can also [browse community reports](/reports), open the [recovery checklist](/have-i-been-scammed), or find [where to report](/global-scam-reporting).
 Source: https://www.scamwatch.gov.au/something-real and https://reportfraud.ftc.gov/other-real.
 According to the FBI's IC3 report (ic3.gov) and the FTC's imposter-scam release (ftc.gov), the trend continues.
+
+What to do before you act:
+1. Stop and verify the sender independently.
+2. Do not send money or share any documents.
+3. Run the message through the scam checker.
+
+**Is it safe to reply just to verify?** No — replying confirms your number is active.
+**How do I know if a recruiter is real?** Check the company domain and official listings.
+**Can I get my money back?** Sometimes, if you act fast and contact your bank.
+**Should I report it?** Yes, report it to your local authority.
+**What if I already shared my ID?** Follow the recovery checklist immediately.
 `;
     return sections + links;
 }
@@ -45,6 +59,7 @@ function buildPassingPost(): { post: GeneratedPost; body: string } {
             sources: [
                 'https://www.ic3.gov/AnnualReport/Reports/2024_IC3Report.pdf',
                 'https://www.ftc.gov/news-events/news/press-releases/2024/ftc-business-imposter-employment-scam-report',
+                'https://www.scamwatch.gov.au/something-real',
             ],
             body: '',
         },
@@ -72,11 +87,11 @@ describe('validateGeneratedPostQuality', () => {
         expect(reasons).toEqual([]);
     });
 
-    it('rejects bodies under 800 words', () => {
+    it('rejects bodies under the weekly minimum word count', () => {
         const { post } = buildPassingPost();
         const shortBody = HEADINGS.join('\n\n') + '\n\nshort.';
         const reasons = validateGeneratedPostQuality(post, shortBody);
-        expect(reasons.some((r) => r.includes('800'))).toBe(true);
+        expect(reasons.some((r) => /needs at least 1500/.test(r))).toBe(true);
     });
 
     it('rejects fewer than 2 valid source URLs', () => {
@@ -257,5 +272,46 @@ describe('validateGeneratedPostQuality', () => {
             clusterRoutes: ['/guides/job-scams'],
         });
         expect(reasons.some((r) => r.includes('not in the sources list'))).toBe(true);
+    });
+});
+
+describe('validateGeneratedPostQuality — weekly long-form bar', () => {
+    it('requires at least 3 sources', () => {
+        const { post, body } = buildPassingPost();
+        const bad: GeneratedPost = { ...post, sources: post.sources.slice(0, 2) };
+        const reasons = validateGeneratedPostQuality(bad, body, { clusterRoutes: ['/guides/job-scams'] });
+        expect(reasons.some((r) => /needs at least 3/.test(r))).toBe(true);
+    });
+
+    it('requires at least 5 distinct internal links', () => {
+        const { post, body } = buildPassingPost();
+        // Remove two internal links → 3 distinct remain (< 5).
+        const stripped = body
+            .replace('/have-i-been-scammed', 'x')
+            .replace('/global-scam-reporting', 'x');
+        const reasons = validateGeneratedPostQuality(post, stripped, { clusterRoutes: ['/guides/job-scams'] });
+        expect(reasons.some((r) => /at least 5/.test(r))).toBe(true);
+    });
+
+    it('requires an FAQ with at least 5 questions', () => {
+        const { post, body } = buildPassingPost();
+        const noQuestions = body.replace(/\?/g, '.');
+        const reasons = validateGeneratedPostQuality(post, noQuestions, { clusterRoutes: ['/guides/job-scams'] });
+        expect(reasons.some((r) => /FAQ too thin/.test(r))).toBe(true);
+    });
+
+    it('rejects a weak/generic AI intro', () => {
+        const { post, body } = buildPassingPost();
+        const weak = "In today's digital age, scams are everywhere.\n\n" + body;
+        const reasons = validateGeneratedPostQuality(post, weak, { clusterRoutes: ['/guides/job-scams'] });
+        expect(reasons.some((r) => /Weak\/generic intro/.test(r))).toBe(true);
+    });
+
+    it('requires at least 3 concrete numbered action steps', () => {
+        const { post, body } = buildPassingPost();
+        // Neutralise the numbered list ("1." → "Step").
+        const noSteps = body.replace(/^\s*\d+\.\s+/gm, 'Step: ');
+        const reasons = validateGeneratedPostQuality(post, noSteps, { clusterRoutes: ['/guides/job-scams'] });
+        expect(reasons.some((r) => /numbered action step/.test(r))).toBe(true);
     });
 });

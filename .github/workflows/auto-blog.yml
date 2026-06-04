@@ -1,13 +1,27 @@
 name: Auto Blog Post
-# Generates 2 AI-written scam/cybersecurity blog posts daily using Gemini (with Groq fallback).
-# Posts are committed directly to main — fully automatic, no PR review needed.
-# Schedule: 6AM UTC and 6PM UTC (2 posts per day).
+# Generates ONE high-quality, long-form scam/cybersecurity SEO article per week
+# using Gemini (primary) with Groq as fallback. Posts are committed directly to
+# main — fully automatic, no PR review needed.
+#
+# Schedule: weekly, Sunday 22:00 UTC. That is Monday ~08:00 in Australia/Sydney
+# (AEST, UTC+10) and ~09:00 during daylight saving (AEDT, UTC+11) — i.e. Monday
+# morning Sydney year-round. GitHub Actions cron is UTC-only, so we encode the
+# Sydney target as a UTC time rather than a timezone.
+#
+# Manual runs: use "Run workflow" (workflow_dispatch). Tick `dry_run` to
+# generate + validate WITHOUT writing/committing a post (the generator honours
+# the DRY_RUN env var and produces no file, so nothing is committed).
 
 on:
   schedule:
-    - cron: '0 6 * * *'
-    - cron: '0 18 * * *'
+    - cron: '0 22 * * 0'
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run — generate + validate but do not write/commit a post'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: write
@@ -34,7 +48,13 @@ jobs:
         run: npx tsx scripts/generate-scam-post.ts
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # Optional model override. Defaults to gemini-2.5-pro in the generator.
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          # Optional Groq fallback (used only if Gemini fails).
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          # When dry_run is ticked on a manual run, the generator validates but
+          # writes no file, so the steps below find nothing to commit.
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
 
       - name: Detect what changed
         id: precheck

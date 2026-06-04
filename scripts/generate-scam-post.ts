@@ -435,11 +435,15 @@ function getExistingPostSignals(): ExistingPostSignal[] {
 
 // ── Gemini API call with model fallback ────────────────────────────────────
 
+// Gemini is the PRIMARY provider. The weekly post is long-form + high quality,
+// so we lead with the strongest model. `GEMINI_MODEL` (env) overrides the
+// primary; the rest are in-provider fallbacks for quota/availability. Groq is a
+// separate, lower-priority fallback (see callGroq) used only if Gemini fails.
 const GEMINI_MODELS = [
+    process.env.GEMINI_MODEL || 'gemini-2.5-pro',
     'gemini-2.5-flash',
     'gemini-2.0-flash',
-    'gemini-2.0-flash-lite',
-];
+].filter((m, i, arr) => arr.indexOf(m) === i); // de-dupe if GEMINI_MODEL matches a fallback
 
 async function callGemini(prompt: string): Promise<string> {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -866,10 +870,13 @@ REQUIRED STRUCTURE — every section must appear in this order using EXACTLY the
    - 🇺🇸 USA: [FTC ReportFraud](https://reportfraud.ftc.gov/)
    - 🇬🇧 UK: [Action Fraud](https://www.actionfraud.police.uk/)
    - 🌐 International: [Global Scam Reporting Directory](/global-scam-reporting)
-11. "## Related Scam Checker pages" — bullet list of 2-3 internal links: at least one checker page, at least one pillar/guide or related blog category page, and /reports where relevant.
-12. A short closing sentence with a [free scam checker](/check) link.
+11. "## Frequently Asked Questions" — 5 to 8 concise Q&A pairs covering the real follow-up questions a searcher would ask. Each question is a bolded line that ends with a question mark, e.g. **Is it safe to reply just to verify?**, followed by a 1-3 sentence plain-English answer.
+12. "## Related Scam Checker pages" — bullet list of 2-3 internal links: at least one checker page, at least one pillar/guide or related blog category page, and /reports where relevant.
+13. A short closing sentence with a [free scam checker](/check) link.
 
-The headings #5 through #11 above are mandatory for the deterministic quality gate. Do not rename them. Their wording must match exactly.
+The headings #5 through #12 above are mandatory for the deterministic quality gate. Do not rename them. Their wording must match exactly.
+
+INTERNAL LINKING: include AT LEAST 5 internal markdown links to Scam Checker routes spread naturally across the whole body (not all bunched in one list). Always include a clear call-to-action link to the single most relevant checker tool for this topic's cluster.
 
 SOURCES — STRICT RULES (this is the most important section of these instructions):
 - You MAY ONLY cite sources from this approved registry. Do NOT invent URLs. Do NOT use BBC, Reuters, news articles, dated press releases, or any URL not in this list:
@@ -878,7 +885,7 @@ ${sourcesBlock}
 
 - In the JSON output, the "sources" array MUST contain ONLY the registry IDs you used (e.g. ["ftc_job_scams", "ic3_home"]). Do NOT put URLs in "sources".
 - In the markdown body, you MAY mention an agency by name (e.g. "the FTC", "Scamwatch", "Action Fraud") and OPTIONALLY include the exact URL from the registry above as a markdown link with descriptive anchor text. Any URL not exactly matching the registry above will cause the post to be rejected.
-- Pick at least 2 source IDs from the registry above. Prefer the ones with the most relevant title for the question.
+- Pick at least 3 source IDs from the registry above. Prefer the ones with the most relevant title for the question.
 - Do NOT cite Reuters, BBC, the Guardian, Forbes, Bloomberg, the WSJ, the NYT, or other paywalled / bot-blocking newsrooms.
 - Do NOT claim "FTC warns X" or "FBI warns Y" unless that specific claim is directly supported by the title of the registry entry you cite.
 
@@ -887,7 +894,7 @@ CLAIM RULES:
 - Quantitative claims ("millions lost", "thousands affected") are not allowed unless you are citing the IC3 annual report or an evergreen statistics page from the registry. When in doubt, write qualitative language ("widely reported", "common pattern") instead of numbers.
 - Frame the post as an evergreen explainer of the scam pattern. Do not pretend a specific news event is breaking unless a real news source is in the registry above.
 
-WORD COUNT: 800-1200 words in the body (not counting frontmatter).
+WORD COUNT: 1800-2800 words in the body (not counting frontmatter). This is a weekly flagship article — go deep, stay specific, and never pad with filler to hit the count.
 
 VOICE rules (non-negotiable):
 - Plain English, short paragraphs, active voice.
@@ -897,12 +904,13 @@ VOICE rules (non-negotiable):
 
 OUTPUT FORMAT — Return ONLY pure JSON. No markdown fences. No commentary. All newlines inside the body string must be escaped as \\n.
 {
-  "title": "Title (50-65 chars) that answers the question",
-  "summary": "Meta description (140-155 chars) that hooks searchers",
+  "title": "Title (50-58 chars, under 60) that answers the question",
+  "summary": "Meta description (140-155 chars, under 160) that hooks searchers",
   "tags": ["job-scam", "fake-job-offer", "scam-alert"],
-  "sourceIds": ["${preselectedSources.map((s) => s.id).slice(0, 2).join('", "')}"],
+  "sourceIds": ["${preselectedSources.map((s) => s.id).slice(0, 3).join('", "')}"],
   "body": "Full markdown body with the structure above",
   "primaryKeyword": "the single search phrase this post should rank for",
+  "secondaryKeywords": ["3 to 6 closely related search phrases this post should also rank for"],
   "searchIntent": "informational",
   "audience": "People searching: \\"${question.question.toLowerCase()}\\"",
   "region": "global",
@@ -1031,10 +1039,13 @@ REQUIRED STRUCTURE (every section must be present — no exceptions):
    - 🇺🇸 USA: [FTC ReportFraud](https://reportfraud.ftc.gov/)
    - 🇬🇧 UK: [Action Fraud](https://www.actionfraud.police.uk/)
    - 🌐 International: [Global Scam Reporting Directory](/global-scam-reporting)
-8. "## Related Scam Checker pages" — A short bullet list linking to 2-3 of the cluster's related internal routes (listed above) and any other relevant /check-*, /guides/*, or /reports/* routes.
-9. A single closing sentence with this internal link naturally included: [free scam checker](/check)
+8. "## Frequently Asked Questions" — 5 to 8 concise Q&A pairs. Each question is a bolded line ending in a question mark, followed by a 1-3 sentence answer covering the real follow-ups a searcher would have.
+9. "## Related Scam Checker pages" — A short bullet list linking to 2-3 of the cluster's related internal routes (listed above) and any other relevant /check-*, /guides/*, or /reports/* routes.
+10. A single closing sentence with this internal link naturally included: [free scam checker](/check)
 
-WORD COUNT: Between 800 and 1200 words (body only, not frontmatter).
+INTERNAL LINKING: include AT LEAST 5 internal markdown links to Scam Checker routes spread across the body, including a clear CTA to the most relevant checker tool.
+
+WORD COUNT: Between 1800 and 2800 words (body only, not frontmatter). This is a weekly flagship article — depth and specificity, never filler.
 
 OPENING RULE: The body must start with an answer-first sentence — what the scam is and what a reader should do — not a generic introduction or hype.
 
@@ -1059,9 +1070,10 @@ CRITICAL: All newlines in the body MUST be encoded as \\n inside the JSON string
   "title": "Your Title Here (50-65 chars)",
   "summary": "Your meta description (140-155 chars)",
   "tags": ["tag1", "tag2", "tag3"],
-  "sourceIds": ["${legacyPreselected.map((s) => s.id).slice(0, 2).join('", "')}"],
+  "sourceIds": ["${legacyPreselected.map((s) => s.id).slice(0, 3).join('", "')}"],
   "body": "Full markdown body with \\n for newlines",
   "primaryKeyword": "scam phone number checker",
+  "secondaryKeywords": ["3 to 6 closely related search phrases"],
   "searchIntent": "informational",
   "audience": "Adults receiving suspicious calls or SMS in AU/UK/US",
   "region": "global",
@@ -1123,11 +1135,17 @@ async function runProvidersForPrompt(prompt: string): Promise<GeneratedPost> {
         throw new Error('No AI provider available. Set GEMINI_API_KEY and/or GROQ_API_KEY.');
     }
 
+    console.log(
+        `🤖 Providers (in order): ${providers.map((p) => p.name).join(' → ')}. Gemini is primary.`,
+    );
     let lastError = '';
     for (let i = 0; i < providers.length; i++) {
         const { name, fn } = providers[i];
         try {
-            return await tryProvider(name, fn, prompt);
+            const post = await tryProvider(name, fn, prompt);
+            // Log which provider produced the post (name only — never keys).
+            console.log(`✅ Generated using provider: ${name}`);
+            return post;
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : String(err);
             lastError = msg;
@@ -1172,7 +1190,13 @@ type AttemptOutcome =
           questionId?: string;
           matched?: { slug?: string; title?: string };
       }
-    | { type: 'quality-fail'; reasons: string[]; questionId?: string };
+    | { type: 'quality-fail'; reasons: string[]; questionId?: string }
+    // Dry run: the draft passed every gate but was intentionally NOT written.
+    | { type: 'dry-run'; questionId?: string; title: string };
+
+/** True when DRY_RUN=true (workflow input) or `--dry-run` is passed. */
+const IS_DRY_RUN =
+    process.env.DRY_RUN === 'true' || process.argv.includes('--dry-run');
 
 /**
  * Build prompt → call providers → dedupe → quality-gate → write MDX → record
@@ -1281,6 +1305,12 @@ async function attemptOneQuestion(
     // Build a sourceIds frontmatter block so the repair script and the
     // changed-post source check can verify registry membership directly.
     const sourceIdsYaml = `sourceIds: ${JSON.stringify(rawIds)}\n`;
+    // Secondary keywords (weekly long-form posts) — written when the model
+    // supplies them. Capped at 6 so the frontmatter stays tidy.
+    const secondaryKeywordsYaml =
+        Array.isArray(post.secondaryKeywords) && post.secondaryKeywords.length > 0
+            ? `secondaryKeywords: ${JSON.stringify(post.secondaryKeywords.slice(0, 6))}\n`
+            : '';
     // claimSupport: prefer the new sourceId form, fall back to legacy URL.
     const claimSupportYaml = Array.isArray(post.claimSupport) && post.claimSupport.length > 0
         ? `claimSupport:\n${post.claimSupport
@@ -1300,7 +1330,7 @@ summary: "${yamlEscape(post.summary)}"
 tags: ${tagYaml}
 sources:
 ${sourceYaml}
-${sourceIdsYaml}${optionalLine('updated', today)}${optionalLine('category', post.category ?? cluster.slug)}${optionalLine('primaryKeyword', post.primaryKeyword)}${optionalLine('searchIntent', post.searchIntent)}${optionalLine('audience', post.audience)}${optionalLine('region', post.region ?? 'global')}${optionalLine('author', post.author ?? 'Shubham Singla')}${optionalLine('reviewer', post.reviewer ?? 'Shubham Singla')}${optionalLine('lastReviewed', today)}${optionalLine('questionId', questionId)}${claimSupportYaml}---
+${sourceIdsYaml}${secondaryKeywordsYaml}${optionalLine('updated', today)}${optionalLine('category', post.category ?? cluster.slug)}${optionalLine('primaryKeyword', post.primaryKeyword)}${optionalLine('searchIntent', post.searchIntent)}${optionalLine('audience', post.audience)}${optionalLine('region', post.region ?? 'global')}${optionalLine('author', post.author ?? 'Shubham Singla')}${optionalLine('reviewer', post.reviewer ?? 'Shubham Singla')}${optionalLine('lastReviewed', today)}${optionalLine('questionId', questionId)}${claimSupportYaml}---
 
 ${DISCLAIMER}
 
@@ -1369,6 +1399,19 @@ ${body}
         console.log('⚠️  Generated post failed quality gate:');
         for (const r of qualityReasons) console.log(`     - ${r}`);
         return { type: 'quality-fail', reasons: qualityReasons, questionId };
+    }
+
+    // ── Dry run: stop before writing ──────────────────────────────────────
+    // The draft already passed the full quality gate above. In dry-run mode we
+    // report what WOULD publish but write no file and leave the ledger
+    // untouched — so the workflow finds nothing to commit.
+    if (IS_DRY_RUN) {
+        console.log('🧪 DRY RUN — draft passed the quality gate; nothing will be written.');
+        console.log(`   Title: ${post.title}`);
+        console.log(`   Would-be slug: ${buildCleanBlogSlug(today, post.title, [])}`);
+        console.log(`   Tags: ${post.tags.join(', ')}`);
+        console.log(`   Sources referenced: ${post.sources.length}`);
+        return { type: 'dry-run', questionId, title: post.title };
     }
 
     // ── Write to disk + record ledger ─────────────────────────────────────
@@ -1467,6 +1510,17 @@ async function main(): Promise<void> {
                 `🏁 Final result: 1 post published after ${attempts} attempt(s).` +
                     ` Selected question: ${outcome.questionId ?? '(legacy fallback)'}.` +
                     ` ${skippedCount} question(s) skipped during this run.`,
+            );
+            success = true;
+            break;
+        }
+
+        if (outcome.type === 'dry-run') {
+            // A publishable draft was produced and validated, but nothing was
+            // written (dry run). Stop the loop cleanly — the workflow will find
+            // no staged post and report "nothing to commit".
+            console.log(
+                `🏁 Dry run complete: a publishable draft passed every gate but was NOT written. Title: "${outcome.title}".`,
             );
             success = true;
             break;

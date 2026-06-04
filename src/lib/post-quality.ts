@@ -31,6 +31,8 @@ export interface GeneratedPost {
     updated?: string;
     category?: string;
     primaryKeyword?: string;
+    /** 3-6 closely related search phrases (weekly long-form posts). */
+    secondaryKeywords?: string[];
     searchIntent?: 'informational' | 'commercial' | 'transactional' | 'navigational';
     audience?: string;
     region?: string;
@@ -61,6 +63,8 @@ export const REQUIRED_HEADINGS = [
     '## What to Do Before You Click, Reply, or Pay',
     "## What to Do If You've Already Been Affected",
     '## Where to Report',
+    // Weekly long-form posts must answer real follow-up questions.
+    '## Frequently Asked Questions',
     '## Related Scam Checker pages',
 ] as const;
 
@@ -74,6 +78,25 @@ export const REQUIRED_HEADINGS = [
  * recovery checklist counts because it's the right CTA for "already affected"
  * readers.
  */
+/**
+ * Filler openers that mark a weak, generic AI intro. If any appears in the
+ * post's introduction (before the first H2), the post is rejected. Lower-case.
+ */
+export const GENERIC_INTRO_PATTERNS = [
+    "in today's digital age",
+    "in today's digital landscape",
+    "in today's digital world",
+    'in this article',
+    'in this blog post',
+    'in the world of',
+    'in an increasingly digital',
+    'with the rise of',
+    'scams are on the rise',
+    'we have all been there',
+    "we've all been there",
+    'have you ever wondered',
+] as const;
+
 export const PRIMARY_CHECKER_ROUTES = [
     '/check',
     '/check-scam-text',
@@ -189,15 +212,23 @@ export interface ValidationOptions {
  *
  * Gates (per the SEO follow-up instructions):
  *   - body word count >= 800
- *   - at least 2 valid http(s) source URLs (no placeholders)
- *   - all REQUIRED_HEADINGS present
- *   - at least 3 internal Scam Checker links
+ *   - at least 3 valid http(s) source URLs (no placeholders)
+ *   - all REQUIRED_HEADINGS present (incl. an FAQ section)
+ *   - at least 5 internal Scam Checker links
  *   - at least 1 link to a primary checker page (a clear scam-check CTA)
  *   - at least 1 cluster-specific internal link if a cluster is given
+ *   - an FAQ with at least 5 questions
+ *   - a strong, non-generic intro (no AI filler openers)
+ *   - at least 3 concrete numbered action steps
  *   - title length 45..60 chars   (matches the rendered <title> ≤60 gate)
  *   - summary length 130..160 chars (matches the meta-description ≤160 gate)
  *   - no obvious placeholder source URLs
  *   - no single URL or internal route repeated more than 5 times (visual spam)
+ *
+ * These thresholds are the WEEKLY long-form bar (1,500+ words, 5 links, FAQ).
+ * They gate only freshly generated posts; the corpus baseline in
+ * scripts/check-blog-quality.mjs stays laxer so existing posts aren't
+ * retroactively failed.
  */
 export function validateGeneratedPostQuality(
     post: GeneratedPost,
@@ -205,7 +236,9 @@ export function validateGeneratedPostQuality(
     options: ValidationOptions = {},
 ): string[] {
     const reasons: string[] = [];
-    const minWordCount = options.minWordCount ?? 800;
+    // Weekly flagship floor. Target is 1,800-2,800 (see the generator prompt);
+    // 1,500 is the hard minimum-useful-depth gate, with margin below target.
+    const minWordCount = options.minWordCount ?? 1500;
 
     // Word count
     const wc = countBodyWords(body);
@@ -219,8 +252,8 @@ export function validateGeneratedPostQuality(
     const validSources = (post.sources || []).filter(
         (s) => typeof s === 'string' && /^https?:\/\//i.test(s.trim()),
     );
-    if (validSources.length < 2) {
-        reasons.push(`Only ${validSources.length} valid source URL(s); needs at least 2.`);
+    if (validSources.length < 3) {
+        reasons.push(`Only ${validSources.length} valid source URL(s); needs at least 3.`);
     }
     const seenSources = new Set<string>();
     for (const src of post.sources || []) {
@@ -331,9 +364,9 @@ export function validateGeneratedPostQuality(
         internalRouteHits.add(route);
         internalRouteCounts.set(route, (internalRouteCounts.get(route) ?? 0) + 1);
     }
-    if (internalRouteHits.size < 3) {
+    if (internalRouteHits.size < 5) {
         reasons.push(
-            `Only ${internalRouteHits.size} distinct internal Scam Checker link(s); needs at least 3.`,
+            `Only ${internalRouteHits.size} distinct internal Scam Checker link(s); needs at least 5.`,
         );
     }
 
@@ -374,6 +407,31 @@ export function validateGeneratedPostQuality(
     const summaryLen = (post.summary || '').length;
     if (summaryLen < 130 || summaryLen > 160) {
         reasons.push(`Summary length ${summaryLen} chars; must be 130-160.`);
+    }
+
+    // FAQ depth — the "## Frequently Asked Questions" heading is already
+    // required above; here we confirm it actually contains questions. We count
+    // question marks across the body (real FAQs have ≥5; prose rarely does).
+    const questionCount = (body.match(/\?/g) || []).length;
+    if (questionCount < 5) {
+        reasons.push(`FAQ too thin: found ${questionCount} question(s); need an FAQ with at least 5.`);
+    }
+
+    // Weak / generic intro — reject the AI filler openers that signal a thin
+    // post. We only scan the intro (before the first H2 heading).
+    const intro = body.split(/\n##\s/)[0].toLowerCase();
+    for (const phrase of GENERIC_INTRO_PATTERNS) {
+        if (intro.includes(phrase)) {
+            reasons.push(`Weak/generic intro: opens with filler phrase "${phrase}".`);
+            break;
+        }
+    }
+
+    // Concrete user action steps — a useful post tells people what to do. Require
+    // at least 3 numbered list items (the "what to do" / verification steps).
+    const numberedSteps = (body.match(/^\s*\d+\.\s+\S/gm) || []).length;
+    if (numberedSteps < 3) {
+        reasons.push(`Only ${numberedSteps} numbered action step(s); need at least 3 concrete steps.`);
     }
 
     // Repetitive linking — same internal route used > 5 times = visual spam.
