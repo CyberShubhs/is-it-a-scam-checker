@@ -4,45 +4,691 @@
   "notes": "Each entry is one real question raised by a potential customer on Reddit. Generated blog posts MUST answer exactly one unused question per run, framed as either a Q&A or a clearly-labelled realistic example scenario. Used questions are tracked in data/used-blog-questions.json so we never repeat one.",
   "cluster": "job-scams",
   "questions": [
-    { "id": "fq-001", "question": "Is my job offer a scam? Red flags to watch for", "intent": "How to verify if a job offer is legitimate" },
-    { "id": "fq-002", "question": "Company sent me a check before I started — is this normal?", "intent": "Understanding unusual hiring practices" },
-    { "id": "fq-003", "question": "How to spot fake job offers and employment scams", "intent": "Learning warning signs of job scams" },
-    { "id": "fq-004", "question": "What information should a real employer ask for?", "intent": "Knowing what's appropriate to share during hiring" },
-    { "id": "fq-005", "question": "Should I cash a check from an employer I haven't started with?", "intent": "Understanding suspicious check requests" },
-    { "id": "fq-006", "question": "How to verify a company is real before accepting a job", "intent": "Validating employer legitimacy" },
-    { "id": "fq-007", "question": "Remote job offers that seem too good to be true — are they scams?", "intent": "Evaluating suspicious job postings" },
-    { "id": "fq-008", "question": "What's an 'e-check' in job scams and how does it work?", "intent": "Understanding fake payment methods" },
-    { "id": "fq-009", "question": "Fake recruitment agency red flags — what to look for", "intent": "Identifying illegitimate recruiters" },
-    { "id": "fq-010", "question": "Why do job scammers send checks to candidates?", "intent": "Understanding the scam mechanics" },
-    { "id": "fq-011", "question": "How legitimate companies verify your identity during hiring", "intent": "Learning proper employment onboarding" },
-    { "id": "fq-012", "question": "Job scam check: what should I do if I already cashed the check?", "intent": "Steps to take after realizing you're scammed" },
-    { "id": "fq-013", "question": "Can a job posting be a scam if it asks for too much personal info?", "intent": "Recognizing data harvesting attempts" },
-    { "id": "fq-014", "question": "How to tell if a job contract is fake or real", "intent": "Verifying employment documentation" },
-    { "id": "fq-015", "question": "Early career job offers — how to spot employment scams targeting new graduates", "intent": "Protecting entry-level job seekers" },
-    { "id": "fq-016", "question": "What information do scammers need to steal your identity in job scams?", "intent": "Understanding what to protect" },
-    { "id": "fq-017", "question": "Legitimate jobs never ask you to pay — here's why scammers do", "intent": "Understanding payment-related scam red flags" },
-    { "id": "fq-018", "question": "How to verify a job offer is real: complete checklist", "intent": "Step-by-step verification process" },
-    { "id": "fq-019", "question": "Should you ever wire money or use CashApp for a job?", "intent": "Understanding legitimate payment practices" },
-    { "id": "fq-020", "question": "Fake employment contract — what does a real one look like?", "intent": "Learning to spot forged documents" },
-    { "id": "fq-021", "question": "How job scammers use fake company names and logos", "intent": "Identifying impersonation tactics" },
-    { "id": "fq-022", "question": "What to do if a recruiter demands money upfront", "intent": "Recognizing fee-based scams" },
-    { "id": "fq-023", "question": "How long does it take for a fake check to bounce?", "intent": "Understanding deposit and withdrawal timelines" },
-    { "id": "fq-024", "question": "Are remote job listings more likely to be scams?", "intent": "Evaluating work-from-home opportunities" },
-    { "id": "fq-025", "question": "Job offer scam — how to report it and protect others", "intent": "Taking action after being targeted" },
-    { "id": "fq-026", "question": "Can you get your money back if you fell for a job scam?", "intent": "Understanding recovery options" },
-    { "id": "fq-027", "question": "Legitimate companies don't need I-9 forms before hire — or do they?", "intent": "Understanding proper documentation timing" },
-    { "id": "fq-028", "question": "How scammers impersonate real companies during recruitment", "intent": "Learning impersonation tactics" },
-    { "id": "fq-029", "question": "What does a real job interview process look like?", "intent": "Comparing legitimate vs. suspicious hiring" },
-    { "id": "fq-030", "question": "Job scam warning signs — phone number, email, and website red flags", "intent": "Checking contact information legitimacy" },
-    { "id": "fq-031", "question": "Why do job scammers ask you to keep it confidential?", "intent": "Understanding isolation tactics" },
-    { "id": "fq-032", "question": "How to verify a job posting is from the real company website", "intent": "Confirming legitimate job listings" },
-    { "id": "fq-033", "question": "What happens if you send money back to a job scammer?", "intent": "Understanding the aftermath of compliance" },
-    { "id": "fq-034", "question": "Job offer received via email only — is this a red flag?", "intent": "Evaluating communication methods" },
-    { "id": "fq-035", "question": "How to check if a recruitment agency is legitimate", "intent": "Verifying third-party recruiters" },
-    { "id": "fq-036", "question": "Should employers ask for banking information during onboarding?", "intent": "Understanding appropriate financial data requests" },
-    { "id": "fq-037", "question": "Real vs. fake job offers: side-by-side comparison", "intent": "Direct comparison of legitimate and scam offers" },
-    { "id": "fq-038", "question": "Job interview scam — how to spot them before wasting your time", "intent": "Early detection of fraudulent interviews" },
-    { "id": "fq-039", "question": "What's the most common job scam in 2026?", "intent": "Current trends in employment fraud" },
-    { "id": "fq-040", "question": "How to protect yourself from job scams while job hunting", "intent": "Preventative measures and best practices" }
+    {
+      "id": "fq-001",
+      "question": "Is my job offer a scam? Red flags to watch for",
+      "intent": "How to verify if a job offer is legitimate"
+    },
+    {
+      "id": "fq-002",
+      "question": "Company sent me a check before I started — is this normal?",
+      "intent": "Understanding unusual hiring practices"
+    },
+    {
+      "id": "fq-003",
+      "question": "How to spot fake job offers and employment scams",
+      "intent": "Learning warning signs of job scams"
+    },
+    {
+      "id": "fq-004",
+      "question": "What information should a real employer ask for?",
+      "intent": "Knowing what's appropriate to share during hiring"
+    },
+    {
+      "id": "fq-005",
+      "question": "Should I cash a check from an employer I haven't started with?",
+      "intent": "Understanding suspicious check requests"
+    },
+    {
+      "id": "fq-006",
+      "question": "How to verify a company is real before accepting a job",
+      "intent": "Validating employer legitimacy"
+    },
+    {
+      "id": "fq-007",
+      "question": "Remote job offers that seem too good to be true — are they scams?",
+      "intent": "Evaluating suspicious job postings"
+    },
+    {
+      "id": "fq-008",
+      "question": "What's an 'e-check' in job scams and how does it work?",
+      "intent": "Understanding fake payment methods"
+    },
+    {
+      "id": "fq-009",
+      "question": "Fake recruitment agency red flags — what to look for",
+      "intent": "Identifying illegitimate recruiters"
+    },
+    {
+      "id": "fq-010",
+      "question": "Why do job scammers send checks to candidates?",
+      "intent": "Understanding the scam mechanics"
+    },
+    {
+      "id": "fq-011",
+      "question": "How legitimate companies verify your identity during hiring",
+      "intent": "Learning proper employment onboarding"
+    },
+    {
+      "id": "fq-012",
+      "question": "Job scam check: what should I do if I already cashed the check?",
+      "intent": "Steps to take after realizing you're scammed"
+    },
+    {
+      "id": "fq-013",
+      "question": "Can a job posting be a scam if it asks for too much personal info?",
+      "intent": "Recognizing data harvesting attempts"
+    },
+    {
+      "id": "fq-014",
+      "question": "How to tell if a job contract is fake or real",
+      "intent": "Verifying employment documentation"
+    },
+    {
+      "id": "fq-015",
+      "question": "Early career job offers — how to spot employment scams targeting new graduates",
+      "intent": "Protecting entry-level job seekers"
+    },
+    {
+      "id": "fq-016",
+      "question": "What information do scammers need to steal your identity in job scams?",
+      "intent": "Understanding what to protect"
+    },
+    {
+      "id": "fq-017",
+      "question": "Legitimate jobs never ask you to pay — here's why scammers do",
+      "intent": "Understanding payment-related scam red flags"
+    },
+    {
+      "id": "fq-018",
+      "question": "How to verify a job offer is real: complete checklist",
+      "intent": "Step-by-step verification process"
+    },
+    {
+      "id": "fq-019",
+      "question": "Should you ever wire money or use CashApp for a job?",
+      "intent": "Understanding legitimate payment practices"
+    },
+    {
+      "id": "fq-020",
+      "question": "Fake employment contract — what does a real one look like?",
+      "intent": "Learning to spot forged documents"
+    },
+    {
+      "id": "fq-021",
+      "question": "How job scammers use fake company names and logos",
+      "intent": "Identifying impersonation tactics"
+    },
+    {
+      "id": "fq-022",
+      "question": "What to do if a recruiter demands money upfront",
+      "intent": "Recognizing fee-based scams"
+    },
+    {
+      "id": "fq-023",
+      "question": "How long does it take for a fake check to bounce?",
+      "intent": "Understanding deposit and withdrawal timelines"
+    },
+    {
+      "id": "fq-024",
+      "question": "Are remote job listings more likely to be scams?",
+      "intent": "Evaluating work-from-home opportunities"
+    },
+    {
+      "id": "fq-025",
+      "question": "Job offer scam — how to report it and protect others",
+      "intent": "Taking action after being targeted"
+    },
+    {
+      "id": "fq-026",
+      "question": "Can you get your money back if you fell for a job scam?",
+      "intent": "Understanding recovery options"
+    },
+    {
+      "id": "fq-027",
+      "question": "Legitimate companies don't need I-9 forms before hire — or do they?",
+      "intent": "Understanding proper documentation timing"
+    },
+    {
+      "id": "fq-028",
+      "question": "How scammers impersonate real companies during recruitment",
+      "intent": "Learning impersonation tactics"
+    },
+    {
+      "id": "fq-029",
+      "question": "What does a real job interview process look like?",
+      "intent": "Comparing legitimate vs. suspicious hiring"
+    },
+    {
+      "id": "fq-030",
+      "question": "Job scam warning signs — phone number, email, and website red flags",
+      "intent": "Checking contact information legitimacy"
+    },
+    {
+      "id": "fq-031",
+      "question": "Why do job scammers ask you to keep it confidential?",
+      "intent": "Understanding isolation tactics"
+    },
+    {
+      "id": "fq-032",
+      "question": "How to verify a job posting is from the real company website",
+      "intent": "Confirming legitimate job listings"
+    },
+    {
+      "id": "fq-033",
+      "question": "What happens if you send money back to a job scammer?",
+      "intent": "Understanding the aftermath of compliance"
+    },
+    {
+      "id": "fq-034",
+      "question": "Job offer received via email only — is this a red flag?",
+      "intent": "Evaluating communication methods"
+    },
+    {
+      "id": "fq-035",
+      "question": "How to check if a recruitment agency is legitimate",
+      "intent": "Verifying third-party recruiters"
+    },
+    {
+      "id": "fq-036",
+      "question": "Should employers ask for banking information during onboarding?",
+      "intent": "Understanding appropriate financial data requests"
+    },
+    {
+      "id": "fq-037",
+      "question": "Real vs. fake job offers: side-by-side comparison",
+      "intent": "Direct comparison of legitimate and scam offers"
+    },
+    {
+      "id": "fq-038",
+      "question": "Job interview scam — how to spot them before wasting your time",
+      "intent": "Early detection of fraudulent interviews"
+    },
+    {
+      "id": "fq-039",
+      "question": "What's the most common job scam in 2026?",
+      "intent": "Current trends in employment fraud"
+    },
+    {
+      "id": "fq-040",
+      "question": "How to protect yourself from job scams while job hunting",
+      "intent": "Preventative measures and best practices"
+    },
+    {
+      "id": "fq-041",
+      "question": "How can I tell if an online store is legit before I buy?",
+      "intent": "Verify an unfamiliar shopping website before paying",
+      "cluster": "website-checker"
+    },
+    {
+      "id": "fq-042",
+      "question": "Is this website safe to enter my card details on?",
+      "intent": "Check a site is safe before entering payment info",
+      "cluster": "website-checker"
+    },
+    {
+      "id": "fq-043",
+      "question": "What are the warning signs of a fake shopping website?",
+      "intent": "Spot red flags of a scam online store",
+      "cluster": "website-checker"
+    },
+    {
+      "id": "fq-044",
+      "question": "How do I check if a website is a scam for free?",
+      "intent": "Free ways to assess website legitimacy",
+      "cluster": "website-checker"
+    },
+    {
+      "id": "fq-045",
+      "question": "Why does a website only accept bank transfer or crypto?",
+      "intent": "Why limited payment options signal a scam store",
+      "cluster": "website-checker"
+    },
+    {
+      "id": "fq-046",
+      "question": "Is a brand-new website with huge discounts a scam?",
+      "intent": "Assess too-good-to-be-true online deals",
+      "cluster": "website-checker"
+    },
+    {
+      "id": "fq-047",
+      "question": "How do I verify a seller on an unfamiliar marketplace?",
+      "intent": "Check seller legitimacy before buying",
+      "cluster": "website-checker"
+    },
+    {
+      "id": "fq-048",
+      "question": "Does a padlock icon mean a website is safe?",
+      "intent": "Understand what HTTPS does and does not prove",
+      "cluster": "website-checker"
+    },
+    {
+      "id": "fq-049",
+      "question": "Is this charity or donation website real or fake?",
+      "intent": "Verify a charity site before donating",
+      "cluster": "website-checker"
+    },
+    {
+      "id": "fq-050",
+      "question": "Who called me from this number and is it a scam?",
+      "intent": "Identify an unknown caller and assess risk",
+      "cluster": "phone-checker"
+    },
+    {
+      "id": "fq-051",
+      "question": "Is a missed call from an international number a scam?",
+      "intent": "Understand wangiri / one-ring callback scams",
+      "cluster": "phone-checker"
+    },
+    {
+      "id": "fq-052",
+      "question": "How do I check if a phone number is a known scam caller?",
+      "intent": "Look up a suspicious phone number",
+      "cluster": "phone-checker"
+    },
+    {
+      "id": "fq-053",
+      "question": "My bank phoned me — how do I know it is really them?",
+      "intent": "Verify a caller claiming to be your bank",
+      "cluster": "phone-checker"
+    },
+    {
+      "id": "fq-054",
+      "question": "Is a voicemail saying my account is suspended a scam?",
+      "intent": "Assess account-suspension voicemail scams",
+      "cluster": "phone-checker"
+    },
+    {
+      "id": "fq-055",
+      "question": "Should I call back a number I do not recognise?",
+      "intent": "Whether to return calls from unknown numbers",
+      "cluster": "phone-checker"
+    },
+    {
+      "id": "fq-056",
+      "question": "Is a recorded call about my car warranty a scam?",
+      "intent": "Identify robocall warranty scams",
+      "cluster": "phone-checker"
+    },
+    {
+      "id": "fq-057",
+      "question": "How do scammers fake a real company phone number?",
+      "intent": "Understand caller ID spoofing",
+      "cluster": "phone-checker"
+    },
+    {
+      "id": "fq-058",
+      "question": "Is a call demanding payment in gift cards a scam?",
+      "intent": "Spot payment-by-gift-card phone scams",
+      "cluster": "phone-checker"
+    },
+    {
+      "id": "fq-059",
+      "question": "Is this email from my bank real or a phishing attempt?",
+      "intent": "Tell a genuine bank email from phishing",
+      "cluster": "email-checker"
+    },
+    {
+      "id": "fq-060",
+      "question": "How do I check if an email is a scam?",
+      "intent": "Steps to assess a suspicious email",
+      "cluster": "email-checker"
+    },
+    {
+      "id": "fq-061",
+      "question": "Why did I get an invoice for something I never bought?",
+      "intent": "Understand fake invoice / billing scams",
+      "cluster": "email-checker"
+    },
+    {
+      "id": "fq-062",
+      "question": "Is a \"your account will be closed\" email a scam?",
+      "intent": "Assess account-closure phishing emails",
+      "cluster": "email-checker"
+    },
+    {
+      "id": "fq-063",
+      "question": "How can I tell a fake delivery email from a real one?",
+      "intent": "Spot fake courier / delivery emails",
+      "cluster": "email-checker"
+    },
+    {
+      "id": "fq-064",
+      "question": "Is it safe to open an attachment from an unknown sender?",
+      "intent": "Risks of unexpected email attachments",
+      "cluster": "email-checker"
+    },
+    {
+      "id": "fq-065",
+      "question": "What does a spoofed sender email address look like?",
+      "intent": "Recognise spoofed or lookalike sender addresses",
+      "cluster": "email-checker"
+    },
+    {
+      "id": "fq-066",
+      "question": "Is a refund email asking for my card details a scam?",
+      "intent": "Identify refund phishing emails",
+      "cluster": "email-checker"
+    },
+    {
+      "id": "fq-067",
+      "question": "How do I report a phishing email?",
+      "intent": "Where and how to report phishing",
+      "cluster": "email-checker"
+    },
+    {
+      "id": "fq-068",
+      "question": "Is this text message about a parcel a scam?",
+      "intent": "Assess parcel-delivery SMS scams",
+      "cluster": "sms-checker"
+    },
+    {
+      "id": "fq-069",
+      "question": "How do I check if a text message is a scam?",
+      "intent": "Steps to evaluate a suspicious SMS",
+      "cluster": "sms-checker"
+    },
+    {
+      "id": "fq-070",
+      "question": "Is a text from my bank asking me to verify a scam?",
+      "intent": "Identify bank-verification smishing",
+      "cluster": "sms-checker"
+    },
+    {
+      "id": "fq-071",
+      "question": "Why did I get a verification code I never requested?",
+      "intent": "Understand unsolicited OTP texts",
+      "cluster": "sms-checker"
+    },
+    {
+      "id": "fq-072",
+      "question": "Should I click the link in a text from an unknown number?",
+      "intent": "Risks of clicking SMS links",
+      "cluster": "sms-checker"
+    },
+    {
+      "id": "fq-073",
+      "question": "Is a WhatsApp message from family on a new number a scam?",
+      "intent": "Spot family-impersonation messaging scams",
+      "cluster": "sms-checker"
+    },
+    {
+      "id": "fq-074",
+      "question": "What is smishing and how do I spot it?",
+      "intent": "Define and detect SMS phishing",
+      "cluster": "sms-checker"
+    },
+    {
+      "id": "fq-075",
+      "question": "Is a text offering a tax refund a scam?",
+      "intent": "Assess tax-refund SMS scams",
+      "cluster": "sms-checker"
+    },
+    {
+      "id": "fq-076",
+      "question": "Is a text saying I won a prize a scam?",
+      "intent": "Identify prize / lottery SMS scams",
+      "cluster": "sms-checker"
+    },
+    {
+      "id": "fq-077",
+      "question": "Is this crypto investment platform a scam?",
+      "intent": "Assess a crypto investment site",
+      "cluster": "crypto-checker"
+    },
+    {
+      "id": "fq-078",
+      "question": "How do I check if a crypto exchange is legit?",
+      "intent": "Verify a cryptocurrency exchange",
+      "cluster": "crypto-checker"
+    },
+    {
+      "id": "fq-079",
+      "question": "Someone promised guaranteed crypto returns — is it a scam?",
+      "intent": "Recognise guaranteed-return crypto fraud",
+      "cluster": "crypto-checker"
+    },
+    {
+      "id": "fq-080",
+      "question": "Is a crypto giveaway that asks me to send coins first a scam?",
+      "intent": "Spot send-first crypto giveaway scams",
+      "cluster": "crypto-checker"
+    },
+    {
+      "id": "fq-081",
+      "question": "What is a pig-butchering crypto investment scam?",
+      "intent": "Understand long-con crypto investment scams",
+      "cluster": "crypto-checker"
+    },
+    {
+      "id": "fq-082",
+      "question": "Will connecting my wallet to this site drain it?",
+      "intent": "Assess wallet-drainer connect requests",
+      "cluster": "crypto-checker"
+    },
+    {
+      "id": "fq-083",
+      "question": "How do I spot a fake crypto trading app?",
+      "intent": "Identify counterfeit trading apps",
+      "cluster": "crypto-checker"
+    },
+    {
+      "id": "fq-084",
+      "question": "Is a crypto \"recovery agent\" who can get my coins back a scam?",
+      "intent": "Recognise crypto recovery scams",
+      "cluster": "crypto-checker"
+    },
+    {
+      "id": "fq-085",
+      "question": "Why is a stranger offering to teach me crypto trading?",
+      "intent": "Spot mentorship-based crypto scams",
+      "cluster": "crypto-checker"
+    },
+    {
+      "id": "fq-086",
+      "question": "Is a work-from-home job that pays unusually well a scam?",
+      "intent": "Assess overpaid remote job offers",
+      "cluster": "job-scams"
+    },
+    {
+      "id": "fq-087",
+      "question": "Why is a recruiter asking me to buy my own equipment?",
+      "intent": "Understand equipment-purchase job scams",
+      "cluster": "job-scams"
+    },
+    {
+      "id": "fq-088",
+      "question": "Is a job interview held only over text or Telegram a scam?",
+      "intent": "Spot chat-only interview scams",
+      "cluster": "job-scams"
+    },
+    {
+      "id": "fq-089",
+      "question": "Should a new employer ever ask for my bank login?",
+      "intent": "Why employers never need banking credentials",
+      "cluster": "job-scams"
+    },
+    {
+      "id": "fq-090",
+      "question": "Is a mystery shopper job that mails me a cheque a scam?",
+      "intent": "Identify mystery-shopper cheque scams",
+      "cluster": "job-scams"
+    },
+    {
+      "id": "fq-091",
+      "question": "Why does a job offer want my ID before any interview?",
+      "intent": "Recognise identity-theft job scams",
+      "cluster": "job-scams"
+    },
+    {
+      "id": "fq-092",
+      "question": "Is an \"earn money liking videos\" task job a scam?",
+      "intent": "Spot task-based money scams",
+      "cluster": "job-scams"
+    },
+    {
+      "id": "fq-093",
+      "question": "Is a job that asks me to receive and reship packages a scam?",
+      "intent": "Understand reshipping / package-mule scams",
+      "cluster": "job-scams"
+    },
+    {
+      "id": "fq-094",
+      "question": "How do I verify a remote job offer is real?",
+      "intent": "Steps to confirm a legitimate remote role",
+      "cluster": "job-scams"
+    },
+    {
+      "id": "fq-095",
+      "question": "What should I do immediately after being scammed?",
+      "intent": "First steps right after a scam",
+      "cluster": "recovery"
+    },
+    {
+      "id": "fq-096",
+      "question": "Can I get my money back after a bank transfer scam?",
+      "intent": "Recovering funds sent by bank transfer",
+      "cluster": "recovery"
+    },
+    {
+      "id": "fq-097",
+      "question": "I gave a scammer my card details — what do I do now?",
+      "intent": "Action steps after sharing card details",
+      "cluster": "recovery"
+    },
+    {
+      "id": "fq-098",
+      "question": "I clicked a phishing link — what should I do?",
+      "intent": "What to do after clicking a phishing link",
+      "cluster": "recovery"
+    },
+    {
+      "id": "fq-099",
+      "question": "How do I report a scam and who do I report it to?",
+      "intent": "Where to report scams by country",
+      "cluster": "recovery"
+    },
+    {
+      "id": "fq-100",
+      "question": "Will my bank refund money lost to a scam?",
+      "intent": "Understand bank scam-refund rules",
+      "cluster": "recovery"
+    },
+    {
+      "id": "fq-101",
+      "question": "I sent gift cards to a scammer — can I recover them?",
+      "intent": "Whether gift-card payments can be reversed",
+      "cluster": "recovery"
+    },
+    {
+      "id": "fq-102",
+      "question": "How do I protect my identity after a data breach?",
+      "intent": "Identity protection steps after a breach",
+      "cluster": "recovery"
+    },
+    {
+      "id": "fq-103",
+      "question": "I shared a one-time code with a scammer — what now?",
+      "intent": "Action steps after revealing an OTP",
+      "cluster": "recovery"
+    },
+    {
+      "id": "fq-104",
+      "question": "How do I report a scam in Australia?",
+      "intent": "Reporting scams to Australian authorities",
+      "cluster": "australia"
+    },
+    {
+      "id": "fq-105",
+      "question": "Is this Australia Post text about a parcel a scam?",
+      "intent": "Assess AusPost SMS scams",
+      "cluster": "australia"
+    },
+    {
+      "id": "fq-106",
+      "question": "Is an ATO tax debt call a scam in Australia?",
+      "intent": "Identify ATO impersonation calls",
+      "cluster": "australia"
+    },
+    {
+      "id": "fq-107",
+      "question": "How do I check a scam phone number in Australia?",
+      "intent": "Look up suspicious AU phone numbers",
+      "cluster": "australia"
+    },
+    {
+      "id": "fq-108",
+      "question": "Is a PayID request from a buyer a scam?",
+      "intent": "Understand PayID overpayment scams",
+      "cluster": "australia"
+    },
+    {
+      "id": "fq-109",
+      "question": "Is a myGov email asking me to verify a scam?",
+      "intent": "Spot myGov phishing emails",
+      "cluster": "australia"
+    },
+    {
+      "id": "fq-110",
+      "question": "What is Scamwatch and how do I use it?",
+      "intent": "Using Scamwatch to check and report scams",
+      "cluster": "australia"
+    },
+    {
+      "id": "fq-111",
+      "question": "Is a Telstra account-suspended text a scam?",
+      "intent": "Assess Telstra impersonation SMS",
+      "cluster": "australia"
+    },
+    {
+      "id": "fq-112",
+      "question": "How do Australians check if a website is a scam?",
+      "intent": "Verify website legitimacy from Australia",
+      "cluster": "australia"
+    },
+    {
+      "id": "fq-113",
+      "question": "How do I check if a website is a scam in the UK?",
+      "intent": "Verify website legitimacy from the UK",
+      "cluster": "uk"
+    },
+    {
+      "id": "fq-114",
+      "question": "Is this Royal Mail fee-to-pay text a scam?",
+      "intent": "Assess Royal Mail / Evri redelivery scams",
+      "cluster": "uk"
+    },
+    {
+      "id": "fq-115",
+      "question": "Is an HMRC tax refund email a scam in the UK?",
+      "intent": "Identify HMRC refund phishing",
+      "cluster": "uk"
+    },
+    {
+      "id": "fq-116",
+      "question": "How do I report a scam to Action Fraud?",
+      "intent": "Reporting scams via Action Fraud",
+      "cluster": "uk"
+    },
+    {
+      "id": "fq-117",
+      "question": "Is a DVLA vehicle tax failed text a scam?",
+      "intent": "Spot DVLA impersonation texts",
+      "cluster": "uk"
+    },
+    {
+      "id": "fq-118",
+      "question": "Is a bank safe account phone call a scam in the UK?",
+      "intent": "Recognise safe-account bank scams",
+      "cluster": "uk"
+    },
+    {
+      "id": "fq-119",
+      "question": "How do I check a suspicious phone number in the UK?",
+      "intent": "Look up UK scam phone numbers",
+      "cluster": "uk"
+    },
+    {
+      "id": "fq-120",
+      "question": "Is a parcel-is-held text from an unknown number a scam?",
+      "intent": "Assess parcel-held smishing in the UK",
+      "cluster": "uk"
+    },
+    {
+      "id": "fq-121",
+      "question": "What is the 159 service for checking bank scams?",
+      "intent": "Using the 159 hotline to verify bank calls",
+      "cluster": "uk"
+    }
   ]
 }

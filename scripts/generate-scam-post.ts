@@ -17,6 +17,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {
     validateGeneratedPostQuality,
+    countBodyWords,
     type GeneratedPost,
 } from '../src/lib/post-quality';
 import { buildCleanBlogSlug } from '../src/lib/blogSlug';
@@ -435,15 +436,13 @@ function getExistingPostSignals(): ExistingPostSignal[] {
 
 // ── Gemini API call with model fallback ────────────────────────────────────
 
-// Gemini is the PRIMARY provider. The weekly post is long-form + high quality,
-// so we lead with the strongest model. `GEMINI_MODEL` (env) overrides the
-// primary; the rest are in-provider fallbacks for quota/availability. Groq is a
-// separate, lower-priority fallback (see callGroq) used only if Gemini fails.
-const GEMINI_MODELS = [
-    process.env.GEMINI_MODEL || 'gemini-2.5-pro',
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-].filter((m, i, arr) => arr.indexOf(m) === i); // de-dupe if GEMINI_MODEL matches a fallback
+// The single Gemini model used for generation. Defaults to gemini-2.5-pro and
+// is overridable via GEMINI_MODEL. We deliberately do NOT auto-cascade to
+// Gemini Flash on failure — Flash previously produced invalid JSON / thin
+// drafts. Resilience comes from per-call retries (below) and the run-level
+// attempt loop, all on this one model. To use Flash, set GEMINI_MODEL=...
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-pro';
+const GEMINI_MODELS = [GEMINI_MODEL];
 
 async function callGemini(prompt: string): Promise<string> {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -701,11 +700,12 @@ function parseAIResponse(raw: string): GeneratedPost {
             return JSON.parse(repaired);
         } catch (parseErr: unknown) {
             const parseMsg = parseErr instanceof Error ? parseErr.message : String(parseErr);
+            // Keep logs lean — never dump the full AI response. A short head +
+            // length is enough to diagnose a truncation/format problem.
             console.error('Failed to parse AI response as JSON (even after repair).');
             console.error('Parse error:', parseMsg);
             console.error('Response length:', raw.length, 'chars');
-            console.error('Last 100 chars:', JSON.stringify(raw.slice(-100)));
-            console.error('Raw response (first 500 chars):', raw.slice(0, 500));
+            console.error('First 200 chars:', JSON.stringify(raw.slice(0, 200)));
             throw new Error('AI did not return valid JSON.');
         }
     }
@@ -776,9 +776,42 @@ const KEYWORD_CLUSTERS = [
         notes: 'Task scams, fake-cheque overpayments, equipment-purchase scams, identity-theft onboarding, recruitment-fee scams. Source: FindQuestions PDF.',
         relatedInternalRoutes: ['/guides/job-scams', '/blog/job-scams', '/check'],
     },
+    {
+        slug: 'recovery',
+        primaryQueries: ['what to do if you have been scammed', 'i got scammed what now', 'how to get money back after a scam'],
+        notes: 'First-hour damage control: freeze cards, stop transfers, change passwords, report, protect identity after a breach.',
+        relatedInternalRoutes: ['/have-i-been-scammed', '/guides/what-to-do-if-youve-been-scammed', '/check'],
+    },
 ] as const;
 
 type KeywordCluster = (typeof KEYWORD_CLUSTERS)[number];
+
+/**
+ * Cluster slug → source-registry categories. getSourcesForTopic() pads to the
+ * required minimum with general-scam-advice / reporting-scams evergreens, so
+ * even sparse clusters reliably yield ≥3 citable sources.
+ */
+const CLUSTER_SOURCE_CATEGORIES: Record<string, string[]> = {
+    'website-checker': ['marketplace-scams', 'phishing', 'general-scam-advice'],
+    'link-checker': ['phishing', 'email-phishing', 'general-scam-advice'],
+    'email-checker': ['email-phishing', 'phishing', 'general-scam-advice'],
+    'sms-checker': ['sms-scams', 'phishing', 'general-scam-advice'],
+    'phone-checker': ['bank-payment-scams', 'government-impersonation', 'general-scam-advice'],
+    'crypto-checker': ['cryptocurrency-scams', 'general-scam-advice'],
+    australia: ['government-impersonation', 'bank-payment-scams', 'general-scam-advice'],
+    uk: ['phishing', 'reporting-scams', 'general-scam-advice'],
+    'job-scams': ['job-scams', 'fake-cheque-scams', 'general-scam-advice'],
+    recovery: ['identity-theft', 'account-security', 'reporting-scams', 'general-scam-advice'],
+};
+
+/** Resolve a question's cluster slug → KEYWORD_CLUSTERS entry (default job-scams). */
+function clusterForSlug(slug: string | undefined): KeywordCluster {
+    return (
+        KEYWORD_CLUSTERS.find((c) => c.slug === slug) ??
+        KEYWORD_CLUSTERS.find((c) => c.slug === 'job-scams') ??
+        KEYWORD_CLUSTERS[0]
+    );
+}
 
 interface BuiltPrompt {
     prompt: string;
@@ -806,10 +839,10 @@ function buildQuestionPrompt(
     question: QuestionBankEntry,
     existingTitles: string[],
 ): BuiltPrompt {
-    // Job-related questions get routed to the job-scams cluster so the
+    // Route the post to the question's cluster (each bank entry now carries a
+    // `cluster` slug; legacy entries default to job-scams) so the
     // cluster-specific internal-link gate in post-quality.ts is satisfied.
-    const cluster =
-        KEYWORD_CLUSTERS.find((c) => c.slug === 'job-scams') ?? KEYWORD_CLUSTERS[0];
+    const cluster = clusterForSlug(question.cluster);
     const today = new Date().toISOString().split('T')[0];
 
     const existingContext =
@@ -824,8 +857,8 @@ function buildQuestionPrompt(
     // most important change preventing 404/401/hallucinated citations.
     const preselectedSources = getSourcesForTopic(
         {
-            categories: ['job-scams', 'fake-cheque-scams', 'general-scam-advice'],
-            region: 'global',
+            categories: CLUSTER_SOURCE_CATEGORIES[cluster.slug] ?? ['general-scam-advice'],
+            region: cluster.slug === 'australia' ? 'AU' : cluster.slug === 'uk' ? 'UK' : 'global',
             keywordHaystack: `${question.question} ${question.intent}`,
         },
         { min: 3, max: 4 },
@@ -1128,15 +1161,21 @@ async function runProvidersForPrompt(prompt: string): Promise<GeneratedPost> {
     if (process.env.GEMINI_API_KEY) {
         providers.push({ name: 'Gemini', fn: callGemini });
     }
-    if (process.env.GROQ_API_KEY) {
+    // Groq is added ONLY in 'gemini_then_groq' mode. In 'gemini' mode it is
+    // never called, even if GROQ_API_KEY is set.
+    if (PROVIDER_MODE === 'gemini_then_groq' && process.env.GROQ_API_KEY) {
         providers.push({ name: 'Groq', fn: callGroq });
     }
     if (providers.length === 0) {
-        throw new Error('No AI provider available. Set GEMINI_API_KEY and/or GROQ_API_KEY.');
+        throw new Error(
+            PROVIDER_MODE === 'gemini'
+                ? 'No AI provider available. Set GEMINI_API_KEY (provider=gemini).'
+                : 'No AI provider available. Set GEMINI_API_KEY and/or GROQ_API_KEY.',
+        );
     }
 
     console.log(
-        `🤖 Providers (in order): ${providers.map((p) => p.name).join(' → ')}. Gemini is primary.`,
+        `🤖 Provider mode '${PROVIDER_MODE}' — order: ${providers.map((p) => p.name).join(' → ')} (Gemini model: ${GEMINI_MODEL}).`,
     );
     let lastError = '';
     for (let i = 0; i < providers.length; i++) {
@@ -1145,6 +1184,7 @@ async function runProvidersForPrompt(prompt: string): Promise<GeneratedPost> {
             const post = await tryProvider(name, fn, prompt);
             // Log which provider produced the post (name only — never keys).
             console.log(`✅ Generated using provider: ${name}`);
+            lastProviderUsed = name;
             return post;
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : String(err);
@@ -1197,6 +1237,61 @@ type AttemptOutcome =
 /** True when DRY_RUN=true (workflow input) or `--dry-run` is passed. */
 const IS_DRY_RUN =
     process.env.DRY_RUN === 'true' || process.argv.includes('--dry-run');
+
+/**
+ * Provider mode (PROVIDER env / workflow input):
+ *   - 'gemini'           — Gemini only; Groq is NEVER called.
+ *   - 'gemini_then_groq' — Gemini first; Groq only after Gemini fails.
+ * Anything else falls back to the safe default 'gemini'.
+ */
+const PROVIDER_MODE: 'gemini' | 'gemini_then_groq' =
+    process.env.PROVIDER === 'gemini_then_groq' ? 'gemini_then_groq' : 'gemini';
+
+/** Max generation attempts this run (MAX_ATTEMPTS env). Default 3, clamped 1-10. */
+const MAX_ATTEMPTS_ENV = (() => {
+    const n = parseInt(process.env.MAX_ATTEMPTS ?? '', 10);
+    return Number.isFinite(n) ? Math.max(1, Math.min(n, 10)) : 3;
+})();
+
+/** Name of the provider that produced the most recent draft (for dry-run report). */
+let lastProviderUsed = '';
+
+/** Count distinct internal-link routes in a markdown body (matches the gate). */
+function countInternalLinks(body: string): number {
+    const matches = body.match(/\]\(\/[a-zA-Z0-9_\-/]*/g) || [];
+    return new Set(matches.map((m) => m.slice(2))).size;
+}
+
+/**
+ * Dry-run diagnostic report. Prints the key metrics + the quality-gate result
+ * (and reasons if rejected) without writing anything.
+ */
+function printDryRunReport(args: {
+    post: GeneratedPost;
+    body: string;
+    clusterSlug: string;
+    wouldBeSlug: string;
+    reasons: string[];
+}): void {
+    const { post, body, clusterSlug, wouldBeSlug, reasons } = args;
+    const provider = lastProviderUsed || 'unknown';
+    const model = provider === 'Gemini' ? GEMINI_MODEL : 'n/a';
+    console.log('\n🧪 DRY RUN — validated only, nothing written:');
+    console.log(`   title:          ${post.title}`);
+    console.log(`   slug:           ${wouldBeSlug}`);
+    console.log(`   provider:       ${provider}`);
+    console.log(`   model:          ${model}`);
+    console.log(`   cluster:        ${clusterSlug}`);
+    console.log(`   word count:     ${countBodyWords(body)}`);
+    console.log(`   internal links: ${countInternalLinks(body)}`);
+    console.log(`   sources:        ${post.sources.length}`);
+    console.log(`   FAQ questions:  ${(body.match(/\?/g) || []).length}`);
+    console.log(`   quality gate:   ${reasons.length === 0 ? 'PASS ✅' : 'REJECTED ❌'}`);
+    if (reasons.length > 0) {
+        console.log('   reasons:');
+        for (const r of reasons) console.log(`     - ${r}`);
+    }
+}
 
 /**
  * Build prompt → call providers → dedupe → quality-gate → write MDX → record
@@ -1395,23 +1490,25 @@ ${body}
     const qualityReasons = validateGeneratedPostQuality(post, body, {
         clusterRoutes: cluster.relatedInternalRoutes,
     });
+
+    // ── Dry run: validate only, write nothing ─────────────────────────────
+    // Reports the full diagnostic (metrics + PASS/REJECTED + reasons) whether
+    // or not the draft passed, then stops cleanly so nothing is committed.
+    if (IS_DRY_RUN) {
+        printDryRunReport({
+            post,
+            body,
+            clusterSlug: cluster.slug,
+            wouldBeSlug: buildCleanBlogSlug(today, post.title, []),
+            reasons: qualityReasons,
+        });
+        return { type: 'dry-run', questionId, title: post.title };
+    }
+
     if (qualityReasons.length > 0) {
         console.log('⚠️  Generated post failed quality gate:');
         for (const r of qualityReasons) console.log(`     - ${r}`);
         return { type: 'quality-fail', reasons: qualityReasons, questionId };
-    }
-
-    // ── Dry run: stop before writing ──────────────────────────────────────
-    // The draft already passed the full quality gate above. In dry-run mode we
-    // report what WOULD publish but write no file and leave the ledger
-    // untouched — so the workflow finds nothing to commit.
-    if (IS_DRY_RUN) {
-        console.log('🧪 DRY RUN — draft passed the quality gate; nothing will be written.');
-        console.log(`   Title: ${post.title}`);
-        console.log(`   Would-be slug: ${buildCleanBlogSlug(today, post.title, [])}`);
-        console.log(`   Tags: ${post.tags.join(', ')}`);
-        console.log(`   Sources referenced: ${post.sources.length}`);
-        return { type: 'dry-run', questionId, title: post.title };
     }
 
     // ── Write to disk + record ledger ─────────────────────────────────────
@@ -1452,7 +1549,11 @@ async function main(): Promise<void> {
         fs.mkdirSync(blogDir, { recursive: true });
     }
 
-    console.log('🔍 Generating blog post via AI (Gemini → Groq fallback)...');
+    // Run configuration — printed up-front so logs are self-explanatory.
+    console.log('🔍 Weekly blog generation starting.');
+    console.log(
+        `⚙️  Config: dry_run=${IS_DRY_RUN} · provider=${PROVIDER_MODE} · max_attempts=${MAX_ATTEMPTS_ENV} · gemini_model=${GEMINI_MODEL}`,
+    );
 
     const bank = loadQuestionBank();
     const remainingAtStart = listRemainingQuestions();
@@ -1460,11 +1561,10 @@ async function main(): Promise<void> {
         `🧮 Question bank state: ${remainingAtStart.length} unused/unskipped of ${bank?.questions.length ?? 0} total.`,
     );
 
-    // Per-run safety cap. Equals the count of unprocessed questions plus a
-    // single legacy-fallback attempt so the loop is bounded but can still
-    // exhaust the bank if every question collides. Clamped to a small
-    // upper bound so a runaway loop can't burn the GitHub Action quota.
-    const MAX_ATTEMPTS = Math.max(1, Math.min(remainingAtStart.length + 1, 12));
+    // Attempt cap comes from MAX_ATTEMPTS (workflow input), NOT the bank size —
+    // so logs honestly show "up to N attempts" regardless of how many questions
+    // remain.
+    const MAX_ATTEMPTS = MAX_ATTEMPTS_ENV;
     console.log(`🔁 Up to ${MAX_ATTEMPTS} attempt(s) this run.`);
 
     let success = false;
@@ -1476,33 +1576,42 @@ async function main(): Promise<void> {
     for (let i = 0; i < MAX_ATTEMPTS; i++) {
         attempts = i + 1;
         const picked = pickUnusedQuestion();
-        // listRemainingQuestions includes both used and skipped — re-derive
-        // each iteration so newly-recorded skips are visible.
         const remainingNow = listRemainingQuestions();
 
-        if (!picked && bank) {
+        // Bank exhausted: do NOT use the old random-cluster fallback. Stop and
+        // ask for fresh topics — a weak legacy post is worse than no post.
+        if (!picked) {
             console.warn(
-                `⚠️  All ${bank.questions.length} questions in data/findquestions-bank.json are either used or skipped. ` +
-                    'Falling back to the legacy random-cluster prompt for this attempt only.',
+                `⚠️  Question bank exhausted (0 unused/unskipped of ${bank?.questions.length ?? 0}). ` +
+                    'Legacy random-cluster fallback is disabled — add fresh topics to ' +
+                    'data/findquestions-bank.json. No post will be generated this run.',
             );
+            lastFailure = 'question-bank-exhausted';
+            break;
         }
-        const questionEntry = picked?.question ?? null;
+        const questionEntry = picked.question;
 
         console.log(
-            `\n🔄 Attempt ${attempts}/${MAX_ATTEMPTS}. ${remainingNow.length} unused/unskipped question(s) remaining before this attempt.`,
+            `\n🔄 Attempt ${attempts}/${MAX_ATTEMPTS} — topic: "${questionEntry.question}" ` +
+                `[cluster: ${questionEntry.cluster ?? 'job-scams'}, id: ${questionEntry.id}]. ` +
+                `${remainingNow.length} question(s) remaining before this attempt.`,
         );
 
         let outcome: AttemptOutcome;
         try {
             outcome = await attemptOneQuestion(blogDir, questionEntry);
         } catch (err: unknown) {
-            // Provider/network errors bubble up — they're transient and
-            // don't tell us anything about the chosen question. Stop the
-            // loop and let the GitHub Action surface the error in logs.
+            // Provider / invalid-JSON errors are often transient. Retry the
+            // model up to max_attempts rather than giving up after one try.
+            // The loop bound (MAX_ATTEMPTS) keeps this safe; if every attempt
+            // fails we exit cleanly below with no post.
             const msg = err instanceof Error ? err.message : String(err);
             lastFailure = msg;
-            console.error(`❌ Attempt ${attempts} aborted: ${msg}`);
-            break;
+            console.error(
+                `❌ Attempt ${attempts}/${MAX_ATTEMPTS} failed: ${msg}` +
+                    (attempts < MAX_ATTEMPTS ? ' — retrying.' : ' — no attempts left.'),
+            );
+            continue;
         }
 
         if (outcome.type === 'success') {

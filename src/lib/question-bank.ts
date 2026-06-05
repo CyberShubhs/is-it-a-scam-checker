@@ -18,6 +18,12 @@ export interface QuestionBankEntry {
     id: string;
     question: string;
     intent: string;
+    /**
+     * Optional keyword-cluster slug (e.g. 'phone-checker', 'crypto-checker').
+     * Routes the post to the right cluster + internal links. Legacy entries
+     * omit it and default to the job-scams cluster in the generator.
+     */
+    cluster?: string;
 }
 
 export interface QuestionBankFile {
