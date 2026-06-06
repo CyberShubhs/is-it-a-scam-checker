@@ -110,7 +110,7 @@ export default function CheckScamTextPage() {
                                         <h3 className="text-lg font-bold text-slate-900 mb-2">2. The "Hi Mum/Dad" Scam</h3>
                                         <p className="text-slate-600 italic mb-3">"Hi Mum, I broke my phone and lost my contacts. This is my new temporary number. I need to pay a bill urgently..."</p>
                                         <p className="text-sm text-slate-500">
-                                            <strong>Why it works:</strong> It targets parental instincts. If you receive this, <Link href="/guides/hi-mum-scam-explained" className="text-blue-600 hover:underline">verify their identity</Link> by calling the old number or asking a personal question only they would know.
+                                            <strong>Why it works:</strong> It targets parental instincts. If you receive this, <Link href="/guides/whatsapp-scams-examples" className="text-blue-600 hover:underline">verify their identity</Link> by calling the old number or asking a personal question only they would know.
                                         </p>
                                     </div>
 

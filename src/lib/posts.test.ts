@@ -78,9 +78,15 @@ describe('buildBlogPostingJsonLd', () => {
             fixture({ author: 'Custom Author', reviewer: 'Shubham Singla' }),
         );
         expect((node.author as { name: string }).name).toBe('Custom Author');
-        expect(node.reviewedBy).toMatchObject({
-            '@type': 'Person',
-            name: 'Shubham Singla',
+        // `reviewedBy` is only valid on WebPage, so the reviewer is attached to
+        // the mainEntityOfPage WebPage node — never to the BlogPosting itself.
+        expect(node.reviewedBy).toBeUndefined();
+        expect(node.mainEntityOfPage).toMatchObject({
+            '@type': 'WebPage',
+            reviewedBy: {
+                '@type': 'Person',
+                name: 'Shubham Singla',
+            },
         });
     });
 

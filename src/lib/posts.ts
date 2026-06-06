@@ -145,7 +145,7 @@ export const BLOG_CATEGORIES: BlogCategory[] = [
         slug: 'crypto-scams',
         title: 'Crypto scams and investment fraud',
         description:
-            'Wallet drainers, fake exchanges, pig-butchering rings, and other crypto-flavoured fraud campaigns.',
+            'Wallet drainers, fake exchanges, pig-butchering investment rings, and other crypto-flavoured fraud — how these scams work and how to protect your funds.',
         keywords: ['crypto', 'bitcoin', 'wallet', 'investment scam', 'pig butchering', 'mining'],
     },
     {
@@ -300,7 +300,12 @@ export function buildBlogPostingJsonLd(post: Post): Record<string, unknown> {
     if (articleSection) node.articleSection = articleSection;
     if (sources.length > 0) node.citation = sources;
     if (fm.reviewer) {
-        node.reviewedBy = {
+        // `reviewedBy` is only a valid Schema.org property of WebPage (not of
+        // CreativeWork/BlogPosting), so attach the human reviewer to the
+        // mainEntityOfPage WebPage node. This keeps the E-E-A-T reviewer
+        // signal — consistent with the visible "Reviewed by" byline — while
+        // staying schema.org-valid.
+        (node.mainEntityOfPage as Record<string, unknown>).reviewedBy = {
             '@type': 'Person',
             name: fm.reviewer,
         };
