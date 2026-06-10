@@ -141,6 +141,9 @@ jobs:
           git commit -m "blog: auto-publish ${TITLE}"
           echo ""
           echo "=== Debug: pushing to origin main ==="
+          # The validate step takes several minutes; rebase onto any commits
+          # that landed on main meanwhile so the push isn't rejected.
+          git pull --rebase origin main
           git push origin main
           echo "=== Done: push successful ==="
 
@@ -158,6 +161,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git commit -m "blog: record duplicate-topic skips in question-bank ledger"
+          git pull --rebase origin main
           git push origin main
           echo "=== Done: ledger-only push successful ==="
 
