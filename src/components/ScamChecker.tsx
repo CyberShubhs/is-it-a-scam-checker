@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FileUploader } from './FileUploader';
 import { ScannerProgress } from './ScannerProgress';
-import { scanImageFile, scanDocumentFile } from '@/lib/extractors';
 import { checkIp } from '@/lib/entities';
 import { SCAN_STAGES } from '@/lib/scanStages';
 import {
@@ -147,6 +146,13 @@ export function ScamChecker({ defaultTab = 'url' }: ScamCheckerProps) {
         setInput('');
         setFileText('');
         setExtractionError(null);
+        // Warm the scanner chunk (Tesseract/pdf.js/mammoth, ~700KB) as soon as
+        // a file tab is opened so it's cached before a file is chosen. The
+        // module is code-split out of the initial bundle — text/URL/email
+        // checks never download it.
+        if (tab === 'image' || tab === 'file') {
+            void import('@/lib/extractors');
+        }
     };
 
     // ── File / image scan ─────────────────────────────────────────────────
@@ -190,6 +196,7 @@ export function ScamChecker({ defaultTab = 'url' }: ScamCheckerProps) {
         };
 
         try {
+            const { scanImageFile, scanDocumentFile } = await import('@/lib/extractors');
             const scan = activeTab === 'image' ? await scanImageFile(file) : await scanDocumentFile(file);
 
             // Hard failure with nothing usable extracted.
