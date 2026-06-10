@@ -89,6 +89,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
         // IP reputation + community report lookup tools (added 2026-06).
         '/check-scam-ip',
         '/scam-report-lookup',
+        // Weekly scam-alerts email landing page (added 2026-06-11).
+        '/weekly-scam-alerts',
     ].map((route) => ({
         url: `${baseUrl}${route}`,
         lastModified: lastModifiedFor(route),

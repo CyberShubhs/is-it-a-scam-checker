@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, ArrowRight, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import { GuideCtaLink } from '@/components/TrackedLinks';
+import { NewsletterSignup } from '@/components/NewsletterSignup';
 
 export async function generateStaticParams() {
     const posts = getAllPosts();
@@ -405,6 +406,15 @@ export default async function BlogPostPage({
                                 </GuideCtaLink>
                             </Button>
                         </div>
+                    </aside>
+
+                    {/* Weekly alerts signup — this article IS the content the
+                        email summarises, so the pitch is native here. */}
+                    <aside aria-label="Weekly scam alerts signup" className="mb-12">
+                        <NewsletterSignup
+                            ctaLocation="blog_post_end"
+                            heading="Get scam alerts like this in your inbox every week"
+                        />
                     </aside>
                 </article>
 

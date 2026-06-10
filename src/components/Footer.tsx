@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { NewsletterSignup } from './NewsletterSignup';
 
 type FooterLink = { href: string; label: string; emphasis?: 'red' };
 
@@ -34,6 +35,7 @@ const sections: { heading: string; links: FooterLink[] }[] = [
             { href: '/scam-guides', label: 'Scam identification guides' },
             { href: '/guides', label: 'All guides on Scam Checker' },
             { href: '/blog', label: 'Scam alerts and fraud news blog' },
+            { href: '/weekly-scam-alerts', label: 'Weekly scam alerts email (free)' },
             { href: '/blog/job-scams', label: 'Job scams and fake employment offers' },
             { href: '/scam-checker-australia', label: 'Scam checker (Australia)' },
             { href: '/scam-website-checker-uk', label: 'Scam website checker (UK)' },
@@ -119,6 +121,10 @@ export function Footer() {
                         </nav>
                     ))}
                 </div>
+                <div className="border-t border-slate-700 pt-8 mb-8">
+                    <NewsletterSignup ctaLocation="footer" variant="footer" />
+                </div>
+
                 <div className="border-t border-slate-700 pt-8 text-center text-sm">
                     <p className="mb-2">
                         Built privacy-first by{' '}

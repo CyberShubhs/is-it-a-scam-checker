@@ -19,6 +19,7 @@ import { DEFAULT_TECHNICAL_DETAILS_OPEN } from '@/lib/scanStages';
 import { RelatedReports } from './RelatedReports';
 import { IpReputation } from './IpReputation';
 import { ReportModal } from './ReportModal';
+import { NewsletterSignup } from './NewsletterSignup';
 
 interface AnalysisResultProps {
     result: ScamAnalysisResult | null;
@@ -269,6 +270,14 @@ export function AnalysisResultDisplay({ result, input, isFileScan }: AnalysisRes
                         Files and pasted content are scanned for risk signals and are not stored. We verify
                         community reports anonymously.
                     </p>
+
+                    {/* Weekly alerts signup — shown after every verdict. Only the
+                        email goes to our API; the checked content never leaves
+                        this component. */}
+                    <NewsletterSignup
+                        ctaLocation="result_panel"
+                        heading="Stay ahead of next week's scams"
+                    />
 
                     <ReportModal
                         isOpen={isReportOpen}

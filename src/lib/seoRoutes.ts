@@ -43,6 +43,9 @@ export const ROUTE_LAST_MODIFIED: Record<string, string> = {
     '/check-scam-ip': '2026-06-01',
     '/scam-report-lookup': '2026-06-01',
 
+    // Weekly scam-alerts email landing page.
+    '/weekly-scam-alerts': '2026-06-11',
+
     // Conversion / recovery surfaces.
     '/have-i-been-scammed': '2026-05-29',
     '/i-got-a-scam-message': '2026-05-29',
