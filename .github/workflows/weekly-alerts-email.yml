@@ -1,0 +1,87 @@
+name: Weekly Alerts Email
+# Sends the weekly scam-alerts digest (latest blog posts) to the confirmed
+# Resend segment/audience via the Broadcasts API. Resend excludes unsubscribed
+# contacts automatically and every email carries a one-click unsubscribe link.
+#
+# Coordination with auto-blog.yml (deliberately NOT modified): the blog
+# publishes Sundays 22:00 UTC; this runs 23:30 UTC the same day — 90 minutes
+# later — so a freshly published post is in the checkout. If that week's blog
+# run failed or was skipped, the sender script skips cleanly when no post is
+# newer than 8 days (it never emails stale content).
+#
+# SAFETY:
+#  - Scheduled runs send for REAL only when the repo variable
+#    WEEKLY_ALERTS_ENABLED is set to 'true'. Until then they downgrade to a
+#    dry run, so merging this workflow cannot email anyone by itself.
+#  - Manual runs default to dry_run. Use mode=test to send only to
+#    ADMIN_TEST_EMAIL; use mode=send for the real broadcast.
+
+on:
+  schedule:
+    - cron: '30 23 * * 0'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'dry_run (print only), test (admin email only), send (REAL broadcast)'
+        type: choice
+        required: false
+        default: dry_run
+        options:
+          - dry_run
+          - test
+          - send
+      test_email:
+        description: 'Override test recipient (defaults to ADMIN_TEST_EMAIL secret)'
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  send-weekly-alerts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve mode
+        id: mode
+        run: |
+          MODE="${{ github.event.inputs.mode }}"
+          if [ -z "$MODE" ]; then
+            # Scheduled run: real send only once explicitly enabled.
+            if [ "${{ vars.WEEKLY_ALERTS_ENABLED }}" = "true" ]; then
+              MODE="send"
+            else
+              MODE="dry_run"
+              echo "WEEKLY_ALERTS_ENABLED is not 'true' — scheduled run downgraded to dry run."
+            fi
+          fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "Resolved mode: $MODE"
+
+      - name: Send weekly alerts
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
+          RESEND_AUDIENCE_ID: ${{ secrets.RESEND_AUDIENCE_ID }}
+          ADMIN_TEST_EMAIL: ${{ secrets.ADMIN_TEST_EMAIL }}
+        run: |
+          case "${{ steps.mode.outputs.mode }}" in
+            send)
+              npx tsx scripts/send-weekly-alerts.ts --send ;;
+            test)
+              npx tsx scripts/send-weekly-alerts.ts --test ${{ github.event.inputs.test_email }} ;;
+            *)
+              npx tsx scripts/send-weekly-alerts.ts --dry-run ;;
+          esac

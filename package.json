@@ -22,6 +22,9 @@
     "audit:blog-sources": "node scripts/check-blog-sources.mjs --network --full --soft",
     "repair:blog-sources": "node scripts/repair-blog-sources.mjs",
     "generate-blog": "npx tsx scripts/generate-scam-post.ts",
+    "alerts:dry-run": "npx tsx scripts/send-weekly-alerts.ts --dry-run",
+    "alerts:test-send": "npx tsx scripts/send-weekly-alerts.ts --test",
+    "alerts:send": "npx tsx scripts/send-weekly-alerts.ts --send",
     "postinstall": "prisma generate && node scripts/prepare-scan-assets.mjs"
   },
   "dependencies": {
