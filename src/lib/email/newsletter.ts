@@ -181,6 +181,18 @@ of your address.</p>
 
 // ── Senders (read env, call Resend, never throw) ─────────────────────────────
 
+/**
+ * Extract Resend's machine error code (a fixed enum like 'restricted_api_key',
+ * 'validation_error', 'not_found') for logging. Never returns user data.
+ */
+function providerErrorName(error: unknown): string {
+    if (error && typeof error === 'object' && 'name' in error) {
+        const name = (error as { name?: unknown }).name;
+        if (typeof name === 'string') return name;
+    }
+    return 'unknown';
+}
+
 function clientFor(config: NewsletterConfig, opts: NewsletterOptions): NewsletterResendLike | null {
     if (opts.client) return opts.client;
     if (!config.apiKey) return null;
@@ -213,8 +225,8 @@ export async function sendConfirmRequest(
             html: built.html,
         });
         if (res.error) {
-            // Generic class only — never the provider payload or the address.
-            console.warn('Newsletter confirm email: provider error.');
+            // Error code only — never the provider payload or the address.
+            console.warn(`Newsletter confirm email: provider error (${providerErrorName(res.error)}).`);
             return { ok: false, reason: 'provider-error' };
         }
         return { ok: true, id: res.data?.id };
@@ -226,8 +238,15 @@ export async function sendConfirmRequest(
 
 /**
  * Step 2 of double opt-in: the user clicked the link — add them to the Resend
- * audience. Resend treats an existing contact as a no-op/update, so repeated
+ * list. Resend treats an existing contact as a no-op/update, so repeated
  * clicks are harmless.
+ *
+ * Resend is migrating Audiences → Segments (the SDK has deprecated
+ * `audienceId`). `RESEND_AUDIENCE_ID` may therefore hold either a new segment
+ * ID or a legacy audience ID depending on when the dashboard list was created,
+ * so we try the current `segments` shape first and fall back to the legacy
+ * `audienceId` shape. Both failures are logged with Resend's machine error
+ * code (a fixed enum — never the address) so the cause shows up in logs.
  */
 export async function addConfirmedContact(
     email: string,
@@ -242,16 +261,25 @@ export async function addConfirmedContact(
     if (!client) return { ok: false, reason: 'not-configured' };
 
     try {
-        const res = await client.contacts.create({
+        const viaSegment = await client.contacts.create({
+            email,
+            unsubscribed: false,
+            segments: [{ id: config.audienceId }],
+        });
+        if (!viaSegment.error) return { ok: true, id: viaSegment.data?.id };
+
+        const segmentError = providerErrorName(viaSegment.error);
+        const viaAudience = await client.contacts.create({
             email,
             audienceId: config.audienceId,
             unsubscribed: false,
         });
-        if (res.error) {
-            console.warn('Newsletter contact create: provider error.');
-            return { ok: false, reason: 'provider-error' };
-        }
-        return { ok: true, id: res.data?.id };
+        if (!viaAudience.error) return { ok: true, id: viaAudience.data?.id };
+
+        console.warn(
+            `Newsletter contact create failed (segments: ${segmentError}; legacy audience: ${providerErrorName(viaAudience.error)}).`,
+        );
+        return { ok: false, reason: 'provider-error' };
     } catch {
         console.warn('Newsletter contact create: threw.');
         return { ok: false, reason: 'send-failed' };

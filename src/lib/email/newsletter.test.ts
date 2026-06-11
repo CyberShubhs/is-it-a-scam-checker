@@ -196,22 +196,41 @@ describe('addConfirmedContact', () => {
         expect(result).toEqual({ ok: false, reason: 'not-configured' });
     });
 
-    it('creates the contact in the configured audience, subscribed', async () => {
+    it('creates the contact via the current segments shape, subscribed', async () => {
         const { client, create } = mockClient();
         const result = await addConfirmedContact('ada@example.com', { env: FULL_ENV, client });
         expect(result.ok).toBe(true);
+        expect(create).toHaveBeenCalledTimes(1);
         expect(create).toHaveBeenCalledWith({
+            email: 'ada@example.com',
+            unsubscribed: false,
+            segments: [{ id: 'aud_123' }],
+        });
+    });
+
+    it('falls back to the legacy audienceId shape when segments are rejected', async () => {
+        const create = vi.fn<CreateFn>(async (payload) =>
+            'segments' in payload
+                ? { error: { name: 'not_found', message: 'segment not found' } }
+                : { data: { id: 'ct_legacy' } },
+        );
+        const { client } = mockClient({ create });
+        const result = await addConfirmedContact('ada@example.com', { env: FULL_ENV, client });
+        expect(result).toEqual({ ok: true, id: 'ct_legacy' });
+        expect(create).toHaveBeenCalledTimes(2);
+        expect(create).toHaveBeenLastCalledWith({
             email: 'ada@example.com',
             audienceId: 'aud_123',
             unsubscribed: false,
         });
     });
 
-    it('returns provider-error without throwing when Resend errors', async () => {
-        const { client } = mockClient({
-            create: async () => ({ error: { message: 'boom' } }),
+    it('returns provider-error without throwing when both shapes fail', async () => {
+        const { client, create } = mockClient({
+            create: async () => ({ error: { name: 'restricted_api_key', message: 'boom' } }),
         });
         const result = await addConfirmedContact('ada@example.com', { env: FULL_ENV, client });
         expect(result).toEqual({ ok: false, reason: 'provider-error' });
+        expect(create).toHaveBeenCalledTimes(2);
     });
 });
