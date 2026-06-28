@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { matchCommunityReports, IntelItem } from '@/lib/reportMatching';
 import { getIpReputation } from '@/lib/threat-intel/abuseipdb';
+import { getUrlIntel } from '@/lib/threat-intel/urlIntel';
 import { isValidPublicIp } from '@/lib/entities';
 import { rateLimit, clientRateKey } from '@/lib/scanRateLimit';
-import type { IpReputationResult } from '@/lib/threat-intel/types';
+import type { IpReputationResult, UrlReputationResult } from '@/lib/threat-intel/types';
 
 /**
  * Reputation + intel endpoint used by the scanner.
@@ -30,6 +31,9 @@ import type { IpReputationResult } from '@/lib/threat-intel/types';
 const MAX_ITEMS = 25;
 // At most this many distinct IPs get an external reputation lookup per request.
 const MAX_IP_LOOKUPS = 5;
+// At most this many distinct URLs get live intelligence (Safe Browsing / RDAP /
+// shortener expansion) per request — bounds latency and any third-party quota.
+const MAX_URL_LOOKUPS = 5;
 
 export async function POST(req: Request) {
     // ── Rate limit: 30 scans/min per device-hash ─────────────────────────
@@ -78,14 +82,26 @@ export async function POST(req: Request) {
             ),
         ).slice(0, MAX_IP_LOOKUPS);
 
-        const ipReputation: IpReputationResult[] = await Promise.all(
-            ipValues.map((ip) => getIpReputation(ip)),
-        );
+        // Live URL intelligence for any URL entities (server-side key, cached).
+        const urlValues = Array.from(
+            new Set(
+                items
+                    .filter((i) => i.type.toLowerCase() === 'url')
+                    .map((i) => i.value.trim())
+                    .filter((v) => v.length > 0),
+            ),
+        ).slice(0, MAX_URL_LOOKUPS);
+
+        const [ipReputation, urlReputation]: [IpReputationResult[], UrlReputationResult[]] =
+            await Promise.all([
+                Promise.all(ipValues.map((ip) => getIpReputation(ip))),
+                Promise.all(urlValues.map((u) => getUrlIntel(u))),
+            ]);
 
         // Legacy shape: [{ value, count }] for any older consumers.
         const results = matches.map((m) => ({ value: m.value, count: m.count }));
 
-        return NextResponse.json({ results, matches, ipReputation });
+        return NextResponse.json({ results, matches, ipReputation, urlReputation });
     } catch (e) {
         console.error('check-reputation error:', (e as Error)?.name || 'unknown');
         return NextResponse.json({ results: [], matches: [], ipReputation: [] });
