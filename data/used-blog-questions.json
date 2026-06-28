@@ -282,6 +282,13 @@
       "date": "2026-06-14",
       "matchedExistingSlug": "2026-04-12-rental-scam-warning-how-fake-listings-steal-your-d-0ea266",
       "matchedExistingTitle": "rental scam warning: how fake listings steal your deposit"
+    },
+    {
+      "id": "fq-045",
+      "reason": "duplicate-topic",
+      "date": "2026-06-28",
+      "matchedExistingSlug": "2026-04-12-crypto-liquidity-scam-warning-over-defi-yield-pro-5d956a",
+      "matchedExistingTitle": "crypto liquidity scam: warning over defi yield pro fraud"
     }
   ]
 }
