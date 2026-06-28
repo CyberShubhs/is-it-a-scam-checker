@@ -2,12 +2,13 @@ import { analyzeUrlRisk, UrlRiskResult } from './urlRisk';
 import { extractUrls } from './textExtractUrls';
 import { extractEntities, ExtractedEntities } from './entities';
 import { analyzeDocument, DocumentMetadata } from './documentScan';
-import type { IpReputationResult } from './threat-intel/types';
+import { analyzePhoneRisk } from './phoneRisk';
+import type { IpReputationResult, UrlReputationResult } from './threat-intel/types';
 
 export type RiskLevel = 'Low' | 'Medium' | 'High';
 
 /** Which section of "Why this result" a signal belongs to. */
-export type SignalGroupId = 'content' | 'link' | 'document' | 'ip' | 'community';
+export type SignalGroupId = 'content' | 'phone' | 'link' | 'document' | 'ip' | 'community';
 
 export interface ScanSignal {
     id: string;
@@ -80,6 +81,8 @@ export interface ScamAnalysisResult {
     relatedReports?: RelatedReportMatch[];
     /** AbuseIPDB reputation for any public IPs found. */
     ipReputation?: IpReputationResult[];
+    /** Live URL intelligence (Safe Browsing / domain age / shortener) per URL. */
+    urlReputation?: UrlReputationResult[];
     /** Risk-specific "what to do next" advice lines. */
     whatToDoNext?: string[];
     /** Privacy-safe summary for the "copy" button (never the raw input). */
@@ -99,7 +102,7 @@ const SIGNALS = [
         label: 'CVV / Security Code Request',
         points: 60,
         pattern: /\b(cvv|cvc|security code|3 digit code|cvv2|cip)\b/i,
-        explanation: "Asking for your card's security code is a massive red flag. legitimate companies never ask for this via text/email."
+        explanation: "Asking for your card's security code is a massive red flag. Legitimate companies never ask for this via text/email."
     },
     {
         id: 'otp_request',
@@ -124,9 +127,12 @@ const SIGNALS = [
     },
     {
         id: 'prize_bait',
+        // Note: bare dollar amounts (e.g. a legitimate "$49.99 receipt") and the
+        // standalone words "gift"/"cash" were removed in 2026-06 — they fired on
+        // ordinary messages. We now require an actual prize/lottery hook word.
         label: 'Prize/Lottery Bait',
         points: 35,
-        pattern: /\b(win|winner|won|\$\d+|prize|gift|free money|cash|reward)s?\b/i,
+        pattern: /\b(win|winner|won|prize|gift card|free money|lottery|jackpot|reward)s?\b/i,
         explanation: "Promises of money, prizes, or rewards are the most common hook used by scammers."
     },
     {
@@ -167,6 +173,42 @@ const SIGNALS = [
         explanation: "Asking you to click a link is standard operating procedure for phishing attacks."
     }
 ];
+
+/**
+ * Signal IDs that are strong, specific evidence of a scam on their own — a
+ * request for a card/CVV/OTP/login, an untraceable-payment ask, a parcel-fee
+ * lure, a known-malicious link, a community report, or a flagged IP/URL.
+ *
+ * Generic phrasing alone (urgency, "verify", "click the link", a prize hook)
+ * is NOT in this set. Section 6 uses it to stop a pile of common words from
+ * reaching "High" without at least one of these — the main source of false
+ * positives on legitimate appointment/bill/delivery messages.
+ */
+const STRONG_SIGNAL_IDS = new Set<string>([
+    'cvv_request',
+    'otp_request',
+    'card_details',
+    'login_creds',
+    'suspicious_payment',
+    'delivery_fee',
+    'malicious_url',
+    'doc_malicious_url',
+    'doc_bank_details',
+    'doc_crypto_wallet',
+    'doc_credentials',
+    'reported_scam',
+    'ip_reputation',
+    'url_blocklist',
+    'url_reputation',
+]);
+
+/**
+ * The most a scan can score when ONLY weak/generic signals fired — no strong
+ * signal, no high-risk URL, no community report, no flagged IP. Keeps such
+ * scans at "Medium" (advice: verify independently) instead of crying "High"
+ * on ordinary wording.
+ */
+const WEAK_ONLY_MAX_SCORE = 45;
 
 /**
  * Translate a 30-day community-report count into the points it adds, per the
@@ -288,6 +330,7 @@ export async function calculateRiskScore(
     const entities = mergeEntities(extractEntities(content), documentEntities);
     let relatedReports: RelatedReportMatch[] = [];
     let ipReputation: IpReputationResult[] = [];
+    let urlReputation: UrlReputationResult[] = [];
     try {
         const items = buildIntelItems(entities, detectedUrlsRaw);
         if (items.length > 0) {
@@ -300,6 +343,7 @@ export async function calculateRiskScore(
                 const data = await res.json();
                 relatedReports = Array.isArray(data.matches) ? data.matches : [];
                 ipReputation = Array.isArray(data.ipReputation) ? data.ipReputation : [];
+                urlReputation = Array.isArray(data.urlReputation) ? data.urlReputation : [];
             }
         }
     } catch {
@@ -341,6 +385,41 @@ export async function calculateRiskScore(
         if ((rep.abuseConfidenceScore ?? 0) >= 80) ipForcesHigh = true;
     }
 
+    // Fold live URL intelligence (Safe Browsing / domain age / shortener) into
+    // the score + signals. A Safe Browsing blocklist hit forces High.
+    let urlForcesHigh = false;
+    for (const rep of urlReputation) {
+        if (rep.riskContribution > 0) {
+            score += rep.riskContribution;
+            caughtSignals.push({
+                id: rep.safeBrowsing ? 'url_blocklist' : 'url_reputation',
+                label: rep.safeBrowsing ? 'Known malicious link (Safe Browsing)' : 'Live URL risk signal',
+                points: rep.riskContribution,
+                explanation: rep.message,
+                matchedText: rep.url,
+                group: 'link',
+            });
+        }
+        if (rep.safeBrowsing) urlForcesHigh = true;
+    }
+
+    // Fold structural phone-number risk (premium-rate traps, implausible
+    // lengths, placeholder/spoofed patterns) into the score + signals.
+    for (const phone of entities.phones) {
+        const phoneRisk = analyzePhoneRisk(phone.normalised);
+        if (phoneRisk.points > 0) {
+            score += phoneRisk.points;
+            caughtSignals.push({
+                id: 'phone_risk',
+                label: 'Suspicious phone number',
+                points: phoneRisk.points,
+                explanation: phoneRisk.flags.join(' '),
+                matchedText: phone.raw,
+                group: 'phone',
+            });
+        }
+    }
+
     // ── 5. Hard overrides & combinations ─────────────────────────────────
     const hasUrgency = caughtSignals.some((s) => s.id === 'urgency');
     const hasVerification = caughtSignals.some((s) => s.id === 'verification_bait');
@@ -354,19 +433,35 @@ export async function calculateRiskScore(
         score += 20;
     }
 
-    // ── 6. Cap score ─────────────────────────────────────────────────────
+    // ── 6. Weak-signal ceiling (false-positive guard) ────────────────────
+    // If nothing strong fired — no card/credential/payment ask, no parcel-fee
+    // lure, no high-risk URL, no community report, no flagged IP — then we only
+    // saw generic wording. Cap the score so common phrases like "verify your
+    // account today, click here" land at Medium ("verify independently")
+    // rather than a confidence-eroding "High".
+    const hasStrongSignal = caughtSignals.some(
+        (s) => STRONG_SIGNAL_IDS.has(s.id) || s.points >= 40,
+    );
+    const hasHighRiskUrl = detectedUrls.some((u) => u.risk.riskLevel === 'High');
+    const hasCommunityEvidence = maxCount30d > 0;
+    const hasIpEvidence = ipReputation.some((r) => (r.riskContribution ?? 0) > 0);
+    if (!hasStrongSignal && !hasHighRiskUrl && !hasCommunityEvidence && !hasIpEvidence) {
+        score = Math.min(score, WEAK_ONLY_MAX_SCORE);
+    }
+
+    // ── 7. Cap score ─────────────────────────────────────────────────────
     score = Math.max(0, Math.min(100, score));
 
-    // ── 7. Determine level (with community/IP minimum-level overrides) ───
+    // ── 8. Determine level (with community/IP minimum-level overrides) ───
     let riskLevel: RiskLevel = 'Low';
     if (score >= 60) riskLevel = 'High';
     else if (score >= 30) riskLevel = 'Medium';
 
-    // Repeated community reports / high-confidence IPs raise the floor.
-    if (maxCount30d >= 10 || ipForcesHigh) riskLevel = 'High';
+    // Repeated community reports / high-confidence IPs / blocklisted URLs raise the floor.
+    if (maxCount30d >= 10 || ipForcesHigh || urlForcesHigh) riskLevel = 'High';
     else if (maxCount30d >= 6 && riskLevel === 'Low') riskLevel = 'Medium';
 
-    // ── 8. Build outputs ─────────────────────────────────────────────────
+    // ── 9. Build outputs ─────────────────────────────────────────────────
     const summary = generateSummary(riskLevel, caughtSignals, detectedUrls);
     const signalGroups = buildSignalGroups(caughtSignals);
     const whatToDoNext = buildWhatToDoNext(riskLevel, caughtSignals, relatedReports);
@@ -381,6 +476,7 @@ export async function calculateRiskScore(
         signalGroups,
         relatedReports,
         ipReputation,
+        urlReputation,
         whatToDoNext,
         safeSummary,
         scannedItems,
@@ -435,13 +531,14 @@ function buildIntelItems(
 
 const GROUP_TITLES: Record<SignalGroupId, string> = {
     content: 'Message / content signals',
+    phone: 'Phone number signals',
     link: 'Link / domain signals',
     document: 'File / document signals',
     ip: 'IP reputation signals',
     community: 'Community report signals',
 };
 
-const GROUP_ORDER: SignalGroupId[] = ['content', 'link', 'document', 'ip', 'community'];
+const GROUP_ORDER: SignalGroupId[] = ['content', 'phone', 'link', 'document', 'ip', 'community'];
 
 /** Group the flat signal list into the ordered "Why this result" sections. */
 function buildSignalGroups(signals: ScanSignal[]): SignalGroup[] {
